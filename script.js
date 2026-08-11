@@ -775,8 +775,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const elDetalhes = document.getElementById('respDetalhes');
       if (elDetalhes) elDetalhes.value = card.detalhes || '';
 
-      // Preencher campos da guia Documentos (Etiquetas de Status)
+      // Preencher campos da guia Documentos (Etiquetas de Status e Lista Eventuais)
       renderDocumentBadges(card);
+      renderEventualDocs(card);
 
       // Atualizar estado visual do botão Etiqueta (Status)
       updateStatusTagUI(card.status || 'novo');
@@ -800,6 +801,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     'Recebido': 'badge-recebido'
   };
 
+  const obrigatorioKeys = ['doc_procuracoes', 'doc_rg_cnh', 'doc_certidao', 'doc_cnis', 'doc_carteira_trabalho'];
+
+  function updateDocsCounters() {
+    if (!currentActiveCard) return;
+
+    // 1. Contagem dos Obrigatórios (Total: 5)
+    let obgRecebidos = 0;
+    obrigatorioKeys.forEach(key => {
+      if (currentActiveCard[key] === 'Recebido') {
+        obgRecebidos++;
+      }
+    });
+    const countObgEl = document.getElementById('countObrigatorios');
+    if (countObgEl) countObgEl.textContent = `${obgRecebidos}/5`;
+
+    // 2. Contagem dos Eventuais (Total dinâmico)
+    let eventuaisList = currentActiveCard.eventuais;
+    if (typeof eventuaisList === 'string') {
+      try { eventuaisList = JSON.parse(eventuaisList); } catch (e) { eventuaisList = []; }
+    }
+    if (!Array.isArray(eventuaisList)) eventuaisList = [];
+
+    let evtRecebidos = 0;
+    eventuaisList.forEach(item => {
+      if (item.status === 'Recebido') {
+        evtRecebidos++;
+      }
+    });
+    const countEvtEl = document.getElementById('countEventuais');
+    if (countEvtEl) countEvtEl.textContent = `${evtRecebidos}/${eventuaisList.length}`;
+  }
+
   function renderDocumentBadges(card) {
     document.querySelectorAll('.doc-status-badge').forEach(badge => {
       const docKey = badge.dataset.docKey;
@@ -808,6 +841,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const currentStatus = card[docKey] || 'Pendente';
       updateBadgeUI(badge, currentStatus);
     });
+    updateDocsCounters();
   }
 
   function updateBadgeUI(badge, status) {
@@ -832,6 +866,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Atualizar UI instantaneamente
       updateBadgeUI(badge, newStatus);
       currentActiveCard[docKey] = newStatus;
+      updateDocsCounters();
 
       // Gravar alteração na coluna correspondente da tabela no Supabase
       const { error } = await supabase
@@ -844,9 +879,154 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Reverter UI em caso de falha
         updateBadgeUI(badge, currentStatus);
         currentActiveCard[docKey] = currentStatus;
+        updateDocsCounters();
       }
     });
   });
+
+  // Alternância (Toggle Acordeão) da Categoria 'Obrigatórios'
+  const toggleObrigatoriosBtn = document.getElementById('toggleObrigatoriosBtn');
+  const listObrigatoriosContent = document.getElementById('listObrigatoriosContent');
+
+  if (toggleObrigatoriosBtn && listObrigatoriosContent) {
+    toggleObrigatoriosBtn.addEventListener('click', () => {
+      const isExpanded = toggleObrigatoriosBtn.getAttribute('aria-expanded') === 'true';
+      toggleObrigatoriosBtn.setAttribute('aria-expanded', !isExpanded);
+      listObrigatoriosContent.classList.toggle('collapsed', isExpanded);
+    });
+  }
+
+  // Alternância (Toggle Acordeão) da Categoria 'Eventuais'
+  const toggleEventuaisBtn = document.getElementById('toggleEventuaisBtn');
+  const listEventuaisContent = document.getElementById('listEventuaisContent');
+
+  if (toggleEventuaisBtn && listEventuaisContent) {
+    toggleEventuaisBtn.addEventListener('click', () => {
+      const isExpanded = toggleEventuaisBtn.getAttribute('aria-expanded') === 'true';
+      toggleEventuaisBtn.setAttribute('aria-expanded', !isExpanded);
+      listEventuaisContent.classList.toggle('collapsed', isExpanded);
+    });
+  }
+
+  /* ==========================================
+     LÓGICA DA CATEGORIA 'EVENTUAIS' (DINÂMICA VIA JSONB)
+     ========================================== */
+  const newEventualDocName = document.getElementById('newEventualDocName');
+  const addEventualDocBtn = document.getElementById('addEventualDocBtn');
+  const eventualDocsDynamicList = document.getElementById('eventualDocsDynamicList');
+
+  // Renderizar a lista de documentos eventuais do card ativo
+  function renderEventualDocs(card) {
+    if (!eventualDocsDynamicList) return;
+    eventualDocsDynamicList.innerHTML = '';
+
+    let docs = card.eventuais;
+    if (typeof docs === 'string') {
+      try { docs = JSON.parse(docs); } catch (e) { docs = []; }
+    }
+    if (!Array.isArray(docs)) docs = [];
+
+    if (docs.length === 0) {
+      eventualDocsDynamicList.innerHTML = `
+        <div style="font-size: 0.84rem; color: #94A3B8; font-style: italic; padding: 0.35rem 0;">
+          Nenhum documento eventual adicionado.
+        </div>
+      `;
+      return;
+    }
+
+    docs.forEach((docItem, index) => {
+      const docName = docItem.nome || 'Documento sem nome';
+      const status = docItem.status || 'Pendente';
+
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'doc-item';
+      itemDiv.innerHTML = `
+        <span class="doc-name">${escapeHtml(docName)}</span>
+        <div class="doc-item-actions">
+          <button type="button" class="doc-status-badge ${docStatusClasses[status] || 'badge-pendente'}" data-eventual-index="${index}" data-status="${escapeHtml(status)}">
+            <span class="doc-badge-dot"></span> ${escapeHtml(status)}
+          </button>
+          <button type="button" class="btn-remove-doc" data-eventual-index="${index}" title="Excluir documento" aria-label="Excluir documento">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          </button>
+        </div>
+      `;
+
+      // Evento de clique para alternar o status do documento eventual
+      const badgeBtn = itemDiv.querySelector('.doc-status-badge');
+      badgeBtn.addEventListener('click', async () => {
+        const currentIndex = docStatusOrder.indexOf(status);
+        const nextIndex = (currentIndex + 1) % docStatusOrder.length;
+        const newStatus = docStatusOrder[nextIndex];
+
+        docs[index].status = newStatus;
+        await saveEventualDocsToSupabase(docs);
+      });
+
+      // Evento de clique para remover o documento eventual
+      const removeBtn = itemDiv.querySelector('.btn-remove-doc');
+      removeBtn.addEventListener('click', async () => {
+        docs.splice(index, 1);
+        await saveEventualDocsToSupabase(docs);
+      });
+
+      eventualDocsDynamicList.appendChild(itemDiv);
+    });
+  }
+
+  // Função auxiliar para salvar a lista de eventuais no Supabase
+  async function saveEventualDocsToSupabase(updatedDocsArray) {
+    if (!currentActiveCard || !supabase) return;
+
+    const { error } = await supabase
+      .from('oportunidades_crm')
+      .update({ eventuais: updatedDocsArray })
+      .eq('id', currentActiveCard.id);
+
+    if (error) {
+      showToast('Erro ao atualizar documentos eventuais: ' + error.message);
+      return;
+    }
+
+    currentActiveCard.eventuais = updatedDocsArray;
+    renderEventualDocs(currentActiveCard);
+    updateDocsCounters();
+  }
+
+  // Adicionar Novo Documento Eventual
+  if (addEventualDocBtn && newEventualDocName) {
+    const handleAddEventual = async () => {
+      const docTitle = newEventualDocName.value.trim();
+      if (!docTitle) {
+        showToast('Digite o nome do documento.');
+        return;
+      }
+
+      let docs = currentActiveCard.eventuais;
+      if (typeof docs === 'string') {
+        try { docs = JSON.parse(docs); } catch (e) { docs = []; }
+      }
+      if (!Array.isArray(docs)) docs = [];
+
+      docs.push({
+        nome: docTitle,
+        status: 'Pendente'
+      });
+
+      newEventualDocName.value = '';
+      await saveEventualDocsToSupabase(docs);
+      showToast('Documento eventual adicionado!');
+    };
+
+    addEventualDocBtn.addEventListener('click', handleAddEventual);
+    newEventualDocName.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAddEventual();
+      }
+    });
+  }
 
   // Salvamento das informações da Ficha no Supabase
   if (clientSheetForm) {
