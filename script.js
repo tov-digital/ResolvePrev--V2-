@@ -383,12 +383,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const column = btnAdd.closest('.kanban-column');
         const stage = column ? column.dataset.stage : 'novo';
         
-        // Dados Padrão para novo card
+        // Dados Padrão para novo card (Documentos Obrigatórios iniciam como 'Pendente')
         const defaultData = {
           nome: 'Novo Cliente',
           telefone: '(11) 99999-9999',
           data_requerimento: new Date().toISOString().split('T')[0],
-          status: stage
+          status: stage,
+          doc_procuracoes: 'Pendente',
+          doc_rg_cnh: 'Pendente',
+          doc_certidao: 'Pendente',
+          doc_cnis: 'Pendente',
+          doc_carteira_trabalho: 'Pendente'
         };
 
         if (supabase) {
@@ -770,6 +775,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const elDetalhes = document.getElementById('respDetalhes');
       if (elDetalhes) elDetalhes.value = card.detalhes || '';
 
+      // Preencher campos da guia Documentos (Etiquetas de Status)
+      renderDocumentBadges(card);
+
       // Atualizar estado visual do botão Etiqueta (Status)
       updateStatusTagUI(card.status || 'novo');
 
@@ -782,6 +790,63 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error('Erro ao abrir ficha do cliente:', err);
     }
   }
+
+  // Sequência de rotação de status das etiquetas ao clicar
+  const docStatusOrder = ['Pendente', 'Solicitado', 'Validar', 'Recebido'];
+  const docStatusClasses = {
+    'Pendente': 'badge-pendente',
+    'Solicitado': 'badge-solicitado',
+    'Validar': 'badge-validar',
+    'Recebido': 'badge-recebido'
+  };
+
+  function renderDocumentBadges(card) {
+    document.querySelectorAll('.doc-status-badge').forEach(badge => {
+      const docKey = badge.dataset.docKey;
+      if (!docKey) return;
+
+      const currentStatus = card[docKey] || 'Pendente';
+      updateBadgeUI(badge, currentStatus);
+    });
+  }
+
+  function updateBadgeUI(badge, status) {
+    badge.dataset.status = status;
+    badge.className = `doc-status-badge ${docStatusClasses[status] || 'badge-pendente'}`;
+    badge.innerHTML = `<span class="doc-badge-dot"></span> ${status}`;
+  }
+
+  // Evento de clique nas etiquetas de documentos para rotação automática
+  document.querySelectorAll('.doc-status-badge').forEach(badge => {
+    badge.addEventListener('click', async () => {
+      if (!currentActiveCard || !supabase) return;
+
+      const docKey = badge.dataset.docKey;
+      const currentStatus = badge.dataset.status || 'Pendente';
+      
+      // Encontrar o próximo status no ciclo: Pendente -> Solicitado -> Validar -> Recebido -> Pendente
+      const currentIndex = docStatusOrder.indexOf(currentStatus);
+      const nextIndex = (currentIndex + 1) % docStatusOrder.length;
+      const newStatus = docStatusOrder[nextIndex];
+
+      // Atualizar UI instantaneamente
+      updateBadgeUI(badge, newStatus);
+      currentActiveCard[docKey] = newStatus;
+
+      // Gravar alteração na coluna correspondente da tabela no Supabase
+      const { error } = await supabase
+        .from('oportunidades_crm')
+        .update({ [docKey]: newStatus })
+        .eq('id', currentActiveCard.id);
+
+      if (error) {
+        showToast('Erro ao atualizar documento: ' + error.message);
+        // Reverter UI em caso de falha
+        updateBadgeUI(badge, currentStatus);
+        currentActiveCard[docKey] = currentStatus;
+      }
+    });
+  });
 
   // Salvamento das informações da Ficha no Supabase
   if (clientSheetForm) {

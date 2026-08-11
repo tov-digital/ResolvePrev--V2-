@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=34">
+  <link rel="stylesheet" href="styles.css?v=37">
 </head>
 <body>
 
@@ -642,9 +642,62 @@
 
         <!-- Conteúdo da Guia: DOCUMENTOS -->
         <div id="tabContentDocumentos" class="tab-pane hidden">
-          <div class="sheet-placeholder">
-            <h3>Documentos do Cliente</h3>
-            <p>Área de documentos em desenvolvimento.</p>
+          <div class="docs-tab-header">
+            <div class="docs-tag-row">
+              <span class="gray-code-tag">RP00</span>
+            </div>
+          </div>
+
+          <div class="docs-container">
+            <!-- Categoria: Obrigatórios -->
+            <div class="docs-category-card">
+              <h4 class="docs-category-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Obrigatórios
+              </h4>
+
+              <div class="docs-list">
+                <!-- Documento 1 -->
+                <div class="doc-item">
+                  <span class="doc-name">Procurações, Termo e Contrato</span>
+                  <button class="doc-status-badge badge-pendente" data-doc-key="doc_procuracoes" data-status="Pendente">
+                    <span class="doc-badge-dot"></span> Pendente
+                  </button>
+                </div>
+
+                <!-- Documento 2 -->
+                <div class="doc-item">
+                  <span class="doc-name">RG ou CNH</span>
+                  <button class="doc-status-badge badge-pendente" data-doc-key="doc_rg_cnh" data-status="Pendente">
+                    <span class="doc-badge-dot"></span> Pendente
+                  </button>
+                </div>
+
+                <!-- Documento 3 -->
+                <div class="doc-item">
+                  <span class="doc-name">Certidão de Nascimento ou Casamento</span>
+                  <button class="doc-status-badge badge-pendente" data-doc-key="doc_certidao" data-status="Pendente">
+                    <span class="doc-badge-dot"></span> Pendente
+                  </button>
+                </div>
+
+                <!-- Documento 4 -->
+                <div class="doc-item">
+                  <span class="doc-name">CNIS</span>
+                  <button class="doc-status-badge badge-pendente" data-doc-key="doc_cnis" data-status="Pendente">
+                    <span class="doc-badge-dot"></span> Pendente
+                  </button>
+                </div>
+
+                <!-- Documento 5 -->
+                <div class="doc-item">
+                  <span class="doc-name">Carteira de trabalho Física e Digital</span>
+                  <button class="doc-status-badge badge-pendente" data-doc-key="doc_carteira_trabalho" data-status="Pendente">
+                    <span class="doc-badge-dot"></span> Pendente
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -784,6 +837,6 @@
 
   <!-- Supabase JS Client SDK v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=34"></script>
+  <script src="script.js?v=36"></script>
 </body>
 </html>
