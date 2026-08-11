@@ -778,6 +778,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Preencher campos da guia Documentos (Etiquetas de Status e Lista Eventuais)
       renderDocumentBadges(card);
       renderEventualDocs(card);
+      updateSheetNotesBadge(card);
 
       // Atualizar estado visual do botão Etiqueta (Status)
       updateStatusTagUI(card.status || 'novo');
@@ -1148,8 +1149,190 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function closeClientSheet() {
     currentActiveCard = null;
+    closeNotesSidebar();
     if (statusDropdownMenu) statusDropdownMenu.classList.add('hidden');
     if (modalClientSheet) modalClientSheet.classList.add('hidden');
+  }
+
+  /* ==========================================
+     SISTEMA DE OBSERVAÇÕES INTERNAS (SLIDE SIDEBAR)
+     ========================================== */
+  const sheetNotesBtn = document.getElementById('sheetNotesBtn');
+  const notesSidebarDrawer = document.getElementById('notesSidebarDrawer');
+  const notesSidebarOverlay = document.getElementById('notesSidebarOverlay');
+  const closeNotesSidebarBtn = document.getElementById('closeNotesSidebarBtn');
+  const notesSidebarBody = document.getElementById('notesSidebarBody');
+  const addNoteForm = document.getElementById('addNoteForm');
+  const newNoteInput = document.getElementById('newNoteInput');
+
+  function openNotesSidebar() {
+    if (notesSidebarDrawer) notesSidebarDrawer.classList.remove('hidden');
+    if (notesSidebarOverlay) notesSidebarOverlay.classList.remove('hidden');
+    if (currentActiveCard) {
+      renderInternalNotes(currentActiveCard);
+    }
+    setTimeout(() => {
+      if (newNoteInput) newNoteInput.focus();
+    }, 150);
+  }
+
+  function closeNotesSidebar() {
+    if (notesSidebarDrawer) notesSidebarDrawer.classList.add('hidden');
+    if (notesSidebarOverlay) notesSidebarOverlay.classList.add('hidden');
+  }
+
+  if (sheetNotesBtn) sheetNotesBtn.addEventListener('click', openNotesSidebar);
+  if (closeNotesSidebarBtn) closeNotesSidebarBtn.addEventListener('click', closeNotesSidebar);
+  if (notesSidebarOverlay) notesSidebarOverlay.addEventListener('click', closeNotesSidebar);
+
+  // Formatação de data/hora no padrão (Ex: 11/08, 18:34)
+  function formatNoteDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month}, ${hours}:${minutes}`;
+  }
+
+  const sheetNotesCountBadge = document.getElementById('sheetNotesCountBadge');
+
+  function updateSheetNotesBadge(card) {
+    if (!sheetNotesCountBadge) return;
+
+    let notes = card ? card.notas_internas : [];
+    if (typeof notes === 'string') {
+      try { notes = JSON.parse(notes); } catch (e) { notes = []; }
+    }
+    if (!Array.isArray(notes)) notes = [];
+
+    const count = notes.length;
+    if (count > 0) {
+      sheetNotesCountBadge.textContent = count > 99 ? '99+' : count;
+      sheetNotesCountBadge.classList.remove('hidden');
+    } else {
+      sheetNotesCountBadge.textContent = '0';
+      sheetNotesCountBadge.classList.add('hidden');
+    }
+  }
+
+  // Renderizar Notas Internas
+  function renderInternalNotes(card) {
+    updateSheetNotesBadge(card);
+    if (!notesSidebarBody) return;
+    notesSidebarBody.innerHTML = '';
+
+    let notes = card.notas_internas;
+    if (typeof notes === 'string') {
+      try { notes = JSON.parse(notes); } catch (e) { notes = []; }
+    }
+    if (!Array.isArray(notes)) notes = [];
+
+    if (notes.length === 0) {
+      notesSidebarBody.innerHTML = `
+        <div class="notes-empty-state">
+          Nenhuma observação registrada ainda.
+        </div>
+      `;
+      return;
+    }
+
+    notes.forEach(note => {
+      const author = note.usuario || 'Usuário';
+      const timeStr = formatNoteDate(note.created_at || note.data_hora);
+      const textContent = note.texto || '';
+
+      const cardDiv = document.createElement('div');
+      cardDiv.className = 'note-card';
+      cardDiv.innerHTML = `
+        <div class="note-author-row">
+          <span class="note-author-name">${escapeHtml(author)}</span>
+          <span class="note-timestamp">${escapeHtml(timeStr)}</span>
+        </div>
+        <div class="note-text-box">
+          ${escapeHtml(textContent)}
+        </div>
+      `;
+      notesSidebarBody.appendChild(cardDiv);
+    });
+
+    // Rolar para a última nota (base da gaveta)
+    notesSidebarBody.scrollTop = notesSidebarBody.scrollHeight;
+  }
+
+  // Adicionar Nova Nota Interna
+  const sendNoteBtn = document.getElementById('sendNoteBtn');
+
+  const handleAddNote = async () => {
+    if (!newNoteInput) return;
+    const text = newNoteInput.value.trim();
+    if (!text || !currentActiveCard) return;
+
+    let notes = currentActiveCard.notas_internas;
+    if (typeof notes === 'string') {
+      try { notes = JSON.parse(notes); } catch (e) { notes = []; }
+    }
+    if (!Array.isArray(notes)) notes = [];
+
+    // Obter o nome do usuário logado (Perfil ou Metadata)
+    let userName = 'Usuário';
+    if (userDisplayName && userDisplayName.textContent && userDisplayName.textContent.trim() !== '' && userDisplayName.textContent.trim() !== 'Carregando...') {
+      userName = userDisplayName.textContent.trim();
+    } else if (supabase) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+          userName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Usuário';
+        }
+      } catch (err) {
+        console.warn('Erro ao obter sessão de usuário:', err);
+      }
+    }
+
+    const newNote = {
+      texto: text,
+      usuario: userName,
+      created_at: new Date().toISOString()
+    };
+
+    notes.push(newNote);
+    newNoteInput.value = '';
+
+    // Atualiza estado local e UI instantaneamente
+    currentActiveCard.notas_internas = notes;
+    renderInternalNotes(currentActiveCard);
+
+    // Gravação no Supabase em segundo plano
+    if (supabase) {
+      const { error } = await supabase
+        .from('oportunidades_crm')
+        .update({ notas_internas: notes })
+        .eq('id', currentActiveCard.id);
+
+      if (error) {
+        showToast('Erro ao salvar no banco: ' + error.message);
+      }
+    }
+  };
+
+  if (sendNoteBtn) {
+    sendNoteBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      await handleAddNote();
+    });
+  }
+
+  if (newNoteInput) {
+    newNoteInput.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        await handleAddNote();
+      }
+    });
   }
 
   // Toggle do Dropdown de Etiqueta (Status)
