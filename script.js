@@ -80,6 +80,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     loginScreen.classList.add('hidden');
     blankDashboardScreen.classList.remove('hidden');
+
+    // Carregar automaticamente os cards do CRM do usuário logado ao exibir o dashboard
+    loadUserCards();
   }
 
   /* ==========================================
@@ -401,6 +404,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  let allUserCards = []; // Armazena a lista de cards carregados para pesquisa instantânea
+
+  // Pesquisa em tempo real (Filtra Nome ou Sequência de Telefone sem limitações)
+  const crmSearchInput = document.getElementById('crmSearchInput');
+  if (crmSearchInput) {
+    crmSearchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase().trim();
+      filterAndRenderCards(searchTerm);
+    });
+  }
+
   // Atualizar a renderização do CRM com os cards do usuário logado
   async function loadUserCards() {
     if (!supabase) return;
@@ -421,7 +435,33 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    renderKanbanCards(cards || []);
+    allUserCards = cards || [];
+    const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
+    filterAndRenderCards(searchTerm);
+  }
+
+  function filterAndRenderCards(searchTerm) {
+    if (!searchTerm) {
+      renderKanbanCards(allUserCards);
+      return;
+    }
+
+    // Normalizar termo de pesquisa (remover caracteres especiais para facilitar busca por telefone)
+    const cleanSearchTerm = searchTerm.replace(/\D/g, '');
+
+    const filtered = allUserCards.filter(card => {
+      // 1. Busca por Nome (primeiro nome, sobrenome ou qualquer pedaço)
+      const nameMatch = card.nome && card.nome.toLowerCase().includes(searchTerm);
+
+      // 2. Busca por Telefone (comparando tanto a string formatada quanto apenas os dígitos limpos)
+      const rawPhone = card.telefone ? card.telefone.replace(/\D/g, '') : '';
+      const phoneFormattedMatch = card.telefone && card.telefone.toLowerCase().includes(searchTerm);
+      const phoneDigitsMatch = cleanSearchTerm && rawPhone.includes(cleanSearchTerm);
+
+      return nameMatch || phoneFormattedMatch || phoneDigitsMatch;
+    });
+
+    renderKanbanCards(filtered);
   }
 
   // Gerenciamento do Modal de Confirmação de Exclusão
@@ -566,6 +606,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
     `;
 
+    // Clique no Card para Abrir Ficha do Cliente (ignora cliques no botão de exclusão e no link do WhatsApp)
+    cardDiv.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-delete-card') || e.target.closest('.whatsapp-link')) return;
+      openClientSheetModal(card);
+    });
+
     // Evento de Exclusão do Card com Modal Customizado
     const btnDelete = cardDiv.querySelector('.btn-delete-card');
     btnDelete.addEventListener('click', (e) => {
@@ -575,6 +621,294 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     return cardDiv;
   }
+
+  /* ==========================================
+     GERENCIAMENTO DO MODAL: FICHA DO CLIENTE (A4 E GUIAS)
+     ========================================== */
+  const modalClientSheet = document.getElementById('modalClientSheet');
+  const closeClientSheetModal = document.getElementById('closeClientSheetModal');
+  const sheetClientName = document.getElementById('sheetClientName');
+  const browserTabs = document.querySelectorAll('.browser-tab');
+  const tabContentFicha = document.getElementById('tabContentFicha');
+  const tabContentDocumentos = document.getElementById('tabContentDocumentos');
+
+  const sheetReassignBtn = document.getElementById('sheetReassignBtn');
+  const sheetDeleteBtn = document.getElementById('sheetDeleteBtn');
+  let currentActiveCard = null;
+
+  const sheetStatusDropdownBtn = document.getElementById('sheetStatusDropdownBtn');
+  const statusDropdownMenu = document.getElementById('statusDropdownMenu');
+  const sheetStatusText = document.getElementById('sheetStatusText');
+  const sheetStatusDot = document.getElementById('sheetStatusDot');
+
+  const stageLabels = {
+    'novo': 'Novo',
+    'qualificacao': 'Qualificação',
+    'acompanhamento': 'Acompanhamento',
+    'reuniao': 'Reunião',
+    'proposta': 'Proposta'
+  };
+
+  const stageDotClasses = {
+    'novo': 'dot-novo',
+    'qualificacao': 'dot-qualificacao',
+    'acompanhamento': 'dot-acompanhamento',
+    'reuniao': 'dot-reuniao',
+    'proposta': 'dot-proposta'
+  };
+
+  function openClientSheetModal(card) {
+    currentActiveCard = card;
+    if (sheetClientName) sheetClientName.textContent = card.nome || 'Ficha do Cliente';
+    
+    // Atualizar estado visual do botão Etiqueta (Status)
+    updateStatusTagUI(card.status || 'novo');
+
+    // Resetar para a aba 'Ficha' ativa por padrão
+    switchTab('ficha');
+
+    if (modalClientSheet) modalClientSheet.classList.remove('hidden');
+  }
+
+  function updateStatusTagUI(stage) {
+    if (sheetStatusText) sheetStatusText.textContent = stageLabels[stage] || 'Novo';
+    if (sheetStatusDot) {
+      sheetStatusDot.className = 'status-tag-dot ' + (stageDotClasses[stage] || 'dot-novo');
+    }
+  }
+
+  function closeClientSheet() {
+    currentActiveCard = null;
+    if (statusDropdownMenu) statusDropdownMenu.classList.add('hidden');
+    if (modalClientSheet) modalClientSheet.classList.add('hidden');
+  }
+
+  // Toggle do Dropdown de Etiqueta (Status)
+  if (sheetStatusDropdownBtn && statusDropdownMenu) {
+    sheetStatusDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      statusDropdownMenu.classList.toggle('hidden');
+    });
+  }
+
+  // Seleção de nova opção de Status (Movimentação de Coluna)
+  document.querySelectorAll('.status-option').forEach(option => {
+    option.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const newStatus = option.dataset.status;
+      if (!newStatus || !currentActiveCard) return;
+
+      if (statusDropdownMenu) statusDropdownMenu.classList.add('hidden');
+
+      if (newStatus !== currentActiveCard.status) {
+        currentActiveCard.status = newStatus;
+        updateStatusTagUI(newStatus);
+
+        if (supabase) {
+          const { error } = await supabase
+            .from('oportunidades_crm')
+            .update({ status: newStatus })
+            .eq('id', currentActiveCard.id);
+
+          if (error) {
+            showToast('Erro ao atualizar estágio: ' + error.message);
+            return;
+          }
+
+          loadUserCards(); // Atualiza o Kanban movendo o card de coluna
+          showToast(`Estágio alterado para "${stageLabels[newStatus]}"`);
+        }
+      }
+    });
+  });
+
+  // Fechar dropdown de status ao clicar em qualquer outro lugar da tela
+  window.addEventListener('click', (e) => {
+    if (statusDropdownMenu && !e.target.closest('.status-dropdown-wrapper')) {
+      statusDropdownMenu.classList.add('hidden');
+    }
+  });
+
+  // Ação de Lixeira dentro da Ficha do Cliente
+  if (sheetDeleteBtn) {
+    sheetDeleteBtn.addEventListener('click', () => {
+      if (currentActiveCard) {
+        const cardToDel = currentActiveCard;
+        const cardEl = document.querySelector(`.kanban-card[data-id="${cardToDel.id}"]`);
+        closeClientSheet();
+        openDeleteModal(cardToDel, cardEl);
+      }
+    });
+  }
+
+  // Ação de Atribuição a Outro Usuário (Dropdown estilo Print)
+  const modalReassignUser = document.getElementById('modalReassignUser');
+  const closeReassignModal = document.getElementById('closeReassignModal');
+  const reassignSearchInput = document.getElementById('reassignSearchInput');
+  const reassignUserList = document.getElementById('reassignUserList');
+  let cachedProfiles = [];
+
+  if (sheetReassignBtn) {
+    sheetReassignBtn.addEventListener('click', () => {
+      if (currentActiveCard) {
+        openReassignModal();
+      }
+    });
+  }
+
+  if (reassignSearchInput) {
+    reassignSearchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      renderReassignUserList(term);
+    });
+  }
+
+  async function openReassignModal() {
+    if (reassignSearchInput) reassignSearchInput.value = '';
+    if (modalReassignUser) modalReassignUser.classList.remove('hidden');
+
+    if (!supabase) return;
+    reassignUserList.innerHTML = '<div class="loading-users-spinner" style="font-size:0.85rem; color:#64748B; text-align:center; padding:1rem;">Carregando usuários...</div>';
+
+    // Buscar todos os usuários cadastrados na tabela 'profiles' do Supabase
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select('*');
+
+    if (error || !profiles || profiles.length === 0) {
+      reassignUserList.innerHTML = '<div style="font-size:0.85rem; color:#64748B; text-align:center; padding:1rem;">Nenhum usuário encontrado.</div>';
+      return;
+    }
+
+    cachedProfiles = profiles;
+    renderReassignUserList('');
+  }
+
+  function renderReassignUserList(searchTerm) {
+    reassignUserList.innerHTML = '';
+
+    const filtered = cachedProfiles.filter(p => {
+      const name = (p.nome_completo || p.email || '').toLowerCase();
+      return name.includes(searchTerm);
+    });
+
+    if (filtered.length === 0) {
+      reassignUserList.innerHTML = '<div style="font-size:0.85rem; color:#64748B; text-align:center; padding:1rem;">Nenhuma pessoa encontrada.</div>';
+      return;
+    }
+
+    // Separar Usuário Logado ('Eu') e Outros Usuários
+    const currentUserProfile = filtered.find(p => p.id === currentUserId);
+    const otherUsers = filtered.filter(p => p.id !== currentUserId);
+
+    // Seção 'Eu'
+    if (currentUserProfile) {
+      const euHeader = document.createElement('div');
+      euHeader.className = 'reassign-section-title';
+      euHeader.textContent = 'Eu';
+      reassignUserList.appendChild(euHeader);
+
+      reassignUserList.appendChild(createUserItemElement(currentUserProfile));
+    }
+
+    // Seção 'Outras Pessoas' (Se houver)
+    if (otherUsers.length > 0) {
+      if (currentUserProfile) {
+        const othersHeader = document.createElement('div');
+        othersHeader.className = 'reassign-section-title';
+        othersHeader.style.marginTop = '0.5rem';
+        othersHeader.textContent = 'Outras Pessoas';
+        reassignUserList.appendChild(othersHeader);
+      }
+
+      otherUsers.forEach(profile => {
+        reassignUserList.appendChild(createUserItemElement(profile));
+      });
+    }
+  }
+
+  function createUserItemElement(profile) {
+    const displayName = profile.nome_completo || profile.email || 'Usuário';
+    const initial = displayName.charAt(0).toUpperCase();
+
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'reassign-user-item';
+    itemDiv.innerHTML = `
+      <div class="user-avatar-circle">${initial}</div>
+      <div class="user-item-name">${escapeHtml(displayName)}</div>
+    `;
+
+    // Reatribuição Instantânea ao Clicar
+    itemDiv.addEventListener('click', async () => {
+      if (currentActiveCard && supabase) {
+        const { error } = await supabase
+          .from('oportunidades_crm')
+          .update({ user_id: profile.id })
+          .eq('id', currentActiveCard.id);
+
+        if (error) {
+          showToast('Erro ao atribuir: ' + error.message);
+          return;
+        }
+
+        closeReassignUserModal();
+        closeClientSheet();
+        loadUserCards(); // Atualiza o funil
+        showToast(`Oportunidade atribuída a ${displayName}!`);
+      }
+    });
+
+    return itemDiv;
+  }
+
+  function closeReassignUserModal() {
+    if (modalReassignUser) modalReassignUser.classList.add('hidden');
+  }
+
+  if (closeReassignModal) closeReassignModal.addEventListener('click', closeReassignUserModal);
+
+  window.addEventListener('click', (e) => {
+    if (e.target === modalReassignUser) closeReassignUserModal();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalReassignUser) closeReassignUserModal();
+  });
+
+  function switchTab(targetTab) {
+    browserTabs.forEach(tab => {
+      if (tab.dataset.tab === targetTab) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+
+    if (targetTab === 'ficha') {
+      if (tabContentFicha) tabContentFicha.classList.remove('hidden');
+      if (tabContentDocumentos) tabContentDocumentos.classList.add('hidden');
+    } else if (targetTab === 'documentos') {
+      if (tabContentDocumentos) tabContentDocumentos.classList.remove('hidden');
+      if (tabContentFicha) tabContentFicha.classList.add('hidden');
+    }
+  }
+
+  // Alternância de Guias (Tabs)
+  browserTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      switchTab(tab.dataset.tab);
+    });
+  });
+
+  if (closeClientSheetModal) closeClientSheetModal.addEventListener('click', closeClientSheet);
+
+  window.addEventListener('click', (e) => {
+    if (e.target === modalClientSheet) closeClientSheet();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalClientSheet) closeClientSheet();
+  });
 
   function escapeHtml(text) {
     if (!text) return '';
