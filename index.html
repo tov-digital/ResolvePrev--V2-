@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=31">
+  <link rel="stylesheet" href="styles.css?v=34">
 </head>
 <body>
 
@@ -350,7 +350,13 @@
       <!-- Barra Superior Estilo Navegador (Guias / Tabs) -->
       <header class="browser-tabs-header">
         <div class="tabs-group">
-          <button class="browser-tab active" data-tab="ficha">
+          <button class="browser-tab active" data-tab="respostas">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>Respostas</span>
+          </button>
+          <button class="browser-tab" data-tab="ficha">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
@@ -439,7 +445,7 @@
         </div>
 
         <!-- Conteúdo da Guia: FICHA (Campos do Cliente) -->
-        <div id="tabContentFicha" class="tab-pane active">
+        <div id="tabContentFicha" class="tab-pane hidden">
           <form id="clientSheetForm" class="sheet-form-container">
             
             <!-- Seção: Dados Pessoais -->
@@ -556,6 +562,78 @@
               <button type="submit" id="saveClientSheetBtn" class="btn-save-sheet">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 Salvar Ficha do Cliente
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Conteúdo da Guia: RESPOSTAS -->
+        <div id="tabContentRespostas" class="tab-pane active">
+          <form id="clientAnswersForm" class="sheet-form-container">
+            
+            <div class="sheet-form-section">
+              <h4 class="sheet-section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Perguntas & Respostas do Cliente
+              </h4>
+
+              <div class="sheet-form-grid">
+                <!-- 1. Já contribuiu? -->
+                <div class="sheet-field-group span-2">
+                  <label for="respJaContribuiu">Já contribuiu?</label>
+                  <select id="respJaContribuiu">
+                    <option value="">Selecione...</option>
+                    <option value="Sim - e continuo contribuindo.">Sim - e continuo contribuindo.</option>
+                    <option value="Sim - mas parei há algum tempo.">Sim - mas parei há algum tempo.</option>
+                    <option value="Nunca fiz contribuição ao INSS.">Nunca fiz contribuição ao INSS.</option>
+                    <option value="Não sei responder.">Não sei responder.</option>
+                  </select>
+                </div>
+
+                <!-- 2. Por quanto tempo contribuiu? -->
+                <div class="sheet-field-group">
+                  <label for="respTempoContribuicao">Por quanto tempo contribuiu? (Anos / Meses)</label>
+                  <input type="number" id="respTempoContribuicao" placeholder="Ex: 15" min="0" step="1">
+                </div>
+
+                <!-- 3. Que tipo de trabalho exerceu? -->
+                <div class="sheet-field-group">
+                  <label for="respTipoTrabalho">Que tipo de trabalho exerceu?</label>
+                  <select id="respTipoTrabalho">
+                    <option value="">Selecione...</option>
+                    <option value="Emprego de carteira assinada (CLT)">Emprego de carteira assinada (CLT)</option>
+                    <option value="Empresário / Autônomo / MEI">Empresário / Autônomo / MEI</option>
+                    <option value="Servidor público">Servidor público</option>
+                    <option value="Trabalhador rural">Trabalhador rural</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+
+                <!-- 4. Alguma vez solicitou o benefício? -->
+                <div class="sheet-field-group span-2">
+                  <label for="respSolicitouBeneficio">Alguma vez solicitou o benefício?</label>
+                  <select id="respSolicitouBeneficio">
+                    <option value="">Selecione...</option>
+                    <option value="Não - nunca tentei aposentar.">Não - nunca tentei aposentar.</option>
+                    <option value="Sim - já tentei e está em andamento.">Sim - já tentei e está em andamento.</option>
+                    <option value="Sim - mas foi negada pelo INSS.">Sim - mas foi negada pelo INSS.</option>
+                  </select>
+                </div>
+
+                <!-- 5. Detalhes (Textarea extenso) -->
+                <div class="sheet-field-group span-2">
+                  <label for="respDetalhes">Detalhes</label>
+                  <textarea id="respDetalhes" class="sheet-textarea-input" placeholder="Digite os detalhes adicionais sobre o histórico ou caso do cliente..." rows="4"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botão de Salvar Respostas -->
+            <div class="sheet-form-actions">
+              <button type="submit" id="saveClientAnswersBtn" class="btn-save-sheet">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Salvar Respostas
               </button>
             </div>
 
@@ -706,6 +784,6 @@
 
   <!-- Supabase JS Client SDK v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=30"></script>
+  <script src="script.js?v=34"></script>
 </body>
 </html>

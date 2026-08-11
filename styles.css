@@ -1473,13 +1473,15 @@ html, body {
   color: var(--text-secondary);
   border: none;
   border-radius: 10px 10px 0 0;
-  padding: 0.65rem 1.25rem;
+  padding: 0.65rem 1rem;
+  width: 145px; /* Largura fixa e uniforme para todas as guias */
   font-family: var(--font-family);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   transition: all var(--transition-fast);
   position: relative;
@@ -1779,7 +1781,8 @@ html, body {
 }
 
 .sheet-field-group input,
-.sheet-field-group select {
+.sheet-field-group select,
+.sheet-field-group textarea {
   padding: 0.6rem 0.85rem;
   border: 1px solid var(--border-light);
   border-radius: 8px;
@@ -1791,8 +1794,15 @@ html, body {
   transition: all var(--transition-fast);
 }
 
+.sheet-textarea-input {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
 .sheet-field-group input:focus,
-.sheet-field-group select:focus {
+.sheet-field-group select:focus,
+.sheet-field-group textarea:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px var(--color-primary-light);
 }

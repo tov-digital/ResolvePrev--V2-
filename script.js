@@ -754,11 +754,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       const elBairro = document.getElementById('sheetBairro');
       if (elBairro) elBairro.value = card.bairro || '';
 
+      // Preencher campos da guia Respostas
+      const elJaContribuiu = document.getElementById('respJaContribuiu');
+      if (elJaContribuiu) elJaContribuiu.value = card.ja_contribuiu || '';
+
+      const elTempoContribuicao = document.getElementById('respTempoContribuicao');
+      if (elTempoContribuicao) elTempoContribuicao.value = card.tempo_contribuicao !== undefined && card.tempo_contribuicao !== null ? card.tempo_contribuicao : '';
+
+      const elTipoTrabalho = document.getElementById('respTipoTrabalho');
+      if (elTipoTrabalho) elTipoTrabalho.value = card.tipo_trabalho || '';
+
+      const elSolicitouBeneficio = document.getElementById('respSolicitouBeneficio');
+      if (elSolicitouBeneficio) elSolicitouBeneficio.value = card.solicitou_beneficio || '';
+
+      const elDetalhes = document.getElementById('respDetalhes');
+      if (elDetalhes) elDetalhes.value = card.detalhes || '';
+
       // Atualizar estado visual do botão Etiqueta (Status)
       updateStatusTagUI(card.status || 'novo');
 
-      // Resetar para a aba 'Ficha' ativa por padrão
-      switchTab('ficha');
+      // Resetar para a aba 'Respostas' ativa por padrão (primeira guia)
+      switchTab('respostas');
 
       const modal = document.getElementById('modalClientSheet');
       if (modal) modal.classList.remove('hidden');
@@ -824,6 +840,57 @@ document.addEventListener('DOMContentLoaded', async () => {
       Object.assign(currentActiveCard, updatedData);
       loadUserCards();
       showToast('Ficha do cliente salva com sucesso!');
+    });
+  }
+
+  // Salvamento das informações da guia RESPOSTAS no Supabase
+  const clientAnswersForm = document.getElementById('clientAnswersForm');
+  const saveClientAnswersBtn = document.getElementById('saveClientAnswersBtn');
+
+  if (clientAnswersForm) {
+    clientAnswersForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentActiveCard || !supabase) return;
+
+      if (saveClientAnswersBtn) {
+        saveClientAnswersBtn.disabled = true;
+        saveClientAnswersBtn.innerHTML = 'Salvando...';
+      }
+
+      const respJaContribuiu = document.getElementById('respJaContribuiu');
+      const respTempoContribuicao = document.getElementById('respTempoContribuicao');
+      const respTipoTrabalho = document.getElementById('respTipoTrabalho');
+      const respSolicitouBeneficio = document.getElementById('respSolicitouBeneficio');
+      const respDetalhes = document.getElementById('respDetalhes');
+
+      const updatedAnswers = {
+        ja_contribuiu: respJaContribuiu ? respJaContribuiu.value : '',
+        tempo_contribuicao: respTempoContribuicao && respTempoContribuicao.value !== '' ? parseInt(respTempoContribuicao.value, 10) : null,
+        tipo_trabalho: respTipoTrabalho ? respTipoTrabalho.value : '',
+        solicitou_beneficio: respSolicitouBeneficio ? respSolicitouBeneficio.value : '',
+        detalhes: respDetalhes ? respDetalhes.value.trim() : ''
+      };
+
+      const { error } = await supabase
+        .from('oportunidades_crm')
+        .update(updatedAnswers)
+        .eq('id', currentActiveCard.id);
+
+      if (saveClientAnswersBtn) {
+        saveClientAnswersBtn.disabled = false;
+        saveClientAnswersBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Salvar Respostas
+        `;
+      }
+
+      if (error) {
+        showToast('Erro ao salvar respostas: ' + error.message);
+        return;
+      }
+
+      Object.assign(currentActiveCard, updatedAnswers);
+      showToast('Respostas salvas com sucesso!');
     });
   }
 
@@ -1032,6 +1099,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.key === 'Escape' && modalReassignUser) closeReassignUserModal();
   });
 
+  const tabContentRespostas = document.getElementById('tabContentRespostas');
+
   function switchTab(targetTab) {
     browserTabs.forEach(tab => {
       if (tab.dataset.tab === targetTab) {
@@ -1043,10 +1112,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (targetTab === 'ficha') {
       if (tabContentFicha) tabContentFicha.classList.remove('hidden');
+      if (tabContentRespostas) tabContentRespostas.classList.add('hidden');
+      if (tabContentDocumentos) tabContentDocumentos.classList.add('hidden');
+    } else if (targetTab === 'respostas') {
+      if (tabContentRespostas) tabContentRespostas.classList.remove('hidden');
+      if (tabContentFicha) tabContentFicha.classList.add('hidden');
       if (tabContentDocumentos) tabContentDocumentos.classList.add('hidden');
     } else if (targetTab === 'documentos') {
       if (tabContentDocumentos) tabContentDocumentos.classList.remove('hidden');
       if (tabContentFicha) tabContentFicha.classList.add('hidden');
+      if (tabContentRespostas) tabContentRespostas.classList.add('hidden');
     }
   }
 
