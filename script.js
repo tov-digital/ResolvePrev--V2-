@@ -1,4 +1,10 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Inicialização do Supabase Client
+  const SUPABASE_URL = 'https://jqyxtrzcwgropuqchwiz.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxeXh0cnpjd2dyb3B1cWNod2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjIzMDgsImV4cCI6MjEwMjAzODMwOH0.m9ZpiTanwhl5SzzAfJoTs1x9KekWuFqB0C3d__0mIbA';
+
+  const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
   // DOM Elements - Login
   const loginForm = document.getElementById('loginForm');
   const emailInput = document.getElementById('emailInput');
@@ -34,6 +40,22 @@ document.addEventListener('DOMContentLoaded', () => {
     currentYearSpan.textContent = new Date().getFullYear();
   }
 
+  // Verificar sessão ativa do Supabase ao carregar
+  if (supabase) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session && session.user) {
+      showDashboard(session.user.email);
+    }
+  }
+
+  function showDashboard(email) {
+    if (userDisplayEmail) {
+      userDisplayEmail.textContent = email;
+    }
+    loginScreen.classList.add('hidden');
+    blankDashboardScreen.classList.remove('hidden');
+  }
+
   /* ==========================================
      1. MOSTRAR / OCULTAR SENHA
      ========================================== */
@@ -51,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================
-     2. VALIDAÇÃO DO FORMULÁRIO DE LOGIN
+     2. VALIDAÇÃO E AUTENTICAÇÃO DE LOGIN (SUPABASE)
      ========================================== */
   function validateEmail(email) {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -66,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     passwordInput.parentElement.parentElement.classList.remove('invalid');
   });
 
-  loginForm.addEventListener('submit', (e) => {
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     let isValid = true;
 
@@ -94,21 +116,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Iniciar animação de login
     setLoadingState(true);
 
-    // Simular autenticação e redirecionar para a tela em branco
-    setTimeout(() => {
+    if (supabase) {
+      // Autenticação real via Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailValue,
+        password: passwordValue
+      });
+
       setLoadingState(false);
 
-      // Atualizar e-mail na tela pós-login
-      if (userDisplayEmail) {
-        userDisplayEmail.textContent = emailValue;
+      if (error) {
+        showToast(error.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : error.message);
+        return;
       }
 
-      // Transição para a tela em branco pós-login
-      loginScreen.classList.add('hidden');
-      blankDashboardScreen.classList.remove('hidden');
-
+      showDashboard(data.user.email);
       showToast('Autenticação realizada com sucesso! Bem-vindo.');
-    }, 1200);
+    } else {
+      // Fallback de demonstração caso o SDK não carregue
+      setTimeout(() => {
+        setLoadingState(false);
+        showDashboard(emailValue);
+        showToast('Autenticação realizada com sucesso! (Modo Demo)');
+      }, 1000);
+    }
   });
 
   function setLoadingState(loading) {
@@ -128,7 +159,10 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================
      3. LOGOUT (VOLTAR PARA A TELA DE LOGIN)
      ========================================== */
-  logoutBtn.addEventListener('click', () => {
+  logoutBtn.addEventListener('click', async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     blankDashboardScreen.classList.add('hidden');
     loginScreen.classList.remove('hidden');
     passwordInput.value = '';
