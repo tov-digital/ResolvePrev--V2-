@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Portal de Acesso - ResolvePrev Soluções Previdenciárias">
+  <title>ResolvePrev | Login do Sistema</title>
+  
+  <!-- Tipografia Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body>
+
+  <!-- ==================== TELA DE LOGIN ==================== -->
+  <main id="loginScreen" class="login-wrapper">
+    <!-- Imagem de Fundo sobreposta por Overlay Escuro -->
+    <div class="bg-container">
+      <img src="assets/images/Fachada.webp" alt="Fachada ResolvePrev" class="bg-image" id="bgImage">
+      <div class="bg-overlay"></div>
+    </div>
+
+    <!-- Card de Login (Glassmorphism Overlaid) -->
+    <div class="login-card-container">
+      <div class="login-card">
+        
+        <!-- Área da Logo -->
+        <header class="logo-area">
+          <div class="logo-badge">
+            <img src="assets/images/resolveprev-logo.png" alt="Logo ResolvePrev" class="logo-img" id="logoImg">
+          </div>
+          <h1 class="brand-title">ResolvePrev</h1>
+          <p class="brand-subtitle">SOLUÇÕES PREVIDENCIÁRIAS</p>
+          <div class="divider-gold"></div>
+        </header>
+
+        <!-- Formulário de Login -->
+        <form id="loginForm" class="login-form" novalidate>
+          
+          <!-- Campo E-mail -->
+          <div class="input-group">
+            <label for="emailInput" class="input-label">E-mail</label>
+            <div class="input-field-wrapper">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+              <input 
+                type="email" 
+                id="emailInput" 
+                name="email" 
+                class="form-control" 
+                placeholder="seu.email@resolveprev.com.br"
+                required
+                autocomplete="email"
+              >
+            </div>
+            <span class="error-message" id="emailError">Digite um e-mail válido</span>
+          </div>
+
+          <!-- Campo Senha -->
+          <div class="input-group">
+            <div class="label-row">
+              <label for="passwordInput" class="input-label">Senha</label>
+            </div>
+            <div class="input-field-wrapper">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input 
+                type="password" 
+                id="passwordInput" 
+                name="password" 
+                class="form-control" 
+                placeholder="••••••••••••"
+                required
+                autocomplete="current-password"
+              >
+              <button type="button" id="togglePasswordBtn" class="toggle-password-btn" title="Mostrar/ocultar senha" aria-label="Alternar visibilidade da senha">
+                <svg id="eyeIcon" class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg id="eyeOffIcon" class="eye-icon hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                  <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+                  <line x1="2" x2="22" y1="2" y2="22"/>
+                </svg>
+              </button>
+            </div>
+            <span class="error-message" id="passwordError">A senha é obrigatória</span>
+          </div>
+
+          <!-- Opções adicionais e Link Recuperar Acesso -->
+          <div class="form-options">
+            <label class="remember-me">
+              <input type="checkbox" id="rememberMe">
+              <span>Lembrar acesso</span>
+            </label>
+            <a href="#" id="forgotPassLink" class="link-gold">Recuperar acesso</a>
+          </div>
+
+          <!-- Botão Entrar -->
+          <button type="submit" id="submitBtn" class="btn-submit">
+            <span class="btn-text">Entrar</span>
+            <span class="spinner hidden" id="btnSpinner"></span>
+          </button>
+
+          <!-- Link Primeiro Acesso -->
+          <div class="first-access-wrapper">
+            <p>Novo no sistema?</p>
+            <a href="#" id="firstAccessLink" class="link-highlight">Primeiro acesso</a>
+          </div>
+
+        </form>
+
+        <!-- Footer do Card -->
+        <footer class="card-footer">
+          <p>© <span id="currentYear"></span> ResolvePrev. Todos os direitos reservados.</p>
+        </footer>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== TELA EM BRANCO (PÓS-LOGIN) ==================== -->
+  <div id="blankDashboardScreen" class="blank-screen hidden">
+    <header class="blank-header">
+      <div class="blank-header-left">
+        <div class="blank-logo-mini">
+          <img src="assets/images/resolveprev-logo.png" alt="Logo">
+        </div>
+        <h2>ResolvePrev | Painel do Sistema</h2>
+      </div>
+      <div class="blank-header-right">
+        <span id="userDisplayEmail" class="user-badge">usuario@resolveprev.com.br</span>
+        <button id="logoutBtn" class="btn-logout">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" x2="9" y1="12" y2="12"/>
+          </svg>
+          Sair
+        </button>
+      </div>
+    </header>
+    <main class="blank-content">
+      <!-- Área intencionalmente em branco conforme solicitado -->
+      <div class="blank-canvas-message">
+        <div class="blank-icon">⚖️</div>
+        <h3>Sistema Autenticado</h3>
+        <p>Tela inicial em branco pronta para o desenvolvimento dos próximos módulos.</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== MODAL: RECUPERAR ACESSO ==================== -->
+  <div id="modalRecovery" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" id="closeRecoveryModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+          </svg>
+        </div>
+        <h3>Recuperar Acesso</h3>
+        <p>Digite seu e-mail cadastrado para receber as instruções de redefinição de senha.</p>
+      </div>
+      <form id="recoveryForm" class="modal-form">
+        <div class="input-group">
+          <label for="recoveryEmail" class="input-label">E-mail Cadastrado</label>
+          <input type="email" id="recoveryEmail" class="form-control" placeholder="seu.email@resolveprev.com.br" required>
+        </div>
+        <button type="submit" id="recoverySubmitBtn" class="btn-submit">
+          <span class="btn-text">Enviar Link de Recuperação</span>
+          <span class="spinner hidden" id="recoverySpinner"></span>
+        </button>
+      </form>
+      <div id="recoverySuccess" class="alert-success hidden">
+        ✓ Pedido de recuperação enviado com sucesso! Por favor, verifique seu e-mail para completar a recuperação de senha.
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: PRIMEIRO ACESSO ==================== -->
+  <div id="modalFirstAccess" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" id="closeFirstAccessModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" x2="19" y1="8" y2="14"/>
+            <line x1="22" x2="16" y1="11" y2="11"/>
+          </svg>
+        </div>
+        <h3>Solicitar Primeiro Acesso</h3>
+        <p>Preencha os dados abaixo para validar seu cadastro na secretaria.</p>
+      </div>
+      <form id="firstAccessForm" class="modal-form">
+        <div class="input-group">
+          <label for="faName" class="input-label">Nome Completo</label>
+          <input type="text" id="faName" class="form-control" placeholder="Dr. João Silva" required>
+        </div>
+        <div class="input-group">
+          <label for="faEmail" class="input-label">E-mail Institucional</label>
+          <input type="email" id="faEmail" class="form-control" placeholder="nome@resolveprev.com.br" required>
+        </div>
+        <div class="input-group">
+          <label for="faOab" class="input-label">OAB / CPF</label>
+          <input type="text" id="faOab" class="form-control" placeholder="OAB/SP 123.456" required>
+        </div>
+        <button type="submit" class="btn-submit">Solicitar Ativação de Conta</button>
+      </form>
+      <div id="firstAccessSuccess" class="alert-success hidden">
+        ✓ Solicitação enviada! O administrador entrará em contato para liberação de acesso.
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
