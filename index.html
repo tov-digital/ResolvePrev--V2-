@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=26">
+  <link rel="stylesheet" href="styles.css?v=30">
 </head>
 <body>
 
@@ -394,7 +394,9 @@
         
         <!-- Barra de Ferramentas Superior Interna (Parte Branca) -->
         <div class="sheet-internal-header">
-          <h2 id="sheetClientName" class="sheet-title">Ficha do Cliente</h2>
+          <div class="sheet-title-wrapper">
+            <input type="text" id="sheetClientNameInput" class="sheet-title-input" value="Novo Cliente" placeholder="Nome completo do cliente">
+          </div>
 
           <div class="sheet-right-tools">
             <!-- Dropdown Etiqueta (Status da Coluna) -->
@@ -436,11 +438,128 @@
           </div>
         </div>
 
-        <!-- Conteúdo da Guia: FICHA -->
+        <!-- Conteúdo da Guia: FICHA (Campos do Cliente) -->
         <div id="tabContentFicha" class="tab-pane active">
-          <div class="sheet-placeholder">
-            <p>Conteúdo da Ficha do Cliente em desenvolvimento.</p>
-          </div>
+          <form id="clientSheetForm" class="sheet-form-container">
+            
+            <!-- Seção: Dados Pessoais -->
+            <div class="sheet-form-section">
+              <h4 class="sheet-section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Dados Pessoais & Contato
+              </h4>
+              
+              <div class="sheet-form-grid">
+                <!-- Telefone -->
+                <div class="sheet-field-group">
+                  <label for="sheetPhone">Telefone *</label>
+                  <input type="text" id="sheetPhone" placeholder="(99) 99999-9999" maxlength="15">
+                </div>
+
+                <!-- E-mail -->
+                <div class="sheet-field-group">
+                  <label for="sheetEmail">E-mail</label>
+                  <input type="email" id="sheetEmail" placeholder="exemplo@email.com">
+                </div>
+
+                <!-- Profissão -->
+                <div class="sheet-field-group">
+                  <label for="sheetProfissao">Profissão</label>
+                  <input type="text" id="sheetProfissao" placeholder="Ex: Advogado, Autônomo">
+                </div>
+
+                <!-- Estado Civil -->
+                <div class="sheet-field-group">
+                  <label for="sheetEstadoCivil">Estado Civil</label>
+                  <select id="sheetEstadoCivil">
+                    <option value="">Selecione...</option>
+                    <option value="Solteiro(a)">Solteiro(a)</option>
+                    <option value="Casado(a)">Casado(a)</option>
+                    <option value="Divorciado(a)">Divorciado(a)</option>
+                    <option value="Viúvo(a)">Viúvo(a)</option>
+                  </select>
+                </div>
+
+                <!-- RG -->
+                <div class="sheet-field-group">
+                  <label for="sheetRg">RG</label>
+                  <input type="text" id="sheetRg" placeholder="Apenas números">
+                </div>
+
+                <!-- CPF -->
+                <div class="sheet-field-group">
+                  <label for="sheetCpf">CPF</label>
+                  <input type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
+                </div>
+              </div>
+            </div>
+
+            <!-- Seção: Endereço -->
+            <div class="sheet-form-section">
+              <h4 class="sheet-section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Endereço
+              </h4>
+
+              <div class="sheet-form-grid">
+                <!-- CEP -->
+                <div class="sheet-field-group">
+                  <label for="sheetCep">CEP</label>
+                  <input type="text" id="sheetCep" placeholder="99.999-999" maxlength="10">
+                </div>
+
+                <!-- UF -->
+                <div class="sheet-field-group">
+                  <label for="sheetUf">UF</label>
+                  <select id="sheetUf">
+                    <option value="">Selecione...</option>
+                    <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                    <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                    <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                    <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                    <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                    <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                    <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                    <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                    <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                  </select>
+                </div>
+
+                <!-- Endereço (Logradouro + Número) -->
+                <div class="sheet-field-group span-2">
+                  <label for="sheetEndereco">Endereço</label>
+                  <input type="text" id="sheetEndereco" placeholder="Rua, Avenida, Número...">
+                </div>
+
+                <!-- Complemento -->
+                <div class="sheet-field-group">
+                  <label for="sheetComplemento">Complemento</label>
+                  <input type="text" id="sheetComplemento" placeholder="Apto, Bloco, Casa...">
+                </div>
+
+                <!-- Bairro -->
+                <div class="sheet-field-group">
+                  <label for="sheetBairro">Bairro</label>
+                  <input type="text" id="sheetBairro" placeholder="Nome do Bairro">
+                </div>
+
+                <!-- Cidade -->
+                <div class="sheet-field-group span-2">
+                  <label for="sheetCidade">Cidade</label>
+                  <input type="text" id="sheetCidade" placeholder="Nome da Cidade">
+                </div>
+              </div>
+            </div>
+
+            <!-- Botão de Salvar Alterações da Ficha -->
+            <div class="sheet-form-actions">
+              <button type="submit" id="saveClientSheetBtn" class="btn-save-sheet">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Salvar Ficha do Cliente
+              </button>
+            </div>
+
+          </form>
         </div>
 
         <!-- Conteúdo da Guia: DOCUMENTOS -->
@@ -587,6 +706,6 @@
 
   <!-- Supabase JS Client SDK v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js"></script>
+  <script src="script.js?v=30"></script>
 </body>
 </html>

@@ -58,6 +58,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Dicionários Globais de Estágios
+  const stageLabels = {
+    'novo': 'Novo',
+    'qualificacao': 'Qualificação',
+    'acompanhamento': 'Acompanhamento',
+    'reuniao': 'Reunião',
+    'proposta': 'Proposta'
+  };
+
+  const stageDotClasses = {
+    'novo': 'dot-novo',
+    'qualificacao': 'dot-qualificacao',
+    'acompanhamento': 'dot-acompanhamento',
+    'reuniao': 'dot-reuniao',
+    'proposta': 'dot-proposta'
+  };
+
   function showDashboard(user) {
     let name = '';
 
@@ -614,10 +631,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Evento de Exclusão do Card com Modal Customizado
     const btnDelete = cardDiv.querySelector('.btn-delete-card');
-    btnDelete.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openDeleteModal(card, cardDiv);
-    });
+    if (btnDelete) {
+      btnDelete.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDeleteModal(card, cardDiv);
+      });
+    }
 
     return cardDiv;
   }
@@ -627,47 +646,185 @@ document.addEventListener('DOMContentLoaded', async () => {
      ========================================== */
   const modalClientSheet = document.getElementById('modalClientSheet');
   const closeClientSheetModal = document.getElementById('closeClientSheetModal');
-  const sheetClientName = document.getElementById('sheetClientName');
   const browserTabs = document.querySelectorAll('.browser-tab');
   const tabContentFicha = document.getElementById('tabContentFicha');
   const tabContentDocumentos = document.getElementById('tabContentDocumentos');
+  const sheetClientNameInput = document.getElementById('sheetClientNameInput');
+  const clientSheetForm = document.getElementById('clientSheetForm');
+  const sheetPhone = document.getElementById('sheetPhone');
+  const sheetEmail = document.getElementById('sheetEmail');
+  const sheetProfissao = document.getElementById('sheetProfissao');
+  const sheetEstadoCivil = document.getElementById('sheetEstadoCivil');
+  const sheetRg = document.getElementById('sheetRg');
+  const sheetCpf = document.getElementById('sheetCpf');
+  const sheetCep = document.getElementById('sheetCep');
+  const sheetEndereco = document.getElementById('sheetEndereco');
+  const sheetComplemento = document.getElementById('sheetComplemento');
+  const sheetUf = document.getElementById('sheetUf');
+  const sheetCidade = document.getElementById('sheetCidade');
+  const sheetBairro = document.getElementById('sheetBairro');
+  const saveClientSheetBtn = document.getElementById('saveClientSheetBtn');
 
-  const sheetReassignBtn = document.getElementById('sheetReassignBtn');
-  const sheetDeleteBtn = document.getElementById('sheetDeleteBtn');
-  let currentActiveCard = null;
+  // Máscaras de entrada em tempo real
+  if (sheetPhone) {
+    sheetPhone.addEventListener('input', (e) => {
+      let v = e.target.value.replace(/\D/g, '');
+      if (v.length > 11) v = v.slice(0, 11);
+      if (v.length > 10) {
+        v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+      } else if (v.length > 6) {
+        v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+      } else if (v.length > 2) {
+        v = v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+      } else if (v.length > 0) {
+        v = v.replace(/^(\d*)$/, '($1');
+      }
+      e.target.value = v;
+    });
+  }
 
-  const sheetStatusDropdownBtn = document.getElementById('sheetStatusDropdownBtn');
-  const statusDropdownMenu = document.getElementById('statusDropdownMenu');
-  const sheetStatusText = document.getElementById('sheetStatusText');
-  const sheetStatusDot = document.getElementById('sheetStatusDot');
+  if (sheetCpf) {
+    sheetCpf.addEventListener('input', (e) => {
+      let v = e.target.value.replace(/\D/g, '');
+      if (v.length > 11) v = v.slice(0, 11);
+      v = v.replace(/(\d{3})(\d)/, '$1.$2');
+      v = v.replace(/(\d{3})(\d)/, '$1.$2');
+      v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      e.target.value = v;
+    });
+  }
 
-  const stageLabels = {
-    'novo': 'Novo',
-    'qualificacao': 'Qualificação',
-    'acompanhamento': 'Acompanhamento',
-    'reuniao': 'Reunião',
-    'proposta': 'Proposta'
-  };
+  if (sheetCep) {
+    sheetCep.addEventListener('input', (e) => {
+      let v = e.target.value.replace(/\D/g, '');
+      if (v.length > 8) v = v.slice(0, 8);
+      v = v.replace(/^(\d{2})(\d{3})(\d{3})$/, '$1.$2-$3');
+      e.target.value = v;
+    });
+  }
 
-  const stageDotClasses = {
-    'novo': 'dot-novo',
-    'qualificacao': 'dot-qualificacao',
-    'acompanhamento': 'dot-acompanhamento',
-    'reuniao': 'dot-reuniao',
-    'proposta': 'dot-proposta'
-  };
+  if (sheetRg) {
+    sheetRg.addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, '');
+    });
+  }
 
   function openClientSheetModal(card) {
-    currentActiveCard = card;
-    if (sheetClientName) sheetClientName.textContent = card.nome || 'Ficha do Cliente';
-    
-    // Atualizar estado visual do botão Etiqueta (Status)
-    updateStatusTagUI(card.status || 'novo');
+    try {
+      currentActiveCard = card;
+      
+      // Preencher Nome (Título editável)
+      const inputName = document.getElementById('sheetClientNameInput');
+      if (inputName) inputName.value = card.nome || '';
+      
+      // Preencher demais campos da Ficha com segurança
+      const elPhone = document.getElementById('sheetPhone');
+      if (elPhone) elPhone.value = card.telefone || '';
 
-    // Resetar para a aba 'Ficha' ativa por padrão
-    switchTab('ficha');
+      const elEmail = document.getElementById('sheetEmail');
+      if (elEmail) elEmail.value = card.email || '';
 
-    if (modalClientSheet) modalClientSheet.classList.remove('hidden');
+      const elProfissao = document.getElementById('sheetProfissao');
+      if (elProfissao) elProfissao.value = card.profissao || '';
+
+      const elEstadoCivil = document.getElementById('sheetEstadoCivil');
+      if (elEstadoCivil) elEstadoCivil.value = card.estado_civil || '';
+
+      const elRg = document.getElementById('sheetRg');
+      if (elRg) elRg.value = card.rg || '';
+
+      const elCpf = document.getElementById('sheetCpf');
+      if (elCpf) elCpf.value = card.cpf || '';
+
+      const elCep = document.getElementById('sheetCep');
+      if (elCep) elCep.value = card.cep || '';
+
+      const elEndereco = document.getElementById('sheetEndereco');
+      if (elEndereco) elEndereco.value = card.endereco || '';
+
+      const elComplemento = document.getElementById('sheetComplemento');
+      if (elComplemento) elComplemento.value = card.complemento || '';
+
+      const elUf = document.getElementById('sheetUf');
+      if (elUf) elUf.value = card.uf || '';
+
+      const elCidade = document.getElementById('sheetCidade');
+      if (elCidade) elCidade.value = card.cidade || '';
+
+      const elBairro = document.getElementById('sheetBairro');
+      if (elBairro) elBairro.value = card.bairro || '';
+
+      // Atualizar estado visual do botão Etiqueta (Status)
+      updateStatusTagUI(card.status || 'novo');
+
+      // Resetar para a aba 'Ficha' ativa por padrão
+      switchTab('ficha');
+
+      const modal = document.getElementById('modalClientSheet');
+      if (modal) modal.classList.remove('hidden');
+    } catch (err) {
+      console.error('Erro ao abrir ficha do cliente:', err);
+    }
+  }
+
+  // Salvamento das informações da Ficha no Supabase
+  if (clientSheetForm) {
+    clientSheetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentActiveCard || !supabase) return;
+
+      const updatedNome = sheetClientNameInput ? sheetClientNameInput.value.trim() : '';
+      const updatedPhone = sheetPhone ? sheetPhone.value.trim() : '';
+
+      if (!updatedNome) {
+        showToast('O nome do cliente é obrigatório.');
+        return;
+      }
+
+      if (saveClientSheetBtn) {
+        saveClientSheetBtn.disabled = true;
+        saveClientSheetBtn.innerHTML = 'Salvando...';
+      }
+
+      const updatedData = {
+        nome: updatedNome,
+        telefone: updatedPhone,
+        email: sheetEmail ? sheetEmail.value.trim() : '',
+        profissao: sheetProfissao ? sheetProfissao.value.trim() : '',
+        estado_civil: sheetEstadoCivil ? sheetEstadoCivil.value : '',
+        rg: sheetRg ? sheetRg.value.trim() : '',
+        cpf: sheetCpf ? sheetCpf.value.trim() : '',
+        cep: sheetCep ? sheetCep.value.trim() : '',
+        endereco: sheetEndereco ? sheetEndereco.value.trim() : '',
+        complemento: sheetComplemento ? sheetComplemento.value.trim() : '',
+        uf: sheetUf ? sheetUf.value : '',
+        cidade: sheetCidade ? sheetCidade.value.trim() : '',
+        bairro: sheetBairro ? sheetBairro.value.trim() : ''
+      };
+
+      const { error } = await supabase
+        .from('oportunidades_crm')
+        .update(updatedData)
+        .eq('id', currentActiveCard.id);
+
+      if (saveClientSheetBtn) {
+        saveClientSheetBtn.disabled = false;
+        saveClientSheetBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Salvar Ficha do Cliente
+        `;
+      }
+
+      if (error) {
+        showToast('Erro ao salvar ficha: ' + error.message);
+        return;
+      }
+
+      // Atualizar objeto local ativo e recarregar os cards no Kanban
+      Object.assign(currentActiveCard, updatedData);
+      loadUserCards();
+      showToast('Ficha do cliente salva com sucesso!');
+    });
   }
 
   function updateStatusTagUI(stage) {
@@ -919,15 +1076,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
-
-
-
-  // Carregar os cards ao exibir o Dashboard
-  const originalShowDashboard = showDashboard;
-  showDashboard = function(user) {
-    originalShowDashboard(user);
-    loadUserCards();
-  };
 
   /* ==========================================
      6. TOAST NOTIFICATIONS
