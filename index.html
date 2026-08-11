@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=49">
+  <link rel="stylesheet" href="styles.css?v=51">
 </head>
 <body>
 
@@ -316,22 +316,26 @@
 
       </section>
 
-      <!-- Corpo da Visualização: LISTA (Inicialmente oculta) -->
+      <!-- Corpo da Visualização: LISTA -->
       <section id="crmListView" class="crm-view-container crm-list-table-container hidden">
         <table class="crm-list-table">
           <thead>
             <tr>
-              <th>Oportunidade / Cliente</th>
-              <th>Estágio / Coluna</th>
-              <th>Valor (R$)</th>
-              <th>Responsável</th>
-              <th>Data de Criação</th>
-              <th class="text-right">Ações</th>
+              <th class="col-checkbox text-center">
+                <input type="checkbox" id="selectAllListCheckbox" class="list-checkbox" title="Selecionar Todos">
+              </th>
+              <th class="col-avatar text-center">Iniciais</th>
+              <th>Nome Completo</th>
+              <th>Telefone / WhatsApp</th>
+              <th>Profissão</th>
+              <th>Data de Requerimento</th>
+              <th>Status / Estágio</th>
+              <th class="col-actions text-center">Observações</th>
             </tr>
           </thead>
           <tbody id="crmListTbody">
             <tr class="empty-row">
-              <td colspan="6" class="text-center">Nenhuma oportunidade cadastrada até o momento.</td>
+              <td colspan="8" class="text-center">Nenhuma oportunidade cadastrada até o momento.</td>
             </tr>
           </tbody>
         </table>
@@ -652,7 +656,7 @@
           <div class="docs-container">
             <!-- Categoria: Obrigatórios (Toggle / Collapsible) -->
             <div class="docs-category-card">
-              <button type="button" class="docs-category-toggle" id="toggleObrigatoriosBtn" aria-expanded="true">
+              <button type="button" class="docs-category-toggle" id="toggleObrigatoriosBtn" aria-expanded="false">
                 <div class="docs-category-title-inner">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                   <span>Obrigatórios</span>
@@ -661,7 +665,7 @@
                 <svg class="toggle-chevron-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
 
-              <div id="listObrigatoriosContent" class="docs-list">
+              <div id="listObrigatoriosContent" class="docs-list collapsed">
                 <!-- Documento 1 -->
                 <div class="doc-item">
                   <span class="doc-name">Procurações, Termo e Contrato</span>
@@ -706,7 +710,7 @@
 
             <!-- Categoria: Eventuais (Toggle / Dinâmico) -->
             <div class="docs-category-card">
-              <button type="button" class="docs-category-toggle" id="toggleEventuaisBtn" aria-expanded="true">
+              <button type="button" class="docs-category-toggle" id="toggleEventuaisBtn" aria-expanded="false">
                 <div class="docs-category-title-inner">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
                   <span>Eventuais</span>
@@ -715,7 +719,7 @@
                 <svg class="toggle-chevron-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
 
-              <div id="listEventuaisContent" class="docs-list">
+              <div id="listEventuaisContent" class="docs-list collapsed">
                 <!-- Formulário para Adicionar Novo Documento Eventual -->
                 <div class="add-eventual-doc-row">
                   <input type="text" id="newEventualDocName" placeholder="Nome do documento eventual..." class="add-doc-input">
@@ -955,6 +959,6 @@
 
   <!-- Supabase JS Client SDK v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=49"></script>
+  <script src="script.js?v=51"></script>
 </body>
 </html>

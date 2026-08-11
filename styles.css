@@ -1174,26 +1174,130 @@ html, body {
 }
 
 .crm-list-table th {
-  background-color: #FAFAFA;
+  background-color: #F8FAFC;
   color: var(--text-secondary);
   font-weight: 700;
-  padding: 0.9rem 1.25rem;
+  padding: 0.9rem 1rem;
   border-bottom: 1px solid var(--border-light);
   text-transform: uppercase;
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .crm-list-table td {
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--border-light);
   color: var(--color-neutral);
+  vertical-align: middle;
+}
+
+.crm-list-row {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.crm-list-row:hover {
+  background-color: #F8FAFC;
 }
 
 .crm-list-table tr.empty-row td {
   padding: 4rem 1rem;
   color: var(--text-muted);
   font-size: 0.92rem;
+}
+
+/* Colunas Específicas da Lista */
+.col-checkbox {
+  width: 48px;
+  min-width: 48px;
+}
+
+.list-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.col-avatar {
+  width: 54px;
+  min-width: 54px;
+}
+
+.list-user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary-light), #D0E4F7);
+  color: var(--color-primary);
+  font-weight: 800;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  border: 1px solid rgba(30, 80, 128, 0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.list-client-name {
+  color: var(--color-primary);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.list-text-sub {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.column-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background-color: #F1F5F9;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  white-space: nowrap;
+}
+
+.column-status-tag.dot-novo {
+  background-color: #EBF3FA;
+  color: #1E5080;
+  border-color: rgba(30, 80, 128, 0.2);
+}
+
+.column-status-tag.dot-qualificacao {
+  background-color: #FFF7ED;
+  color: #C2410C;
+  border-color: rgba(194, 65, 12, 0.2);
+}
+
+.column-status-tag.dot-acompanhamento {
+  background-color: #F3E8FF;
+  color: #6B21A8;
+  border-color: rgba(107, 33, 168, 0.2);
+}
+
+.column-status-tag.dot-reuniao {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border-color: rgba(146, 64, 14, 0.2);
+}
+
+.column-status-tag.dot-proposta {
+  background-color: #F0FDF4;
+  color: #15803D;
+  border-color: rgba(21, 128, 61, 0.2);
+}
+
+.list-notes-btn {
+  margin: 0 auto;
 }
 
 .text-center { text-align: center; }

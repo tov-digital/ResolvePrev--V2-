@@ -553,7 +553,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const countSpan = column.querySelector('.column-count');
         container.innerHTML = '';
         
-        const stageCards = cards.filter(c => c.status === stage);
+        // Filtrar cards da coluna e ordenar pela última atualização (mais recente primeiro)
+        const stageCards = cards.filter(c => c.status === stage).sort((a, b) => {
+          const dateA = new Date(a.atualizado_em || a.criado_em || 0).getTime();
+          const dateB = new Date(b.atualizado_em || b.criado_em || 0).getTime();
+          return dateB - dateA;
+        });
+
         countSpan.textContent = stageCards.length;
 
         stageCards.forEach(card => {
@@ -561,6 +567,155 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       }
     });
+  }
+
+  function renderListView(cards) {
+    const tbody = document.getElementById('crmListTbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (!cards || cards.length === 0) {
+      tbody.innerHTML = `
+        <tr class="empty-row">
+          <td colspan="8" class="text-center">Nenhuma oportunidade encontrada.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    // Ordenar cards pela última atualização (mais recente no topo)
+    const sortedCards = [...cards].sort((a, b) => {
+      const dateA = new Date(a.atualizado_em || a.criado_em || 0).getTime();
+      const dateB = new Date(b.atualizado_em || b.criado_em || 0).getTime();
+      return dateB - dateA;
+    });
+
+    sortedCards.forEach(card => {
+      const tr = document.createElement('tr');
+      tr.className = 'crm-list-row';
+      tr.dataset.id = card.id;
+
+      // 1. Inicial
+      const clientName = card.nome || 'Sem Nome';
+      const initial = clientName.trim().charAt(0).toUpperCase();
+
+      // 2. Data Requerimento & Cor
+      let formattedDate = '--/--/--';
+      let dateBadgeClass = 'date-gray';
+
+      if (card.data_requerimento) {
+        const [year, month, day] = card.data_requerimento.split('-').map(Number);
+        formattedDate = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${String(year).slice(-2)}`;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const targetDate = new Date(year, month - 1, day);
+        targetDate.setHours(0, 0, 0, 0);
+
+        const diffTime = targetDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+          dateBadgeClass = 'date-purple';
+        } else if (diffDays <= 7) {
+          dateBadgeClass = 'date-red';
+        } else if (diffDays <= 30) {
+          dateBadgeClass = 'date-yellow';
+        } else {
+          dateBadgeClass = 'date-gray';
+        }
+      }
+
+      // 3. Link WhatsApp
+      const rawPhone = card.telefone ? card.telefone.replace(/\D/g, '') : '';
+      const whatsappUrl = rawPhone ? `https://wa.me/55${rawPhone}` : '#';
+
+      // 4. Quantidade de Notas Internas
+      let notes = card.notas_internas;
+      if (typeof notes === 'string') {
+        try { notes = JSON.parse(notes); } catch (e) { notes = []; }
+      }
+      const notesCount = Array.isArray(notes) ? notes.length : 0;
+
+      // Structure da Linha
+      tr.innerHTML = `
+        <td class="col-checkbox text-center" onclick="event.stopPropagation()">
+          <input type="checkbox" class="list-checkbox row-select-checkbox" data-id="${card.id}">
+        </td>
+        <td class="col-avatar text-center">
+          <div class="list-user-avatar">${initial}</div>
+        </td>
+        <td class="col-name">
+          <strong class="list-client-name">${escapeHtml(clientName)}</strong>
+        </td>
+        <td class="col-phone">
+          <a href="${whatsappUrl}" target="_blank" class="whatsapp-link" onclick="event.stopPropagation()" title="Abrir no WhatsApp">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            ${escapeHtml(card.telefone || 'Sem telefone')}
+          </a>
+        </td>
+        <td class="col-profissao">
+          <span class="list-text-sub">${escapeHtml(card.profissao || 'Não informada')}</span>
+        </td>
+        <td class="col-date">
+          <div class="card-detail-item card-date-badge ${dateBadgeClass}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+              <line x1="16" x2="16" y1="2" y2="6"/>
+              <line x1="8" x2="8" y1="2" y2="6"/>
+              <line x1="3" x2="21" y1="10" y2="10"/>
+            </svg>
+            Req: ${formattedDate}
+            <span class="date-dot" title="Status da Data"></span>
+          </div>
+        </td>
+        <td class="col-status">
+          <span class="column-status-tag ${stageDotClasses[card.status || 'novo']}">
+            <span class="column-status-dot ${stageDotClasses[card.status || 'novo']}"></span>
+            ${stageLabels[card.status || 'novo']}
+          </span>
+        </td>
+        <td class="col-actions text-center" onclick="event.stopPropagation()">
+          <button class="sheet-icon-tool-btn list-notes-btn" title="Ver Observações Internas" aria-label="Ver Observações Internas">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            ${notesCount > 0 ? `<span class="notes-count-badge">${notesCount > 99 ? '99+' : notesCount}</span>` : ''}
+          </button>
+        </td>
+      `;
+
+      // Clique na linha abre a ficha do cliente normalmente
+      tr.addEventListener('click', (e) => {
+        if (e.target.closest('.whatsapp-link') || e.target.closest('.list-checkbox') || e.target.closest('.list-notes-btn')) return;
+        openClientSheetModal(card);
+      });
+
+      // Clique no botão de observações da linha abre a ficha e a gaveta lateral
+      const btnNotes = tr.querySelector('.list-notes-btn');
+      if (btnNotes) {
+        btnNotes.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openClientSheetModal(card);
+          openNotesSidebar();
+        });
+      }
+
+      tbody.appendChild(tr);
+    });
+
+    // Checkbox de Selecionar Todos
+    const selectAllCheckbox = document.getElementById('selectAllListCheckbox');
+    if (selectAllCheckbox) {
+      selectAllCheckbox.checked = false;
+      selectAllCheckbox.onclick = (e) => {
+        const isChecked = e.target.checked;
+        tbody.querySelectorAll('.row-select-checkbox').forEach(cb => cb.checked = isChecked);
+      };
+    }
   }
 
   function createCardElement(card) {
@@ -708,7 +863,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* Função genérica para alterar o status do card */
   async function changeCardStatus(cardObj, newStage) {
     const oldStage = cardObj.status;
+    const oldAtualizadoEm = cardObj.atualizado_em;
+    const nowIso = new Date().toISOString();
+
     cardObj.status = newStage;
+    cardObj.atualizado_em = nowIso;
+    
     const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
     filterAndRenderCards(searchTerm);
 
@@ -719,11 +879,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (supabase) {
       const { error } = await supabase
         .from('oportunidades_crm')
-        .update({ status: newStage })
+        .update({ 
+          status: newStage,
+          atualizado_em: nowIso
+        })
         .eq('id', cardObj.id);
 
       if (error) {
         cardObj.status = oldStage;
+        cardObj.atualizado_em = oldAtualizadoEm;
         filterAndRenderCards(searchTerm);
         if (currentActiveCard && currentActiveCard.id === cardObj.id) {
           updateStatusTagUI(oldStage);
@@ -998,8 +1162,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Atualizar estado visual do botão Etiqueta (Status)
       updateStatusTagUI(card.status || 'novo');
 
-      // Resetar para a aba 'Respostas' ativa por padrão (primeira guia)
+      // Resetar para a aba 'Respostas' ativa por padrão (primeira guia) e garantir toggles de Documentos recolhidos
       switchTab('respostas');
+
+      const btnObr = document.getElementById('toggleObrigatoriosBtn');
+      const listObr = document.getElementById('listObrigatoriosContent');
+      if (btnObr && listObr) {
+        btnObr.setAttribute('aria-expanded', 'false');
+        listObr.classList.add('collapsed');
+      }
+
+      const btnEv = document.getElementById('toggleEventuaisBtn');
+      const listEv = document.getElementById('listEventuaisContent');
+      if (btnEv && listEv) {
+        btnEv.setAttribute('aria-expanded', 'false');
+        listEv.classList.add('collapsed');
+      }
 
       const modal = document.getElementById('modalClientSheet');
       if (modal) modal.classList.remove('hidden');
