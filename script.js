@@ -193,10 +193,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     modalFirstAccess.classList.add('hidden');
   });
 
-  // Fechar ao clicar fora do card
+  // Fechar ao clicar fora do card ou pressionar ESC
   window.addEventListener('click', (e) => {
     if (e.target === modalRecovery) modalRecovery.classList.add('hidden');
     if (e.target === modalFirstAccess) modalFirstAccess.classList.add('hidden');
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      modalRecovery.classList.add('hidden');
+      modalFirstAccess.classList.add('hidden');
+    }
   });
 
   // Formulário de Recuperação (Webhook n8n)
