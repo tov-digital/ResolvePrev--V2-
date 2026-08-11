@@ -322,7 +322,281 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   /* ==========================================
-     5. TOAST NOTIFICATIONS
+     5. ALTERNÂNCIA DE VISUALIZAÇÃO CRM (KANBAN x LISTA)
+     ========================================== */
+  const viewKanbanBtn = document.getElementById('viewKanbanBtn');
+  const viewListBtn = document.getElementById('viewListBtn');
+  const crmKanbanView = document.getElementById('crmKanbanView');
+  const crmListView = document.getElementById('crmListView');
+
+  if (viewKanbanBtn && viewListBtn && crmKanbanView && crmListView) {
+    viewKanbanBtn.addEventListener('click', () => {
+      viewKanbanBtn.classList.add('active');
+      viewListBtn.classList.remove('active');
+      crmKanbanView.classList.remove('hidden');
+      crmListView.classList.add('hidden');
+    });
+
+    viewListBtn.addEventListener('click', () => {
+      viewListBtn.classList.add('active');
+      viewKanbanBtn.classList.remove('active');
+      crmListView.classList.remove('hidden');
+      crmKanbanView.classList.add('hidden');
+    });
+  }
+
+  /* ==========================================
+     6. GERENCIAMENTO DE CARDS E FLUXO DO CRM (SUPABASE)
+     ========================================== */
+  const modalAddCard = document.getElementById('modalAddCard');
+  const closeAddCardModal = document.getElementById('closeAddCardModal');
+  const addCardForm = document.getElementById('addCardForm');
+  const cardStageInput = document.getElementById('cardStageInput');
+  let currentUserId = null;
+
+  // Clique no '+' cria o card instantaneamente com dados padrão (Sem Pop-up)
+  const crmKanbanBoard = document.getElementById('crmKanbanView');
+  if (crmKanbanBoard) {
+    crmKanbanBoard.addEventListener('click', async (e) => {
+      const btnAdd = e.target.closest('.btn-add-card');
+      if (btnAdd) {
+        const column = btnAdd.closest('.kanban-column');
+        const stage = column ? column.dataset.stage : 'novo';
+        
+        // Dados Padrão para novo card
+        const defaultData = {
+          nome: 'Novo Cliente',
+          telefone: '(11) 99999-9999',
+          data_requerimento: new Date().toISOString().split('T')[0],
+          status: stage
+        };
+
+        if (supabase) {
+          if (!currentUserId) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session && session.user) {
+              currentUserId = session.user.id;
+            }
+          }
+
+          if (!currentUserId) {
+            showToast('Erro: Faça login para adicionar cards.');
+            return;
+          }
+
+          const { error } = await supabase.from('oportunidades_crm').insert([{
+            ...defaultData,
+            user_id: currentUserId
+          }]);
+
+          if (error) {
+            showToast('Erro ao criar card: ' + error.message);
+            return;
+          }
+
+          loadUserCards();
+          showToast('Novo card adicionado!');
+        }
+      }
+    });
+  }
+
+  // Atualizar a renderização do CRM com os cards do usuário logado
+  async function loadUserCards() {
+    if (!supabase) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !session.user) return;
+    currentUserId = session.user.id;
+
+    // Buscar oportunidades atreladas exclusivamente ao usuário logado
+    const { data: cards, error } = await supabase
+      .from('oportunidades_crm')
+      .select('*')
+      .eq('user_id', currentUserId)
+      .order('criado_em', { ascending: false });
+
+    if (error) {
+      console.warn('Erro ao carregar oportunidades:', error.message);
+      return;
+    }
+
+    renderKanbanCards(cards || []);
+  }
+
+  // Gerenciamento do Modal de Confirmação de Exclusão
+  const modalDeleteConfirm = document.getElementById('modalDeleteConfirm');
+  const closeDeleteModal = document.getElementById('closeDeleteModal');
+  const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+  const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+  const deleteCardName = document.getElementById('deleteCardName');
+  let cardToDelete = null;
+  let cardElementToDelete = null;
+
+  function openDeleteModal(card, cardElement) {
+    cardToDelete = card;
+    cardElementToDelete = cardElement;
+    if (deleteCardName) deleteCardName.textContent = `"${card.nome}"`;
+    if (modalDeleteConfirm) modalDeleteConfirm.classList.remove('hidden');
+  }
+
+  function closeDeleteConfirmModal() {
+    cardToDelete = null;
+    cardElementToDelete = null;
+    if (modalDeleteConfirm) modalDeleteConfirm.classList.add('hidden');
+  }
+
+  if (closeDeleteModal) closeDeleteModal.addEventListener('click', closeDeleteConfirmModal);
+  if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', closeDeleteConfirmModal);
+
+  window.addEventListener('click', (e) => {
+    if (e.target === modalDeleteConfirm) closeDeleteConfirmModal();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalDeleteConfirm) closeDeleteConfirmModal();
+  });
+
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', async () => {
+      if (cardToDelete) {
+        confirmDeleteBtn.disabled = true;
+        confirmDeleteBtn.textContent = 'Excluindo...';
+
+        if (supabase) {
+          await supabase.from('oportunidades_crm').delete().eq('id', cardToDelete.id);
+        }
+
+        if (cardElementToDelete) cardElementToDelete.remove();
+        loadUserCards(); // Atualiza contadores das colunas
+
+        confirmDeleteBtn.disabled = false;
+        confirmDeleteBtn.textContent = 'Sim, Excluir';
+        closeDeleteConfirmModal();
+        showToast('Oportunidade excluída com sucesso.');
+      }
+    });
+  }
+
+  function renderKanbanCards(cards) {
+    // Limpar containers das 5 colunas
+    const stages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
+    stages.forEach(stage => {
+      const column = document.querySelector(`.kanban-column[data-stage="${stage}"]`);
+      if (column) {
+        const container = column.querySelector('.kanban-cards-container');
+        const countSpan = column.querySelector('.column-count');
+        container.innerHTML = '';
+        
+        const stageCards = cards.filter(c => c.status === stage);
+        countSpan.textContent = stageCards.length;
+
+        stageCards.forEach(card => {
+          container.appendChild(createCardElement(card));
+        });
+      }
+    });
+  }
+
+  function createCardElement(card) {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'kanban-card';
+    cardDiv.dataset.id = card.id;
+
+    // Formatação da Data (DD/MM/AA) e Lógica de Cores por Período
+    let formattedDate = '--/--/--';
+    let dateStatusClass = 'date-gray'; // Padrão: Cinza
+
+    if (card.data_requerimento) {
+      const [year, month, day] = card.data_requerimento.split('-').map(Number);
+      formattedDate = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${String(year).slice(-2)}`;
+
+      // Cálculo de diferença em dias em relação à data atual (sem horário)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const targetDate = new Date(year, month - 1, day);
+      targetDate.setHours(0, 0, 0, 0);
+
+      const diffTime = targetDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        dateStatusClass = 'date-purple'; // A data já passou -> Roxo
+      } else if (diffDays <= 7) {
+        dateStatusClass = 'date-red';    // A data está a 7 ou menos dias -> Vermelho
+      } else if (diffDays <= 30) {
+        dateStatusClass = 'date-yellow'; // A data está entre 30 e 7 dias -> Amarelo
+      } else {
+        dateStatusClass = 'date-gray';   // Outras datas -> Cinza
+      }
+    }
+
+    // Formatação do Link para WhatsApp (apenas números)
+    const rawPhone = card.telefone ? card.telefone.replace(/\D/g, '') : '';
+    const whatsappUrl = rawPhone ? `https://wa.me/55${rawPhone}` : '#';
+
+    cardDiv.innerHTML = `
+      <div class="card-top-row">
+        <h5 class="card-client-name">${escapeHtml(card.nome)}</h5>
+        <button class="btn-delete-card" title="Excluir Oportunidade" aria-label="Excluir card">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="card-detail-item">
+        <a href="${whatsappUrl}" target="_blank" class="whatsapp-link" title="Abrir conversa no WhatsApp">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          ${escapeHtml(card.telefone || 'Sem telefone')}
+        </a>
+      </div>
+      <div class="card-detail-item card-date-badge ${dateStatusClass}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+          <line x1="16" x2="16" y1="2" y2="6"/>
+          <line x1="8" x2="8" y1="2" y2="6"/>
+          <line x1="3" x2="21" y1="10" y2="10"/>
+        </svg>
+        Req: ${formattedDate}
+        <span class="date-dot" title="Status da Data"></span>
+      </div>
+    `;
+
+    // Evento de Exclusão do Card com Modal Customizado
+    const btnDelete = cardDiv.querySelector('.btn-delete-card');
+    btnDelete.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openDeleteModal(card, cardDiv);
+    });
+
+    return cardDiv;
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+
+
+  // Carregar os cards ao exibir o Dashboard
+  const originalShowDashboard = showDashboard;
+  showDashboard = function(user) {
+    originalShowDashboard(user);
+    loadUserCards();
+  };
+
+  /* ==========================================
+     6. TOAST NOTIFICATIONS
      ========================================== */
   function showToast(message) {
     const container = document.getElementById('toastContainer');

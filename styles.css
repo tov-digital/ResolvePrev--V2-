@@ -692,43 +692,468 @@ html, body {
   color: var(--danger-color);
 }
 
-/* Área Principal de Conteúdo */
-.dashboard-main {
+/* Área Principal de Conteúdo (Módulo Comercial CRM) */
+.dashboard-main.crm-container {
   flex: 1;
   height: 100%;
+  background-color: #F8FAFC;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 2rem;
+  overflow: hidden;
+}
+
+/* Cabeçalho & Barra de Ferramentas */
+.crm-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.crm-toolbar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.crm-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: -0.4px;
+}
+
+.crm-subtitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.crm-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+/* Pesquisa */
+.crm-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 260px;
+}
+
+.crm-search-wrapper .search-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.crm-search-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 1rem 0 2.4rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
   background-color: #FFFFFF;
+  font-family: var(--font-family);
+  font-size: 0.88rem;
+  color: var(--color-neutral);
+  transition: all var(--transition-fast);
+}
+
+.crm-search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* Botão Secundário (Filtros) */
+.crm-btn-secondary {
+  height: 38px;
+  padding: 0 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  background-color: #FFFFFF;
+  color: var(--color-neutral);
+  font-family: var(--font-family);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.crm-btn-secondary:hover {
+  background-color: var(--bg-input);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Toggle do Grupo de Visualizações (Kanban vs Lista) */
+.view-toggle-group {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-light);
+  padding: 3px;
+  border-radius: 10px;
+  gap: 2px;
+}
+
+.view-toggle-btn {
+  height: 32px;
+  padding: 0 0.85rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all var(--transition-fast);
+}
+
+.view-toggle-btn.active {
+  background-color: #FFFFFF;
+  color: var(--color-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.view-toggle-btn:hover:not(.active) {
+  color: var(--color-primary);
+}
+
+/* Container Principal das Visualizações */
+.crm-view-container {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   KANBAN BOARD & COLUNAS
+   ========================================================================== */
+.crm-kanban-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  gap: 1.25rem;
+  height: 100%;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.kanban-column {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: calc(100vh - 150px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.kanban-column-header {
+  padding: 1rem 1rem 0.85rem;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #FAFAFA;
+  border-radius: 14px 14px 0 0;
+}
+
+.column-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.column-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.dot-novo { background-color: #3B82F6; }         /* Azul */
+.dot-qualificacao { background-color: #F59E0B; } /* Âmbar / Laranja */
+.dot-acompanhamento { background-color: #8B5CF6; }/* Roxo */
+.dot-reuniao { background-color: #EC4899; }       /* Rosa */
+.dot-proposta { background-color: #10B981; }      /* Verde */
+
+.column-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-neutral);
+}
+
+.column-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background-color: var(--bg-input);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.btn-add-card {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px dashed var(--border-light);
+  background-color: #FFFFFF;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-add-card:hover {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  border-style: solid;
+  border-color: var(--color-primary);
+}
+
+.kanban-cards-container {
+  flex: 1;
+  padding: 0.85rem;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
-.blank-canvas-message {
-  text-align: center;
-  max-width: 480px;
-  padding: 3rem;
-  border-radius: 16px;
-  background-color: #F8FAFC;
-  border: 1px dashed var(--border-light);
+/* Card Kanban Oportunidade */
+.kanban-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 0.85rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* Espaçamento idêntico e uniforme entre todas as linhas do card */
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  position: relative;
 }
 
-.blank-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+.kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(23, 32, 42, 0.08);
+  border-color: rgba(30, 80, 128, 0.25);
 }
 
-.blank-canvas-message h3 {
-  font-size: 1.35rem;
-  color: var(--color-primary);
-  margin-bottom: 0.5rem;
-  font-weight: 700;
+.card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
-.blank-canvas-message p {
+.card-client-name {
   font-size: 0.92rem;
-  color: var(--text-secondary);
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.2;
+  margin: 0;
 }
+
+.btn-delete-card {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.btn-delete-card:hover {
+  background-color: #FFF5F5;
+  color: var(--danger-color);
+}
+
+.card-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
+
+.card-detail-item svg {
+  min-width: 14px;
+  width: 14px;
+  height: 14px;
+  color: inherit;
+}
+
+.whatsapp-link {
+  color: #16A34A;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: color var(--transition-fast);
+}
+
+.whatsapp-link:hover {
+  color: #15803D;
+  text-decoration: underline;
+}
+
+.whatsapp-link svg {
+  color: #16A34A;
+}
+
+/* Estilo da linha da Data em Badge Preenchida (Fundo + Borda Sombreada + Bolinha) */
+.card-detail-item.card-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  width: fit-content;
+  margin-top: 0.2rem; /* Ligeiro espaçamento em relação à linha do telefone acima */
+  transition: all var(--transition-fast);
+}
+
+.date-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 0.2rem;
+  flex-shrink: 0;
+}
+
+/* Roxo: A data já passou */
+.card-detail-item.date-purple {
+  background-color: #F3E8FF; /* Fundo Roxo Suave */
+  color: #6B21A8;            /* Texto Roxo Escuro */
+  border: 1px solid rgba(147, 51, 234, 0.25);
+  box-shadow: 0 1px 3px rgba(107, 33, 168, 0.08);
+  font-weight: 600;
+}
+.card-detail-item.date-purple .date-dot {
+  background-color: #9333EA;
+  border: 1px solid #7E22CE;
+  box-shadow: 0 0 4px rgba(147, 51, 234, 0.4);
+}
+
+/* Vermelho: 7 ou menos dias */
+.card-detail-item.date-red {
+  background-color: #FEE2E2; /* Fundo Vermelho Suave */
+  color: #991B1B;            /* Texto Vermelho Escuro */
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  box-shadow: 0 1px 3px rgba(153, 27, 27, 0.08);
+  font-weight: 600;
+}
+.card-detail-item.date-red .date-dot {
+  background-color: #EF4444;
+  border: 1px solid #DC2626;
+  box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+}
+
+/* Amarelo: Entre 30 e 7 dias */
+.card-detail-item.date-yellow {
+  background-color: #FEF3C7; /* Fundo Amarelo Suave */
+  color: #92400E;            /* Texto Amarelo/Âmbar Escuro */
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  box-shadow: 0 1px 3px rgba(146, 64, 14, 0.08);
+  font-weight: 600;
+}
+.card-detail-item.date-yellow .date-dot {
+  background-color: #F59E0B;
+  border: 1px solid #D97706;
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.4);
+}
+
+/* Cinza: Outras datas (+30 dias) */
+.card-detail-item.date-gray {
+  background-color: #F1F5F9; /* Fundo Cinza Suave */
+  color: #475569;            /* Texto Cinza Escuro */
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  box-shadow: 0 1px 2px rgba(71, 85, 105, 0.05);
+  font-weight: 500;
+}
+.card-detail-item.date-gray .date-dot {
+  background-color: #94A3B8;
+  border: 1px solid #64748B;
+  box-shadow: 0 0 3px rgba(148, 163, 184, 0.3);
+}
+
+/* ==========================================================================
+   VISUALIZAÇÃO EM LISTA (TABELA)
+   ========================================================================== */
+.crm-list-table-container {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  overflow-y: auto;
+  max-height: calc(100vh - 150px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.crm-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.88rem;
+}
+
+.crm-list-table th {
+  background-color: #FAFAFA;
+  color: var(--text-secondary);
+  font-weight: 700;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.crm-list-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--color-neutral);
+}
+
+.crm-list-table tr.empty-row td {
+  padding: 4rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
 
 /* ==========================================================================
    ESTADO RECOLHIDO DA SIDEBAR (.collapsed)
@@ -857,6 +1282,57 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.modal-icon-badge.danger-badge {
+  background-color: #FFF5F5;
+  color: var(--danger-color);
+  border-color: rgba(229, 62, 62, 0.2);
+}
+
+.modal-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.btn-modal-cancel {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  padding: 0.65rem 1.25rem;
+  border-radius: 10px;
+  font-family: var(--font-family);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-modal-cancel:hover {
+  background-color: var(--bg-input);
+  color: var(--color-neutral);
+}
+
+.btn-modal-danger {
+  background-color: var(--danger-color);
+  border: 1px solid var(--danger-color);
+  color: #FFFFFF;
+  padding: 0.65rem 1.25rem;
+  border-radius: 10px;
+  font-family: var(--font-family);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 6px rgba(229, 62, 62, 0.25);
+}
+
+.btn-modal-danger:hover {
+  background-color: #C53030;
+  border-color: #C53030;
 }
 
 .modal-header h3 {
