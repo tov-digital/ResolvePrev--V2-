@@ -362,8 +362,195 @@ document.addEventListener('DOMContentLoaded', async () => {
       viewKanbanBtn.classList.remove('active');
       crmListView.classList.remove('hidden');
       crmKanbanView.classList.add('hidden');
+      // Renderiza a visualização em lista com os dados atuais
+      const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
+      const filtered = searchTerm
+        ? allUserCards.filter(c => (c.nome && c.nome.toLowerCase().includes(searchTerm)) || (c.telefone && c.telefone.includes(searchTerm)))
+        : allUserCards;
+      renderListView(filtered);
     });
   }
+
+
+  /* ==========================================
+     BULK ACTION BAR — SELEÇÃO EM MASSA
+     ========================================== */
+  const listBulkBar       = document.getElementById('listBulkBar');
+  const bulkBarCount      = document.getElementById('bulkBarCount');
+  const btnBulkAssign     = document.getElementById('btnBulkAssign');
+  const btnBulkDeselect   = document.getElementById('btnBulkDeselect');
+  const modalBulkAssign   = document.getElementById('modalBulkAssign');
+  const closeBulkAssignModal  = document.getElementById('closeBulkAssignModal');
+  const cancelBulkAssignBtn   = document.getElementById('cancelBulkAssignBtn');
+  const confirmBulkAssignBtn  = document.getElementById('confirmBulkAssignBtn');
+  const bulkAssignUserList    = document.getElementById('bulkAssignUserList');
+  const bulkAssignDesc        = document.getElementById('bulkAssignDesc');
+  const bulkAssignBtnText     = document.getElementById('bulkAssignBtnText');
+  let selectedBulkUserId = null;
+
+  // Atualiza visibilidade da barra de ações em massa
+  function updateBulkBar() {
+    const checkboxes = document.querySelectorAll('.list-row-checkbox');
+    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+    if (listBulkBar) {
+      if (checkedCount > 0) {
+        listBulkBar.classList.remove('hidden');
+        if (bulkBarCount) bulkBarCount.textContent = checkedCount;
+      } else {
+        listBulkBar.classList.add('hidden');
+      }
+    }
+  }
+
+  // Select All checkbox handler (delegado)
+  document.addEventListener('change', (e) => {
+    if (e.target.id === 'listSelectAll') {
+      const checked = e.target.checked;
+      document.querySelectorAll('.list-row-checkbox').forEach(cb => {
+        cb.checked = checked;
+        cb.closest('tr').classList.toggle('selected-row', checked);
+      });
+      updateBulkBar();
+    } else if (e.target.classList.contains('list-row-checkbox')) {
+      // Atualiza estado do "select all" conforme checkboxes individuais
+      const all = document.querySelectorAll('.list-row-checkbox');
+      const allChecked = Array.from(all).every(cb => cb.checked);
+      const selectAll = document.getElementById('listSelectAll');
+      if (selectAll) selectAll.checked = allChecked;
+      updateBulkBar();
+    }
+  });
+
+  // Botão "Limpar Seleção"
+  if (btnBulkDeselect) {
+    btnBulkDeselect.addEventListener('click', () => {
+      document.querySelectorAll('.list-row-checkbox').forEach(cb => {
+        cb.checked = false;
+        cb.closest('tr').classList.remove('selected-row');
+      });
+      const selectAll = document.getElementById('listSelectAll');
+      if (selectAll) selectAll.checked = false;
+      if (listBulkBar) listBulkBar.classList.add('hidden');
+    });
+  }
+
+  // Abre modal de atribuição em massa
+  async function openBulkAssignModal() {
+    if (!modalBulkAssign) return;
+    const count = Array.from(document.querySelectorAll('.list-row-checkbox')).filter(cb => cb.checked).length;
+    if (bulkAssignDesc) bulkAssignDesc.textContent = `Selecione o usuário para receber ${count} oportunidade(s) selecionada(s):`;
+    selectedBulkUserId = null;
+    if (confirmBulkAssignBtn) confirmBulkAssignBtn.disabled = true;
+    if (bulkAssignBtnText) bulkAssignBtnText.textContent = 'Confirmar Atribuição';
+
+    // Carrega usuários do Supabase (tabela auth.users via admin, ou profiles)
+    if (bulkAssignUserList) {
+      bulkAssignUserList.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#94A3B8;font-size:0.85rem;">Carregando usuários...</div>';
+      let users = [];
+      if (supabase) {
+        try {
+          // Tenta buscar da tabela profiles (caso exista) ou auth.users
+          const { data, error } = await supabase.from('profiles').select('id, full_name, email');
+          if (!error && data && data.length > 0) {
+            users = data;
+          }
+        } catch (e) { /* fallback abaixo */ }
+
+        // Fallback: busca via RPC se disponível, ou exibe mensagem
+        if (users.length === 0) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session && session.user) {
+            users = [{ id: session.user.id, full_name: userDisplayName ? userDisplayName.textContent : 'Você', email: session.user.email }];
+          }
+        }
+      }
+
+      if (users.length === 0) {
+        bulkAssignUserList.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#94A3B8;font-size:0.85rem;">Nenhum usuário encontrado.</div>';
+      } else {
+        bulkAssignUserList.innerHTML = '';
+        users.forEach(u => {
+          const name = u.full_name || u.email?.split('@')[0] || 'Usuário';
+          const initial = name.charAt(0).toUpperCase();
+          const opt = document.createElement('div');
+          opt.className = 'bulk-assign-user-option';
+          opt.dataset.userId = u.id;
+          opt.innerHTML = `
+            <div class="bulk-assign-avatar">${escapeHtml(initial)}</div>
+            <div>
+              <div class="bulk-assign-user-name">${escapeHtml(name)}</div>
+              <div class="bulk-assign-user-email">${escapeHtml(u.email || '')}</div>
+            </div>
+          `;
+          opt.addEventListener('click', () => {
+            bulkAssignUserList.querySelectorAll('.bulk-assign-user-option').forEach(el => el.classList.remove('selected'));
+            opt.classList.add('selected');
+            selectedBulkUserId = u.id;
+            if (confirmBulkAssignBtn) confirmBulkAssignBtn.disabled = false;
+          });
+          bulkAssignUserList.appendChild(opt);
+        });
+      }
+    }
+
+    modalBulkAssign.classList.remove('hidden');
+  }
+
+  function closeBulkAssignModalFn() {
+    if (modalBulkAssign) modalBulkAssign.classList.add('hidden');
+    selectedBulkUserId = null;
+  }
+
+  if (btnBulkAssign)       btnBulkAssign.addEventListener('click', openBulkAssignModal);
+  if (closeBulkAssignModal) closeBulkAssignModal.addEventListener('click', closeBulkAssignModalFn);
+  if (cancelBulkAssignBtn)  cancelBulkAssignBtn.addEventListener('click', closeBulkAssignModalFn);
+
+  window.addEventListener('click', (e) => {
+    if (e.target === modalBulkAssign) closeBulkAssignModalFn();
+  });
+
+  // Confirmar atribuição em massa
+  if (confirmBulkAssignBtn) {
+    confirmBulkAssignBtn.addEventListener('click', async () => {
+      if (!selectedBulkUserId) return;
+
+      // Coletar IDs das linhas selecionadas
+      const selectedIds = Array.from(document.querySelectorAll('.list-row-checkbox'))
+        .filter(cb => cb.checked)
+        .map(cb => cb.closest('tr')?.dataset.id)
+        .filter(Boolean);
+
+      if (selectedIds.length === 0) {
+        closeBulkAssignModalFn();
+        return;
+      }
+
+      if (bulkAssignBtnText) bulkAssignBtnText.textContent = 'Atribuindo...';
+      confirmBulkAssignBtn.disabled = true;
+
+      if (supabase) {
+        const { error } = await supabase
+          .from('oportunidades_crm')
+          .update({ user_id: selectedBulkUserId, atualizado_em: new Date().toISOString() })
+          .in('id', selectedIds);
+
+        if (error) {
+          showToast('Erro ao atribuir: ' + error.message);
+        } else {
+          showToast(`${selectedIds.length} oportunidade(s) atribuída(s) com sucesso!`);
+          // Atualiza dados locais e re-renderiza
+          await loadUserCards();
+          // Limpa seleção
+          if (btnBulkDeselect) btnBulkDeselect.click();
+        }
+      }
+
+      closeBulkAssignModalFn();
+      confirmBulkAssignBtn.disabled = false;
+      if (bulkAssignBtnText) bulkAssignBtnText.textContent = 'Confirmar Atribuição';
+    });
+  }
+
 
   /* ==========================================
      6. GERENCIAMENTO DE CARDS E FLUXO DO CRM (SUPABASE)
@@ -466,28 +653,174 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function filterAndRenderCards(searchTerm) {
+    let filtered;
     if (!searchTerm) {
-      renderKanbanCards(allUserCards);
+      filtered = allUserCards;
+    } else {
+      // Normalizar termo de pesquisa (remover caracteres especiais para facilitar busca por telefone)
+      const cleanSearchTerm = searchTerm.replace(/\D/g, '');
+
+      filtered = allUserCards.filter(card => {
+        // 1. Busca por Nome (primeiro nome, sobrenome ou qualquer pedaço)
+        const nameMatch = card.nome && card.nome.toLowerCase().includes(searchTerm);
+
+        // 2. Busca por Telefone (comparando tanto a string formatada quanto apenas os dígitos limpos)
+        const rawPhone = card.telefone ? card.telefone.replace(/\D/g, '') : '';
+        const phoneFormattedMatch = card.telefone && card.telefone.toLowerCase().includes(searchTerm);
+        const phoneDigitsMatch = cleanSearchTerm && rawPhone.includes(cleanSearchTerm);
+
+        return nameMatch || phoneFormattedMatch || phoneDigitsMatch;
+      });
+    }
+
+    renderKanbanCards(filtered);
+
+    // Também atualiza a lista se a visualização em lista estiver visível
+    if (crmListView && !crmListView.classList.contains('hidden')) {
+      renderListView(filtered);
+    }
+  }
+
+  /* ==========================================
+     VISUALIZAÇÃO EM LISTA — RENDER
+     ========================================== */
+  function renderListView(cards) {
+    const tbody = document.getElementById('crmListTbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    // Ordenar por última atualização (mais recente primeiro), igual ao Kanban
+    const sorted = [...cards].sort((a, b) => {
+      const da = new Date(a.atualizado_em || a.criado_em || 0).getTime();
+      const db = new Date(b.atualizado_em || b.criado_em || 0).getTime();
+      return db - da;
+    });
+
+    if (sorted.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Nenhuma oportunidade encontrada.</td></tr>`;
       return;
     }
 
-    // Normalizar termo de pesquisa (remover caracteres especiais para facilitar busca por telefone)
-    const cleanSearchTerm = searchTerm.replace(/\D/g, '');
+    sorted.forEach(card => {
+      // ---- Inicial do avatar ----
+      const initial = (card.nome || 'C').charAt(0).toUpperCase();
 
-    const filtered = allUserCards.filter(card => {
-      // 1. Busca por Nome (primeiro nome, sobrenome ou qualquer pedaço)
-      const nameMatch = card.nome && card.nome.toLowerCase().includes(searchTerm);
+      // ---- Formatação de Data ----
+      let formattedDate = '—';
+      let dateClass = 'date-gray';
+      if (card.data_requerimento) {
+        const [year, month, day] = card.data_requerimento.split('-').map(Number);
+        formattedDate = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${String(year).slice(-2)}`;
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const target = new Date(year, month - 1, day); target.setHours(0, 0, 0, 0);
+        const diff = Math.ceil((target - today) / 86400000);
+        if (diff < 0)      dateClass = 'date-purple';
+        else if (diff <= 7)  dateClass = 'date-red';
+        else if (diff <= 30) dateClass = 'date-yellow';
+        else                 dateClass = 'date-gray';
+      }
 
-      // 2. Busca por Telefone (comparando tanto a string formatada quanto apenas os dígitos limpos)
+      // ---- WhatsApp link ----
       const rawPhone = card.telefone ? card.telefone.replace(/\D/g, '') : '';
-      const phoneFormattedMatch = card.telefone && card.telefone.toLowerCase().includes(searchTerm);
-      const phoneDigitsMatch = cleanSearchTerm && rawPhone.includes(cleanSearchTerm);
+      const waUrl = rawPhone ? `https://wa.me/55${rawPhone}` : '#';
 
-      return nameMatch || phoneFormattedMatch || phoneDigitsMatch;
+      // ---- Status badge ----
+      const statusLabels = { novo: 'Novo', qualificacao: 'Qualificação', acompanhamento: 'Acompanhamento', reuniao: 'Reunião', proposta: 'Proposta' };
+      const statusLabel = statusLabels[card.status] || card.status || 'Novo';
+      const statusClass = `list-status-${card.status || 'novo'}`;
+
+      // ---- Contagem de notas ----
+      let notasCount = 0;
+      if (card.notas_internas) {
+        try {
+          const notas = typeof card.notas_internas === 'string' ? JSON.parse(card.notas_internas) : card.notas_internas;
+          notasCount = Array.isArray(notas) ? notas.length : 0;
+        } catch (e) { notasCount = 0; }
+      }
+      const badgeHidden = notasCount === 0 ? 'hidden' : '';
+
+      const tr = document.createElement('tr');
+      tr.className = 'list-row';
+      tr.dataset.id = card.id;
+
+      tr.innerHTML = `
+        <td class="td-check">
+          <label class="list-checkbox-label" onclick="event.stopPropagation()">
+            <input type="checkbox" class="list-checkbox list-row-checkbox">
+            <span class="list-checkbox-custom"></span>
+          </label>
+        </td>
+        <td>
+          <div class="td-name">
+            <div class="list-avatar">${escapeHtml(initial)}</div>
+            <span class="list-client-name">${escapeHtml(card.nome || 'Sem nome')}</span>
+          </div>
+        </td>
+        <td>
+          <a href="${waUrl}" target="_blank" class="list-phone-link" onclick="event.stopPropagation()" title="Abrir no WhatsApp">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            ${escapeHtml(card.telefone || '—')}
+          </a>
+        </td>
+        <td class="list-profession">${escapeHtml(card.profissao || '—')}</td>
+        <td>
+          <span class="list-date-badge ${dateClass}">
+            <span class="list-date-dot"></span>
+            ${escapeHtml(formattedDate)}
+          </span>
+        </td>
+        <td>
+          <span class="list-status-badge ${statusClass}">
+            <span class="status-dot"></span>
+            ${escapeHtml(statusLabel)}
+          </span>
+        </td>
+        <td class="td-notes">
+          <button class="list-notes-btn" title="Observações internas" data-id="${card.id}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span class="list-notes-badge ${badgeHidden}">${notasCount}</span>
+          </button>
+        </td>
+      `;
+
+      // Clique na linha → abre ficha do cliente (ignora checkbox e botão de notas)
+      tr.addEventListener('click', (e) => {
+        if (e.target.closest('.list-notes-btn') || e.target.closest('.list-checkbox-label') || e.target.closest('.list-phone-link')) return;
+        openClientSheetModal(card);
+      });
+
+      // Checkbox individual → toggle classe selected-row
+      const rowCheckbox = tr.querySelector('.list-row-checkbox');
+      if (rowCheckbox) {
+        rowCheckbox.addEventListener('change', () => {
+          tr.classList.toggle('selected-row', rowCheckbox.checked);
+        });
+      }
+
+      // Botão de notas → abre diretamente a sidebar de notas internas
+      const notesBtn = tr.querySelector('.list-notes-btn');
+      if (notesBtn) {
+        notesBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openClientSheetModal(card);
+          // Pequeno delay para o modal abrir antes de acionar o drawer de notas
+          setTimeout(() => {
+            const sheetNotesBtn = document.getElementById('sheetNotesBtn');
+            if (sheetNotesBtn) sheetNotesBtn.click();
+          }, 80);
+        });
+      }
+
+      tbody.appendChild(tr);
     });
-
-    renderKanbanCards(filtered);
   }
+
+
 
   // Gerenciamento do Modal de Confirmação de Exclusão
   const modalDeleteConfirm = document.getElementById('modalDeleteConfirm');
@@ -567,155 +900,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       }
     });
-  }
-
-  function renderListView(cards) {
-    const tbody = document.getElementById('crmListTbody');
-    if (!tbody) return;
-
-    tbody.innerHTML = '';
-
-    if (!cards || cards.length === 0) {
-      tbody.innerHTML = `
-        <tr class="empty-row">
-          <td colspan="8" class="text-center">Nenhuma oportunidade encontrada.</td>
-        </tr>
-      `;
-      return;
-    }
-
-    // Ordenar cards pela última atualização (mais recente no topo)
-    const sortedCards = [...cards].sort((a, b) => {
-      const dateA = new Date(a.atualizado_em || a.criado_em || 0).getTime();
-      const dateB = new Date(b.atualizado_em || b.criado_em || 0).getTime();
-      return dateB - dateA;
-    });
-
-    sortedCards.forEach(card => {
-      const tr = document.createElement('tr');
-      tr.className = 'crm-list-row';
-      tr.dataset.id = card.id;
-
-      // 1. Inicial
-      const clientName = card.nome || 'Sem Nome';
-      const initial = clientName.trim().charAt(0).toUpperCase();
-
-      // 2. Data Requerimento & Cor
-      let formattedDate = '--/--/--';
-      let dateBadgeClass = 'date-gray';
-
-      if (card.data_requerimento) {
-        const [year, month, day] = card.data_requerimento.split('-').map(Number);
-        formattedDate = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${String(year).slice(-2)}`;
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const targetDate = new Date(year, month - 1, day);
-        targetDate.setHours(0, 0, 0, 0);
-
-        const diffTime = targetDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays < 0) {
-          dateBadgeClass = 'date-purple';
-        } else if (diffDays <= 7) {
-          dateBadgeClass = 'date-red';
-        } else if (diffDays <= 30) {
-          dateBadgeClass = 'date-yellow';
-        } else {
-          dateBadgeClass = 'date-gray';
-        }
-      }
-
-      // 3. Link WhatsApp
-      const rawPhone = card.telefone ? card.telefone.replace(/\D/g, '') : '';
-      const whatsappUrl = rawPhone ? `https://wa.me/55${rawPhone}` : '#';
-
-      // 4. Quantidade de Notas Internas
-      let notes = card.notas_internas;
-      if (typeof notes === 'string') {
-        try { notes = JSON.parse(notes); } catch (e) { notes = []; }
-      }
-      const notesCount = Array.isArray(notes) ? notes.length : 0;
-
-      // Structure da Linha
-      tr.innerHTML = `
-        <td class="col-checkbox text-center" onclick="event.stopPropagation()">
-          <input type="checkbox" class="list-checkbox row-select-checkbox" data-id="${card.id}">
-        </td>
-        <td class="col-avatar text-center">
-          <div class="list-user-avatar">${initial}</div>
-        </td>
-        <td class="col-name">
-          <strong class="list-client-name">${escapeHtml(clientName)}</strong>
-        </td>
-        <td class="col-phone">
-          <a href="${whatsappUrl}" target="_blank" class="whatsapp-link" onclick="event.stopPropagation()" title="Abrir no WhatsApp">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
-            ${escapeHtml(card.telefone || 'Sem telefone')}
-          </a>
-        </td>
-        <td class="col-profissao">
-          <span class="list-text-sub">${escapeHtml(card.profissao || 'Não informada')}</span>
-        </td>
-        <td class="col-date">
-          <div class="card-detail-item card-date-badge ${dateBadgeClass}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-              <line x1="16" x2="16" y1="2" y2="6"/>
-              <line x1="8" x2="8" y1="2" y2="6"/>
-              <line x1="3" x2="21" y1="10" y2="10"/>
-            </svg>
-            Req: ${formattedDate}
-            <span class="date-dot" title="Status da Data"></span>
-          </div>
-        </td>
-        <td class="col-status">
-          <span class="column-status-tag ${stageDotClasses[card.status || 'novo']}">
-            <span class="column-status-dot ${stageDotClasses[card.status || 'novo']}"></span>
-            ${stageLabels[card.status || 'novo']}
-          </span>
-        </td>
-        <td class="col-actions text-center" onclick="event.stopPropagation()">
-          <button class="sheet-icon-tool-btn list-notes-btn" title="Ver Observações Internas" aria-label="Ver Observações Internas">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-            ${notesCount > 0 ? `<span class="notes-count-badge">${notesCount > 99 ? '99+' : notesCount}</span>` : ''}
-          </button>
-        </td>
-      `;
-
-      // Clique na linha abre a ficha do cliente normalmente
-      tr.addEventListener('click', (e) => {
-        if (e.target.closest('.whatsapp-link') || e.target.closest('.list-checkbox') || e.target.closest('.list-notes-btn')) return;
-        openClientSheetModal(card);
-      });
-
-      // Clique no botão de observações da linha abre a ficha e a gaveta lateral
-      const btnNotes = tr.querySelector('.list-notes-btn');
-      if (btnNotes) {
-        btnNotes.addEventListener('click', (e) => {
-          e.stopPropagation();
-          openClientSheetModal(card);
-          openNotesSidebar();
-        });
-      }
-
-      tbody.appendChild(tr);
-    });
-
-    // Checkbox de Selecionar Todos
-    const selectAllCheckbox = document.getElementById('selectAllListCheckbox');
-    if (selectAllCheckbox) {
-      selectAllCheckbox.checked = false;
-      selectAllCheckbox.onclick = (e) => {
-        const isChecked = e.target.checked;
-        tbody.querySelectorAll('.row-select-checkbox').forEach(cb => cb.checked = isChecked);
-      };
-    }
   }
 
   function createCardElement(card) {

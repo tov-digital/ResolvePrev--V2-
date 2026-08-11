@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=51">
+  <link rel="stylesheet" href="styles.css?v=52">
 </head>
 <body>
 
@@ -316,29 +316,51 @@
 
       </section>
 
-      <!-- Corpo da Visualização: LISTA -->
+      <!-- Corpo da Visualização: LISTA (Inicialmente oculta) -->
       <section id="crmListView" class="crm-view-container crm-list-table-container hidden">
         <table class="crm-list-table">
           <thead>
             <tr>
-              <th class="col-checkbox text-center">
-                <input type="checkbox" id="selectAllListCheckbox" class="list-checkbox" title="Selecionar Todos">
+              <th class="col-check">
+                <label class="list-checkbox-label">
+                  <input type="checkbox" id="listSelectAll" class="list-checkbox">
+                  <span class="list-checkbox-custom"></span>
+                </label>
               </th>
-              <th class="col-avatar text-center">Iniciais</th>
-              <th>Nome Completo</th>
-              <th>Telefone / WhatsApp</th>
-              <th>Profissão</th>
-              <th>Data de Requerimento</th>
-              <th>Status / Estágio</th>
-              <th class="col-actions text-center">Observações</th>
+              <th class="col-name">Nome</th>
+              <th class="col-phone">Telefone</th>
+              <th class="col-profession">Profissão</th>
+              <th class="col-date">Data de Requerimento</th>
+              <th class="col-status">Status</th>
+              <th class="col-notes">Obs.</th>
             </tr>
           </thead>
           <tbody id="crmListTbody">
             <tr class="empty-row">
-              <td colspan="8" class="text-center">Nenhuma oportunidade cadastrada até o momento.</td>
+              <td colspan="7" class="text-center">Nenhuma oportunidade cadastrada até o momento.</td>
             </tr>
           </tbody>
         </table>
+
+        <!-- Barra de Ação em Massa (aparece ao selecionar linhas) -->
+        <div id="listBulkBar" class="list-bulk-bar hidden">
+          <span class="bulk-bar-count" id="bulkBarCount">0</span>
+          <span class="bulk-bar-label">oportunidade(s) selecionada(s)</span>
+          <button class="btn-bulk-assign" id="btnBulkAssign" title="Atribuir em massa">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <polyline points="16 11 18 13 22 9"/>
+            </svg>
+            Atribuir a usuário
+          </button>
+          <button class="btn-bulk-deselect" id="btnBulkDeselect" title="Limpar seleção">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Limpar seleção
+          </button>
+        </div>
       </section>
 
     </main>
@@ -950,6 +972,27 @@
       </form>
       <div id="firstAccessSuccess" class="alert-success hidden">
         ✓ Solicitação enviada, verifique seu email!
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: ATRIBUIÇÃO EM MASSA ==================== -->
+  <div id="modalBulkAssign" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-bulk-assign">
+      <button class="modal-close" id="closeBulkAssignModal" aria-label="Fechar">&times;</button>
+      <div class="bulk-assign-header">
+        <h3>Atribuir em Massa</h3>
+        <p id="bulkAssignDesc">Selecione o usuário para receber as oportunidades selecionadas:</p>
+      </div>
+      <div class="bulk-assign-user-list" id="bulkAssignUserList">
+        <!-- Usuários carregados dinamicamente -->
+        <div style="text-align:center;padding:1.5rem;color:#94A3B8;font-size:0.85rem;">Carregando usuários...</div>
+      </div>
+      <div class="bulk-assign-actions">
+        <button class="btn-cancel-assign" id="cancelBulkAssignBtn">Cancelar</button>
+        <button class="btn-confirm-assign" id="confirmBulkAssignBtn" disabled>
+          <span id="bulkAssignBtnText">Confirmar Atribuição</span>
+        </button>
       </div>
     </div>
   </div>
