@@ -21,7 +21,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // DOM Elements - Screens & Navigation
   const loginScreen = document.getElementById('loginScreen');
   const blankDashboardScreen = document.getElementById('blankDashboardScreen');
-  const userDisplayEmail = document.getElementById('userDisplayEmail');
+  const sidebar = document.getElementById('sidebar');
+  const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+  const userDisplayName = document.getElementById('userDisplayName');
+  const userAvatar = document.getElementById('userAvatar');
   const logoutBtn = document.getElementById('logoutBtn');
   const currentYearSpan = document.getElementById('currentYear');
 
@@ -40,18 +43,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentYearSpan.textContent = new Date().getFullYear();
   }
 
+  // Toggle da Sidebar Retrátil
+  if (toggleSidebarBtn && sidebar) {
+    toggleSidebarBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+    });
+  }
+
   // Verificar sessão ativa do Supabase ao carregar
   if (supabase) {
     const { data: { session } } = await supabase.auth.getSession();
     if (session && session.user) {
-      showDashboard(session.user.email);
+      showDashboard(session.user);
     }
   }
 
-  function showDashboard(email) {
-    if (userDisplayEmail) {
-      userDisplayEmail.textContent = email;
+  function showDashboard(user) {
+    let name = '';
+
+    if (typeof user === 'object' && user !== null) {
+      name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário';
+    } else if (typeof user === 'string') {
+      name = user.split('@')[0] || 'Usuário';
     }
+
+    // Formatar nome com primeira letra maiúscula
+    const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+    const initialLetter = formattedName.charAt(0).toUpperCase();
+
+    if (userDisplayName) {
+      userDisplayName.textContent = formattedName;
+    }
+    if (userAvatar) {
+      userAvatar.textContent = initialLetter;
+    }
+
     loginScreen.classList.add('hidden');
     blankDashboardScreen.classList.remove('hidden');
   }
@@ -130,7 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      showDashboard(data.user.email);
+      showDashboard(data.user);
       showToast('Autenticação realizada com sucesso! Bem-vindo.');
     } else {
       // Fallback de demonstração caso o SDK não carregue
