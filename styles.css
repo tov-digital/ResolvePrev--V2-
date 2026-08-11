@@ -991,6 +991,14 @@ html, body {
   border-color: rgba(30, 80, 128, 0.25);
 }
 
+/* Feedback Visual do Drag & Drop */
+.kanban-card.dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+  box-shadow: 0 8px 20px rgba(30, 80, 128, 0.2);
+  border-color: var(--color-primary);
+}
+
 .card-top-row {
   display: flex;
   align-items: center;

@@ -437,6 +437,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Inicializa os ouvintes de Drag & Drop para as colunas do Kanban
+  setupKanbanDragAndDrop();
+
   // Atualizar a renderização do CRM com os cards do usuário logado
   async function loadUserCards() {
     if (!supabase) return;
@@ -628,6 +631,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
     `;
 
+    cardDiv.setAttribute('draggable', 'true');
+
+    // Eventos de Drag & Drop do Card
+    cardDiv.addEventListener('dragstart', (e) => {
+      cardDiv.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', card.id);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    cardDiv.addEventListener('dragend', () => {
+      cardDiv.classList.remove('dragging');
+      document.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('drag-over'));
+    });
+
     // Clique no Card para Abrir Ficha do Cliente (ignora cliques no botão de exclusão e no link do WhatsApp)
     cardDiv.addEventListener('click', (e) => {
       if (e.target.closest('.btn-delete-card') || e.target.closest('.whatsapp-link')) return;
@@ -644,6 +661,73 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     return cardDiv;
+  }
+
+  /* Setup Global de Drag & Drop para as Colunas do Kanban */
+  function setupKanbanDragAndDrop() {
+    const columns = document.querySelectorAll('.kanban-column');
+    columns.forEach(column => {
+      const container = column.querySelector('.kanban-cards-container');
+      const targetStage = column.dataset.stage;
+      if (!container || !targetStage) return;
+
+      column.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        column.classList.add('drag-over');
+      });
+
+      column.addEventListener('dragleave', (e) => {
+        // Remove destaque apenas se saiu da coluna inteira
+        if (!column.contains(e.relatedTarget)) {
+          column.classList.remove('drag-over');
+        }
+      });
+
+      column.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        column.classList.remove('drag-over');
+        const cardId = e.dataTransfer.getData('text/plain');
+        if (!cardId) return;
+
+        const cardObj = allUserCards.find(c => String(c.id) === String(cardId));
+        if (!cardObj || cardObj.status === targetStage) return;
+
+        // Atualização Otimista da Interface
+        const oldStage = cardObj.status;
+        cardObj.status = targetStage;
+        const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
+        filterAndRenderCards(searchTerm);
+
+        // Atualização no Banco de Dados (Supabase)
+        if (supabase) {
+          const { error } = await supabase
+            .from('oportunidades_crm')
+            .update({ status: targetStage })
+            .eq('id', cardId);
+
+          if (error) {
+            // Reverter estado se falhar no banco
+            cardObj.status = oldStage;
+            filterAndRenderCards(searchTerm);
+            showToast('Erro ao mover card: ' + error.message);
+          } else {
+            showToast(`Status alterado para "${getStageLabel(targetStage)}".`);
+          }
+        }
+      });
+    });
+  }
+
+  function getStageLabel(stage) {
+    const labels = {
+      'novo': 'Novo',
+      'qualificacao': 'Qualificação',
+      'acompanhamento': 'Acompanhamento',
+      'reuniao': 'Reunião',
+      'proposta': 'Proposta'
+    };
+    return labels[stage] || stage;
   }
 
   /* ==========================================
