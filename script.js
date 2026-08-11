@@ -693,29 +693,160 @@ document.addEventListener('DOMContentLoaded', async () => {
         const cardObj = allUserCards.find(c => String(c.id) === String(cardId));
         if (!cardObj || cardObj.status === targetStage) return;
 
-        // Atualização Otimista da Interface
-        const oldStage = cardObj.status;
-        cardObj.status = targetStage;
-        const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
-        filterAndRenderCards(searchTerm);
-
-        // Atualização no Banco de Dados (Supabase)
-        if (supabase) {
-          const { error } = await supabase
-            .from('oportunidades_crm')
-            .update({ status: targetStage })
-            .eq('id', cardId);
-
-          if (error) {
-            // Reverter estado se falhar no banco
-            cardObj.status = oldStage;
-            filterAndRenderCards(searchTerm);
-            showToast('Erro ao mover card: ' + error.message);
-          } else {
-            showToast(`Status alterado para "${getStageLabel(targetStage)}".`);
-          }
+        // Se a coluna destino for 'proposta', abre o pop-up de confirmação de canal
+        if (targetStage === 'proposta') {
+          openProposalModal(cardObj, targetStage);
+          return;
         }
+
+        // Para outras colunas, executa a mudança diretamente
+        await changeCardStatus(cardObj, targetStage);
       });
+    });
+  }
+
+  /* Função genérica para alterar o status do card */
+  async function changeCardStatus(cardObj, newStage) {
+    const oldStage = cardObj.status;
+    cardObj.status = newStage;
+    const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
+    filterAndRenderCards(searchTerm);
+
+    if (currentActiveCard && currentActiveCard.id === cardObj.id) {
+      updateStatusTagUI(newStage);
+    }
+
+    if (supabase) {
+      const { error } = await supabase
+        .from('oportunidades_crm')
+        .update({ status: newStage })
+        .eq('id', cardObj.id);
+
+      if (error) {
+        cardObj.status = oldStage;
+        filterAndRenderCards(searchTerm);
+        if (currentActiveCard && currentActiveCard.id === cardObj.id) {
+          updateStatusTagUI(oldStage);
+        }
+        showToast('Erro ao mover card: ' + error.message);
+      } else {
+        showToast(`Status alterado para "${getStageLabel(newStage)}".`);
+      }
+    }
+  }
+
+  /* ==========================================
+     GERENCIAMENTO DO MODAL DE PROPOSTA & WEBHOOK
+     ========================================== */
+  const modalProposalConfirm = document.getElementById('modalProposalConfirm');
+  const closeProposalModal = document.getElementById('closeProposalModal');
+  const cancelProposalBtn = document.getElementById('cancelProposalBtn');
+  const confirmProposalBtn = document.getElementById('confirmProposalBtn');
+  const proposalClientName = document.getElementById('proposalClientName');
+  let proposalCardTarget = null;
+  let proposalNewStatusTarget = null;
+
+  // Toggle de seleção visual entre Email e Whatsapp
+  const proposalEmailLabel = document.getElementById('proposalOptionEmailLabel');
+  const proposalWhatsappLabel = document.getElementById('proposalOptionWhatsappLabel');
+  const proposalRadios = document.querySelectorAll('input[name="proposalChannel"]');
+
+  proposalRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (proposalEmailLabel) proposalEmailLabel.classList.toggle('active', radio.value === 'Email' && radio.checked);
+      if (proposalWhatsappLabel) proposalWhatsappLabel.classList.toggle('active', radio.value === 'Whatsapp' && radio.checked);
+    });
+  });
+
+  function openProposalModal(card, newStatus) {
+    proposalCardTarget = card;
+    proposalNewStatusTarget = newStatus;
+    if (proposalClientName) proposalClientName.textContent = `"${card.nome}"`;
+    
+    // Reseta para Email por padrão
+    const defaultRadio = document.querySelector('input[name="proposalChannel"][value="Email"]');
+    if (defaultRadio) {
+      defaultRadio.checked = true;
+      if (proposalEmailLabel) proposalEmailLabel.classList.add('active');
+      if (proposalWhatsappLabel) proposalWhatsappLabel.classList.remove('active');
+    }
+
+    if (modalProposalConfirm) modalProposalConfirm.classList.remove('hidden');
+  }
+
+  function closeProposalModalWindow() {
+    proposalCardTarget = null;
+    proposalNewStatusTarget = null;
+    if (modalProposalConfirm) modalProposalConfirm.classList.add('hidden');
+  }
+
+  if (closeProposalModal) closeProposalModal.addEventListener('click', closeProposalModalWindow);
+  if (cancelProposalBtn) cancelProposalBtn.addEventListener('click', closeProposalModalWindow);
+
+  window.addEventListener('click', (e) => {
+    if (e.target === modalProposalConfirm) closeProposalModalWindow();
+  });
+
+  if (confirmProposalBtn) {
+    confirmProposalBtn.addEventListener('click', async () => {
+      if (!proposalCardTarget || !proposalNewStatusTarget) return;
+
+      const selectedRadio = document.querySelector('input[name="proposalChannel"]:checked');
+      const canalEnvio = selectedRadio ? selectedRadio.value : 'Email';
+
+      confirmProposalBtn.disabled = true;
+      const btnSpan = confirmProposalBtn.querySelector('span');
+      if (btnSpan) btnSpan.textContent = 'Enviando...';
+
+      // 1. Acionar Webhook com os dados completos da Ficha e o Canal de Envio
+      const webhookPayload = {
+        canal_envio: canalEnvio,
+        id: proposalCardTarget.id,
+        nome: proposalCardTarget.nome,
+        cpf: proposalCardTarget.cpf,
+        rg: proposalCardTarget.rg,
+        data_nascimento: proposalCardTarget.data_nascimento,
+        nome_mae: proposalCardTarget.nome_mae,
+        telefone: proposalCardTarget.telefone,
+        email: proposalCardTarget.email,
+        cep: proposalCardTarget.cep,
+        endereco: proposalCardTarget.endereco,
+        numero: proposalCardTarget.numero,
+        complemento: proposalCardTarget.complemento,
+        bairro: proposalCardTarget.bairro,
+        cidade: proposalCardTarget.cidade,
+        estado: proposalCardTarget.estado,
+        estado_civil: proposalCardTarget.estado_civil,
+        profissao: proposalCardTarget.profissao,
+        nit_pis: proposalCardTarget.nit_pis,
+        senha_meu_inss: proposalCardTarget.senha_meu_inss,
+        data_requerimento: proposalCardTarget.data_requerimento,
+        status: proposalNewStatusTarget,
+        criado_em: proposalCardTarget.criado_em
+      };
+
+      try {
+        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/proposta_rp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(webhookPayload)
+        });
+      } catch (webhookErr) {
+        console.warn('Erro ao acionar webhook:', webhookErr);
+      }
+
+      // 2. Alterar status do card no CRM e Supabase
+      const cardToUpdate = proposalCardTarget;
+      const newStatus = proposalNewStatusTarget;
+      closeProposalModalWindow();
+
+      await changeCardStatus(cardToUpdate, newStatus);
+      showToast(`Proposta enviada via ${canalEnvio}!`);
+
+      confirmProposalBtn.disabled = false;
+      if (btnSpan) btnSpan.textContent = 'Enviar Proposta';
     });
   }
 
@@ -1437,23 +1568,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (statusDropdownMenu) statusDropdownMenu.classList.add('hidden');
 
       if (newStatus !== currentActiveCard.status) {
-        currentActiveCard.status = newStatus;
-        updateStatusTagUI(newStatus);
-
-        if (supabase) {
-          const { error } = await supabase
-            .from('oportunidades_crm')
-            .update({ status: newStatus })
-            .eq('id', currentActiveCard.id);
-
-          if (error) {
-            showToast('Erro ao atualizar estágio: ' + error.message);
-            return;
-          }
-
-          loadUserCards(); // Atualiza o Kanban movendo o card de coluna
-          showToast(`Estágio alterado para "${stageLabels[newStatus]}"`);
+        if (newStatus === 'proposta') {
+          openProposalModal(currentActiveCard, newStatus);
+          return;
         }
+
+        await changeCardStatus(currentActiveCard, newStatus);
       }
     });
   });

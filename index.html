@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=48">
+  <link rel="stylesheet" href="styles.css?v=49">
 </head>
 <body>
 
@@ -770,6 +770,60 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL: CONFIRMAR PROPOSTA (EMAIL / WHATSAPP) ==================== -->
+  <div id="modalProposalConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card proposal-modal-card">
+      <button class="modal-close" id="closeProposalModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge proposal-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9"/>
+            <polyline points="22 7 12 13 2 7"/>
+            <polyline points="16 19 18 21 22 17"/>
+          </svg>
+        </div>
+        <h3>Enviar Proposta</h3>
+        <p>Escolha o canal pelo qual deseja enviar a proposta para <strong id="proposalClientName">este cliente</strong>:</p>
+      </div>
+
+      <div class="proposal-options-group">
+        <label class="proposal-option-card active" id="proposalOptionEmailLabel">
+          <input type="radio" name="proposalChannel" value="Email" checked class="proposal-radio">
+          <div class="proposal-option-icon email-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <div class="proposal-option-info">
+            <span class="proposal-option-title">E-mail</span>
+            <span class="proposal-option-sub">Enviar proposta formal via e-mail</span>
+          </div>
+        </label>
+
+        <label class="proposal-option-card" id="proposalOptionWhatsappLabel">
+          <input type="radio" name="proposalChannel" value="Whatsapp" class="proposal-radio">
+          <div class="proposal-option-icon whatsapp-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+          </div>
+          <div class="proposal-option-info">
+            <span class="proposal-option-title">WhatsApp</span>
+            <span class="proposal-option-sub">Enviar resumo e link via WhatsApp</span>
+          </div>
+        </label>
+      </div>
+
+      <div class="modal-actions-row">
+        <button id="cancelProposalBtn" class="btn-modal-cancel">Cancelar</button>
+        <button id="confirmProposalBtn" class="btn-modal-primary">
+          <span>Enviar Proposta</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== MODAL: CONFIRMAR EXCLUSÃO ==================== -->
   <div id="modalDeleteConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal-card modal-confirm-card">
@@ -901,6 +955,6 @@
 
   <!-- Supabase JS Client SDK v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=48"></script>
+  <script src="script.js?v=49"></script>
 </body>
 </html>
