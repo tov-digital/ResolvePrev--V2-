@@ -53,7 +53,7 @@
                 id="emailInput" 
                 name="email" 
                 class="form-control" 
-                placeholder="seu.email@resolveprev.com.br"
+                placeholder="email@resolveprev.com"
                 required
                 autocomplete="email"
               >
@@ -171,20 +171,25 @@
           </svg>
         </div>
         <h3>Recuperar Acesso</h3>
-        <p>Digite seu e-mail cadastrado para receber as instruções de redefinição de senha.</p>
+        <p>Digite seu <strong>e-mail cadastrado</strong> para receber as instruções de redefinição de senha.</p>
       </div>
       <form id="recoveryForm" class="modal-form">
         <div class="input-group">
-          <label for="recoveryEmail" class="input-label">E-mail Cadastrado</label>
-          <input type="email" id="recoveryEmail" class="form-control" placeholder="seu.email@resolveprev.com.br" required>
+          <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <input type="email" id="recoveryEmail" class="form-control" placeholder="email@resolveprev.com" required>
+          </div>
         </div>
         <button type="submit" id="recoverySubmitBtn" class="btn-submit">
-          <span class="btn-text">Enviar Link de Recuperação</span>
+          <span class="btn-text">Enviar</span>
           <span class="spinner hidden" id="recoverySpinner"></span>
         </button>
       </form>
       <div id="recoverySuccess" class="alert-success hidden">
-        ✓ Pedido de recuperação enviado com sucesso! Por favor, verifique seu e-mail para completar a recuperação de senha.
+        ✓ Enviado com sucesso, verifique seu email!
       </div>
     </div>
   </div>
@@ -203,25 +208,36 @@
           </svg>
         </div>
         <h3>Solicitar Primeiro Acesso</h3>
-        <p>Preencha os dados abaixo para validar seu cadastro na secretaria.</p>
+        <p>Preencha os dados abaixo para validar seu cadastro.</p>
       </div>
       <form id="firstAccessForm" class="modal-form">
         <div class="input-group">
           <label for="faName" class="input-label">Nome Completo</label>
-          <input type="text" id="faName" class="form-control" placeholder="Dr. João Silva" required>
+          <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <input type="text" id="faName" class="form-control" placeholder="Dr. João Silva" required>
+          </div>
         </div>
         <div class="input-group">
-          <label for="faEmail" class="input-label">E-mail Institucional</label>
-          <input type="email" id="faEmail" class="form-control" placeholder="nome@resolveprev.com.br" required>
+          <label for="faEmail" class="input-label">E-mail</label>
+          <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <input type="email" id="faEmail" class="form-control" placeholder="email@resolveprev.com" required>
+          </div>
         </div>
-        <div class="input-group">
-          <label for="faOab" class="input-label">OAB / CPF</label>
-          <input type="text" id="faOab" class="form-control" placeholder="OAB/SP 123.456" required>
-        </div>
-        <button type="submit" class="btn-submit">Solicitar Ativação de Conta</button>
+        <button type="submit" id="firstAccessSubmitBtn" class="btn-submit">
+          <span class="btn-text">Enviar</span>
+          <span class="spinner hidden" id="firstAccessSpinner"></span>
+        </button>
       </form>
       <div id="firstAccessSuccess" class="alert-success hidden">
-        ✓ Solicitação enviada! O administrador entrará em contato para liberação de acesso.
+        ✓ Solicitação enviada, verifique seu email!
       </div>
     </div>
   </div>

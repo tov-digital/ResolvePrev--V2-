@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.warn('Requisição enviada para o webhook:', err);
     } finally {
-      btnText.textContent = 'Enviar Link de Recuperação';
+      btnText.textContent = 'Enviar';
       spinner.classList.add('hidden');
       recoverySubmitBtn.disabled = false;
 
@@ -208,16 +208,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Formulário de Primeiro Acesso
-  firstAccessForm.addEventListener('submit', (e) => {
+  // Formulário de Primeiro Acesso (Webhook n8n)
+  firstAccessForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const faName = document.getElementById('faName').value.trim();
+    const faEmail = document.getElementById('faEmail').value.trim();
+    const firstAccessSubmitBtn = document.getElementById('firstAccessSubmitBtn');
+    const btnText = firstAccessSubmitBtn.querySelector('.btn-text');
+    const spinner = document.getElementById('firstAccessSpinner');
     const successBox = document.getElementById('firstAccessSuccess');
-    successBox.classList.remove('hidden');
-    setTimeout(() => {
-      modalFirstAccess.classList.add('hidden');
-      successBox.classList.add('hidden');
-      firstAccessForm.reset();
-    }, 2500);
+
+    if (!faName || !faEmail) return;
+
+    // Estado de carregamento
+    btnText.textContent = 'Enviando...';
+    spinner.classList.remove('hidden');
+    firstAccessSubmitBtn.disabled = true;
+
+    try {
+      await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/primeiro_acesso', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          nome: faName,
+          email: faEmail
+        })
+      });
+    } catch (err) {
+      console.warn('Requisição enviada para o webhook de primeiro acesso:', err);
+    } finally {
+      btnText.textContent = 'Enviar';
+      spinner.classList.add('hidden');
+      firstAccessSubmitBtn.disabled = false;
+
+      // Exibir mensagem de confirmação para o usuário
+      successBox.classList.remove('hidden');
+
+      setTimeout(() => {
+        modalFirstAccess.classList.add('hidden');
+        successBox.classList.add('hidden');
+        firstAccessForm.reset();
+      }, 4000);
+    }
   });
 
   /* ==========================================
