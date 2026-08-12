@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
+  // Estado da aba atual (Comercial vs Operação)
+  window.currentTab = 'comercial';
+  function getCurrentTable() {
+    return window.currentTab === 'comercial' ? 'oportunidades_crm' : 'operacao_crm';
+  }
   // DOM Elements - Login
   const loginForm = document.getElementById('loginForm');
   const emailInput = document.getElementById('emailInput');
@@ -50,6 +55,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Alternância de Abas (Comercial / Operação)
+  const navItems = document.querySelectorAll('.nav-item[data-tab]');
+  const crmTitle = document.querySelector('.crm-title');
+  const crmSubtitle = document.querySelector('.crm-subtitle');
+  
+  navItems.forEach(item => {
+    item.addEventListener('click', async (e) => {
+      e.preventDefault();
+      
+      // Atualiza aba ativa visualmente
+      navItems.forEach(nav => nav.classList.remove('active'));
+      item.classList.add('active');
+      
+      // Atualiza o estado
+      window.currentTab = item.dataset.tab;
+      
+      // Atualiza títulos
+      if (window.currentTab === 'comercial') {
+        crmTitle.textContent = 'Comercial';
+        crmSubtitle.textContent = 'CRM / Funil de Vendas';
+      } else if (window.currentTab === 'operacao') {
+        crmTitle.textContent = 'Operação';
+        crmSubtitle.textContent = 'Acompanhamento de Operações';
+      }
+      
+      // Exibe/Oculta colunas do Kanban com base na aba
+      document.querySelectorAll('.kanban-column').forEach(col => {
+        if (col.dataset.tab === window.currentTab) {
+          col.classList.remove('hidden');
+        } else {
+          col.classList.add('hidden');
+        }
+      });
+
+      // Exibe/Oculta opções no dropdown de status do card
+      document.querySelectorAll('.status-option').forEach(opt => {
+        if (opt.dataset.tab === window.currentTab) {
+          opt.classList.remove('hidden');
+        } else {
+          opt.classList.add('hidden');
+        }
+      });
+      
+      // Recarrega os dados para a aba atual
+      await fetchAllCards();
+    });
+  });
+
   // Verificar sessão ativa do Supabase ao carregar
   if (supabase) {
     const { data: { session } } = await supabase.auth.getSession();
@@ -64,7 +117,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     'qualificacao': 'Qualificação',
     'acompanhamento': 'Acompanhamento',
     'reuniao': 'Reunião',
-    'proposta': 'Proposta'
+    'proposta': 'Proposta',
+    'documentacao': 'Documentação',
+    'na_fila': 'Na Fila',
+    'requerido': 'Requerido',
+    'concedido': 'Concedido',
+    'insucessos': 'Insucessos'
   };
 
   const stageDotClasses = {
@@ -72,7 +130,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     'qualificacao': 'dot-qualificacao',
     'acompanhamento': 'dot-acompanhamento',
     'reuniao': 'dot-reuniao',
-    'proposta': 'dot-proposta'
+    'proposta': 'dot-proposta',
+    'documentacao': 'dot-documentacao',
+    'na_fila': 'dot-na_fila',
+    'requerido': 'dot-requerido',
+    'concedido': 'dot-concedido',
+    'insucessos': 'dot-insucessos'
   };
 
   function showDashboard(user) {
@@ -530,7 +593,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (supabase) {
         const { error } = await supabase
-          .from('oportunidades_crm')
+          .from(getCurrentTable())
           .update({ user_id: selectedBulkUserId, atualizado_em: new Date().toISOString() })
           .in('id', selectedIds);
 
@@ -568,7 +631,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const btnAdd = e.target.closest('.btn-add-card');
       if (btnAdd) {
         const column = btnAdd.closest('.kanban-column');
-        const stage = column ? column.dataset.stage : 'novo';
+        const defaultStage = window.currentTab === 'comercial' ? 'novo' : 'documentacao';
+        const stage = column ? column.dataset.stage : defaultStage;
         
         // Dados Padrão para novo card (Documentos Obrigatórios iniciam como 'Pendente')
         const defaultData = {
@@ -596,7 +660,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
           }
 
-          const { error } = await supabase.from('oportunidades_crm').insert([{
+          const { error } = await supabase.from(getCurrentTable()).insert([{
             ...defaultData,
             user_id: currentUserId
           }]);
@@ -637,7 +701,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Buscar oportunidades atreladas exclusivamente ao usuário logado
     const { data: cards, error } = await supabase
-      .from('oportunidades_crm')
+      .from(getCurrentTable())
       .select('*')
       .eq('user_id', currentUserId)
       .order('criado_em', { ascending: false });
@@ -652,24 +716,133 @@ document.addEventListener('DOMContentLoaded', async () => {
     filterAndRenderCards(searchTerm);
   }
 
+  /* ==========================================
+     PAINEL DE FILTROS
+     ========================================== */
+  const filterPanel       = document.getElementById('filterPanel');
+  const filterDropWrapper = document.getElementById('filterDropdownWrapper');
+  const filterApplyBtn    = document.getElementById('filterApplyBtn');
+  const filterClearBtn    = document.getElementById('filterClearBtn');
+  const filterActiveBadge = document.getElementById('filterActiveBadge');
+
+  // Estado ativo dos filtros (aplicados ao clicar em "Aplicar")
+  let activeStatusFilters = []; // array de strings e.g. ['novo','proposta']
+  let activeDateFilter    = ''; // string e.g. 'menos7'
+
+  // Toggle do painel
+  const crmFilterBtnEl = document.getElementById('crmFilterBtn');
+  if (crmFilterBtnEl && filterPanel) {
+    crmFilterBtnEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      filterPanel.classList.toggle('hidden');
+    });
+  }
+
+  // Fechar painel ao clicar fora
+  document.addEventListener('click', (e) => {
+    if (filterPanel && !filterPanel.classList.contains('hidden')) {
+      if (!filterDropWrapper?.contains(e.target)) {
+        filterPanel.classList.add('hidden');
+      }
+    }
+  });
+
+  // Função auxiliar: calcula diferença em dias entre hoje e a data do card
+  function daysDiff(dateStr) {
+    if (!dateStr) return null;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const target = new Date(year, month - 1, day); target.setHours(0, 0, 0, 0);
+    return Math.ceil((target - today) / 86400000); // positivo = futuro, negativo = passado
+  }
+
+  // Atualiza badge de filtros ativos no botão
+  function updateFilterBadge() {
+    const count = activeStatusFilters.length + (activeDateFilter ? 1 : 0);
+    if (filterActiveBadge) {
+      if (count > 0) {
+        filterActiveBadge.textContent = count;
+        filterActiveBadge.classList.remove('hidden');
+        if (crmFilterBtnEl) crmFilterBtnEl.style.borderColor = 'var(--color-primary)';
+        if (crmFilterBtnEl) crmFilterBtnEl.style.color = 'var(--color-primary)';
+      } else {
+        filterActiveBadge.classList.add('hidden');
+        if (crmFilterBtnEl) crmFilterBtnEl.style.borderColor = '';
+        if (crmFilterBtnEl) crmFilterBtnEl.style.color = '';
+      }
+    }
+  }
+
+  // Botão "Aplicar Filtros"
+  if (filterApplyBtn) {
+    filterApplyBtn.addEventListener('click', () => {
+      // Lê checkboxes de status
+      activeStatusFilters = Array.from(document.querySelectorAll('.filter-status-cb'))
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+
+      // Lê radio de data
+      const checkedRadio = document.querySelector('.filter-date-radio:checked');
+      activeDateFilter = checkedRadio ? checkedRadio.value : '';
+
+      updateFilterBadge();
+      filterPanel.classList.add('hidden');
+
+      // Re-renderiza com os filtros aplicados
+      const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
+      filterAndRenderCards(searchTerm);
+    });
+  }
+
+  // Botão "Limpar tudo"
+  if (filterClearBtn) {
+    filterClearBtn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-status-cb').forEach(cb => cb.checked = false);
+      const anyDateRadio = document.querySelector('.filter-date-radio[value=""]');
+      if (anyDateRadio) anyDateRadio.checked = true;
+      activeStatusFilters = [];
+      activeDateFilter = '';
+      updateFilterBadge();
+      const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
+      filterAndRenderCards(searchTerm);
+    });
+  }
+
+  /* ==========================================
+     FILTRO PRINCIPAL — busca + status + data
+     ========================================== */
   function filterAndRenderCards(searchTerm) {
-    let filtered;
-    if (!searchTerm) {
-      filtered = allUserCards;
-    } else {
-      // Normalizar termo de pesquisa (remover caracteres especiais para facilitar busca por telefone)
+    let filtered = allUserCards;
+
+    // 1. Filtro de texto (nome / telefone)
+    if (searchTerm) {
       const cleanSearchTerm = searchTerm.replace(/\D/g, '');
-
-      filtered = allUserCards.filter(card => {
-        // 1. Busca por Nome (primeiro nome, sobrenome ou qualquer pedaço)
+      filtered = filtered.filter(card => {
         const nameMatch = card.nome && card.nome.toLowerCase().includes(searchTerm);
-
-        // 2. Busca por Telefone (comparando tanto a string formatada quanto apenas os dígitos limpos)
-        const rawPhone = card.telefone ? card.telefone.replace(/\D/g, '') : '';
+        const rawPhone  = card.telefone ? card.telefone.replace(/\D/g, '') : '';
         const phoneFormattedMatch = card.telefone && card.telefone.toLowerCase().includes(searchTerm);
-        const phoneDigitsMatch = cleanSearchTerm && rawPhone.includes(cleanSearchTerm);
-
+        const phoneDigitsMatch    = cleanSearchTerm && rawPhone.includes(cleanSearchTerm);
         return nameMatch || phoneFormattedMatch || phoneDigitsMatch;
+      });
+    }
+
+    // 2. Filtro de status
+    if (activeStatusFilters.length > 0) {
+      filtered = filtered.filter(card => activeStatusFilters.includes(card.status || 'novo'));
+    }
+
+    // 3. Filtro de data de requerimento
+    if (activeDateFilter) {
+      filtered = filtered.filter(card => {
+        const diff = daysDiff(card.data_requerimento);
+        if (diff === null) return false;
+        switch (activeDateFilter) {
+          case 'mais30':  return diff > 30;           // mais de 30 dias no futuro
+          case 'menos30': return diff >= 0 && diff <= 30; // até 30 dias no futuro
+          case 'menos7':  return diff >= 0 && diff <= 7;  // até 7 dias no futuro
+          case 'vencidos': return diff < 0;            // data já passou
+          default: return true;
+        }
       });
     }
 
@@ -681,6 +854,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+
   /* ==========================================
      VISUALIZAÇÃO EM LISTA — RENDER
      ========================================== */
@@ -690,11 +864,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     tbody.innerHTML = '';
 
-    // Ordenar por última atualização (mais recente primeiro), igual ao Kanban
+    // Ordenação
     const sorted = [...cards].sort((a, b) => {
-      const da = new Date(a.atualizado_em || a.criado_em || 0).getTime();
-      const db = new Date(b.atualizado_em || b.criado_em || 0).getTime();
-      return db - da;
+      if (window.currentTab === 'operacao') {
+        const da = a.data_requerimento ? new Date(a.data_requerimento).getTime() : Infinity;
+        const db = b.data_requerimento ? new Date(b.data_requerimento).getTime() : Infinity;
+        return da - db;
+      } else {
+        // Comercial: ordenação invertida por status na lista (proposta -> novo)
+        const order = { proposta: 1, reuniao: 2, acompanhamento: 3, qualificacao: 4, novo: 5 };
+        const oA = order[a.status] || 99;
+        const oB = order[b.status] || 99;
+        if (oA !== oB) return oA - oB;
+        // fallback para data
+        const da = new Date(a.atualizado_em || a.criado_em || 0).getTime();
+        const db = new Date(b.atualizado_em || b.criado_em || 0).getTime();
+        return db - da;
+      }
     });
 
     if (sorted.length === 0) {
@@ -726,7 +912,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       const waUrl = rawPhone ? `https://wa.me/55${rawPhone}` : '#';
 
       // ---- Status badge ----
-      const statusLabels = { novo: 'Novo', qualificacao: 'Qualificação', acompanhamento: 'Acompanhamento', reuniao: 'Reunião', proposta: 'Proposta' };
+      const statusLabels = { 
+        novo: 'Novo', qualificacao: 'Qualificação', acompanhamento: 'Acompanhamento', reuniao: 'Reunião', proposta: 'Proposta',
+        documentacao: 'Documentação', na_fila: 'Na Fila', requerido: 'Requerido', concedido: 'Concedido', insucessos: 'Insucessos'
+      };
       const statusLabel = statusLabels[card.status] || card.status || 'Novo';
       const statusClass = `list-status-${card.status || 'novo'}`;
 
@@ -862,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         confirmDeleteBtn.textContent = 'Excluindo...';
 
         if (supabase) {
-          await supabase.from('oportunidades_crm').delete().eq('id', cardToDelete.id);
+          await supabase.from(getCurrentTable()).delete().eq('id', cardToDelete.id);
         }
 
         if (cardElementToDelete) cardElementToDelete.remove();
@@ -877,20 +1066,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderKanbanCards(cards) {
-    // Limpar containers das 5 colunas
-    const stages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
+    const stages = window.currentTab === 'comercial' 
+      ? ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta']
+      : ['documentacao', 'na_fila', 'requerido', 'concedido', 'insucessos'];
+
     stages.forEach(stage => {
-      const column = document.querySelector(`.kanban-column[data-stage="${stage}"]`);
+      // Pega apenas a coluna da tab atual
+      const column = document.querySelector(`.kanban-column[data-stage="${stage}"][data-tab="${window.currentTab}"]`);
       if (column) {
         const container = column.querySelector('.kanban-cards-container');
         const countSpan = column.querySelector('.column-count');
         container.innerHTML = '';
         
-        // Filtrar cards da coluna e ordenar pela última atualização (mais recente primeiro)
+        // Filtrar cards da coluna e ordenar
         const stageCards = cards.filter(c => c.status === stage).sort((a, b) => {
-          const dateA = new Date(a.atualizado_em || a.criado_em || 0).getTime();
-          const dateB = new Date(b.atualizado_em || b.criado_em || 0).getTime();
-          return dateB - dateA;
+          if (window.currentTab === 'operacao') {
+            const da = a.data_requerimento ? new Date(a.data_requerimento).getTime() : Infinity;
+            const db = b.data_requerimento ? new Date(b.data_requerimento).getTime() : Infinity;
+            return da - db;
+          } else {
+            const dateA = new Date(a.atualizado_em || a.criado_em || 0).getTime();
+            const dateB = new Date(b.atualizado_em || b.criado_em || 0).getTime();
+            return dateB - dateA;
+          }
         });
 
         countSpan.textContent = stageCards.length;
@@ -1062,7 +1260,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (supabase) {
       const { error } = await supabase
-        .from('oportunidades_crm')
+        .from(getCurrentTable())
         .update({ 
           status: newStage,
           atualizado_em: nowIso
@@ -1448,7 +1646,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Gravar alteração na coluna correspondente da tabela no Supabase
       const { error } = await supabase
-        .from('oportunidades_crm')
+        .from(getCurrentTable())
         .update({ [docKey]: newStatus })
         .eq('id', currentActiveCard.id);
 
@@ -1558,7 +1756,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!currentActiveCard || !supabase) return;
 
     const { error } = await supabase
-      .from('oportunidades_crm')
+      .from(getCurrentTable())
       .update({ eventuais: updatedDocsArray })
       .eq('id', currentActiveCard.id);
 
@@ -1642,7 +1840,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
       const { error } = await supabase
-        .from('oportunidades_crm')
+        .from(getCurrentTable())
         .update(updatedData)
         .eq('id', currentActiveCard.id);
 
@@ -1695,7 +1893,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
       const { error } = await supabase
-        .from('oportunidades_crm')
+        .from(getCurrentTable())
         .update(updatedAnswers)
         .eq('id', currentActiveCard.id);
 
@@ -1884,7 +2082,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Gravação no Supabase em segundo plano
     if (supabase) {
       const { error } = await supabase
-        .from('oportunidades_crm')
+        .from(getCurrentTable())
         .update({ notas_internas: notes })
         .eq('id', currentActiveCard.id);
 
@@ -2060,7 +2258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     itemDiv.addEventListener('click', async () => {
       if (currentActiveCard && supabase) {
         const { error } = await supabase
-          .from('oportunidades_crm')
+          .from(getCurrentTable())
           .update({ user_id: profile.id })
           .eq('id', currentActiveCard.id);
 

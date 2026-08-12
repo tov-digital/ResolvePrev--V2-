@@ -818,6 +818,198 @@ html, body {
   color: var(--color-primary);
 }
 
+/* Badge de filtros ativos no botão */
+.filter-active-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--color-primary);
+  color: #FFFFFF;
+  font-size: 0.68rem;
+  font-weight: 800;
+  border-radius: 20px;
+  margin-left: 2px;
+}
+
+.filter-active-badge.hidden { display: none; }
+
+/* Wrapper do dropdown — posicionamento relativo */
+.filter-dropdown-wrapper {
+  position: relative;
+}
+
+/* Painel flutuante */
+.filter-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 200;
+  width: 300px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  padding: 1rem;
+  animation: filterPanelIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top right;
+}
+
+.filter-panel.hidden { display: none; }
+
+@keyframes filterPanelIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);     }
+}
+
+/* Cabeçalho do painel */
+.filter-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+
+.filter-panel-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--color-neutral);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-clear-btn {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.75;
+  transition: opacity 0.15s;
+}
+.filter-clear-btn:hover { opacity: 1; }
+
+/* Seções */
+.filter-section { margin-bottom: 0.75rem; }
+
+.filter-section-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 0.5rem;
+}
+
+/* Chips de status (checkbox) */
+.filter-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.42rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-neutral);
+  transition: background 0.12s;
+  user-select: none;
+}
+.filter-chip:hover { background: var(--bg-input); }
+
+.filter-chip input[type="checkbox"] { display: none; }
+
+/* Dot colorido de status */
+.filter-chip-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-novo          { background: #60A5FA; }
+.dot-qualificacao  { background: #A78BFA; }
+.dot-acompanhamento{ background: #F59E0B; }
+.dot-reuniao       { background: #34D399; }
+.dot-proposta      { background: #F472B6; }
+
+/* Chip selecionado */
+.filter-chip:has(input:checked) {
+  background: var(--color-primary-light, #EBF3FA);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+/* Divisor */
+.filter-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 0.65rem 0;
+}
+
+/* Radio group de data */
+.filter-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.filter-radio-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.42rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-neutral);
+  transition: background 0.12s;
+  user-select: none;
+}
+.filter-radio-chip:hover { background: var(--bg-input); }
+.filter-radio-chip input[type="radio"] { display: none; }
+
+.filter-radio-chip:has(input:checked) {
+  background: var(--color-primary-light, #EBF3FA);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.filter-radio-vencido { color: #EF4444; }
+.filter-radio-chip:has(input:checked) .filter-radio-vencido { color: #EF4444; }
+
+/* Rodapé do painel */
+.filter-panel-footer {
+  margin-top: 0.85rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-apply-filters {
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-family: var(--font-family);
+}
+.btn-apply-filters:hover { background: var(--color-primary-hover, #1d4ed8); }
+
+
 /* Toggle do Grupo de Visualizações (Kanban vs Lista) */
 .view-toggle-group {
   display: flex;
@@ -908,10 +1100,17 @@ html, body {
 }
 
 .dot-novo { background-color: #3B82F6; }         /* Azul */
-.dot-qualificacao { background-color: #F59E0B; } /* Âmbar / Laranja */
-.dot-acompanhamento { background-color: #8B5CF6; }/* Roxo */
-.dot-reuniao { background-color: #EC4899; }       /* Rosa */
-.dot-proposta { background-color: #10B981; }      /* Verde */
+.dot-qualificacao { background-color: #A855F7; } /* Roxo */
+.dot-acompanhamento { background-color: #F97316; }/* Laranja */
+.dot-reuniao { background-color: #22C55E; }      /* Verde */
+.dot-proposta { background-color: #F43F5E; }     /* Rosa/Vermelho */
+
+/* Dots - Operação */
+.dot-documentacao { background-color: #94A3B8; } /* Slate/Gray */
+.dot-na_fila { background-color: #FACC15; }      /* Yellow */
+.dot-requerido { background-color: #60A5FA; }    /* Blue */
+.dot-concedido { background-color: #4ADE80; }    /* Green */
+.dot-insucessos { background-color: #F87171; }   /* Red */
 
 .column-title {
   font-size: 0.92rem;
@@ -1662,6 +1861,22 @@ html, body {
 
 .list-status-proposta     { background: #FFF1F2; color: #9F1239; border: 1px solid rgba(159,18,57,0.2); }
 .list-status-proposta .status-dot     { background: #F43F5E; }
+
+/* Statuses da Lista - Operação */
+.list-status-documentacao { background: #F1F5F9; color: #334155; border: 1px solid rgba(51,65,85,0.2); }
+.list-status-documentacao .status-dot { background: #94A3B8; }
+
+.list-status-na_fila { background: #FEF9C3; color: #854D0E; border: 1px solid rgba(133,77,14,0.2); }
+.list-status-na_fila .status-dot { background: #FACC15; }
+
+.list-status-requerido { background: #DBEAFE; color: #1E40AF; border: 1px solid rgba(30,64,175,0.2); }
+.list-status-requerido .status-dot { background: #60A5FA; }
+
+.list-status-concedido { background: #DCFCE7; color: #166534; border: 1px solid rgba(22,101,52,0.2); }
+.list-status-concedido .status-dot { background: #4ADE80; }
+
+.list-status-insucessos { background: #FEE2E2; color: #991B1B; border: 1px solid rgba(153,27,27,0.2); }
+.list-status-insucessos .status-dot { background: #F87171; }
 
 /* ---- Notes Button Cell ---- */
 .td-notes {

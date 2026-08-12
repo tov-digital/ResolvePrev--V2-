@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=52">
+  <link rel="stylesheet" href="styles.css?v=55">
 </head>
 <body>
 
@@ -153,13 +153,19 @@
 
       <!-- Navegação Principal / Abas -->
       <nav class="sidebar-nav">
-        <a href="#" class="nav-item active" title="Comercial">
+        <a href="#" class="nav-item active" data-tab="comercial" title="Comercial">
           <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
             <line x1="3" x2="21" y1="6" y2="6"/>
             <path d="M16 10a4 4 0 0 1-8 0"/>
           </svg>
           <span class="nav-label">Comercial</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="operacao" title="Operação">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 9.36l-7.1 7.1a1 1 0 0 1-1.41-1.41l7.1-7.1a6 6 0 0 1 9.36-7.94l-3.77 3.77z"/>
+          </svg>
+          <span class="nav-label">Operação</span>
         </a>
       </nav>
 
@@ -203,13 +209,56 @@
             <input type="text" id="crmSearchInput" class="crm-search-input" placeholder="Pesquisar oportunidades...">
           </div>
 
-          <!-- Botão Filtros -->
-          <button id="crmFilterBtn" class="crm-btn-secondary" title="Filtrar oportunidades">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-            </svg>
-            <span>Filtros</span>
-          </button>
+          <!-- Botão Filtros + Painel Dropdown -->
+          <div class="filter-dropdown-wrapper" id="filterDropdownWrapper">
+            <button id="crmFilterBtn" class="crm-btn-secondary" title="Filtrar oportunidades">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              </svg>
+              <span>Filtros</span>
+              <span id="filterActiveBadge" class="filter-active-badge hidden">0</span>
+            </button>
+
+            <!-- Painel de Filtros -->
+            <div id="filterPanel" class="filter-panel hidden">
+              <div class="filter-panel-header">
+                <span class="filter-panel-title">Filtrar por</span>
+                <button class="filter-clear-btn" id="filterClearBtn" title="Limpar todos os filtros">Limpar tudo</button>
+              </div>
+
+
+              <!-- Seção: Data de Requerimento -->
+              <div class="filter-section">
+                <p class="filter-section-label">Data de Requerimento</p>
+                <div class="filter-radio-group">
+                  <label class="filter-radio-chip">
+                    <input type="radio" name="filterDate" class="filter-date-radio" value="">
+                    <span>Qualquer data</span>
+                  </label>
+                  <label class="filter-radio-chip">
+                    <input type="radio" name="filterDate" class="filter-date-radio" value="mais30">
+                    <span>Mais de 30 dias</span>
+                  </label>
+                  <label class="filter-radio-chip">
+                    <input type="radio" name="filterDate" class="filter-date-radio" value="menos30">
+                    <span>Menos de 30 dias</span>
+                  </label>
+                  <label class="filter-radio-chip">
+                    <input type="radio" name="filterDate" class="filter-date-radio" value="menos7">
+                    <span>Menos de 7 dias</span>
+                  </label>
+                  <label class="filter-radio-chip">
+                    <input type="radio" name="filterDate" class="filter-date-radio" value="vencidos">
+                    <span class="filter-radio-vencido">⚠ Vencidos</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="filter-panel-footer">
+                <button class="btn-apply-filters" id="filterApplyBtn">Aplicar Filtros</button>
+              </div>
+            </div>
+          </div>
 
           <!-- Toggle de Visualização (Kanban x Lista) -->
           <div class="view-toggle-group">
@@ -239,8 +288,8 @@
       <!-- Corpo da Visualização: KANBAN -->
       <section id="crmKanbanView" class="crm-view-container crm-kanban-board">
         
-        <!-- Coluna 1: Novo -->
-        <div class="kanban-column" data-stage="novo">
+        <!-- COLUNAS COMERCIAL -->
+        <div class="kanban-column" data-stage="novo" data-tab="comercial">
           <div class="kanban-column-header">
             <div class="column-title-group">
               <span class="column-status-dot dot-novo"></span>
@@ -249,13 +298,10 @@
             </div>
             <button class="btn-add-card" title="Adicionar oportunidade" aria-label="Adicionar card">+</button>
           </div>
-          <div class="kanban-cards-container">
-            <!-- Cards serão inseridos aqui na próxima etapa -->
-          </div>
+          <div class="kanban-cards-container"></div>
         </div>
 
-        <!-- Coluna 2: Qualificação -->
-        <div class="kanban-column" data-stage="qualificacao">
+        <div class="kanban-column" data-stage="qualificacao" data-tab="comercial">
           <div class="kanban-column-header">
             <div class="column-title-group">
               <span class="column-status-dot dot-qualificacao"></span>
@@ -264,13 +310,10 @@
             </div>
             <button class="btn-add-card" title="Adicionar oportunidade" aria-label="Adicionar card">+</button>
           </div>
-          <div class="kanban-cards-container">
-            <!-- Cards serão inseridos aqui na próxima etapa -->
-          </div>
+          <div class="kanban-cards-container"></div>
         </div>
 
-        <!-- Coluna 3: Acompanhamento -->
-        <div class="kanban-column" data-stage="acompanhamento">
+        <div class="kanban-column" data-stage="acompanhamento" data-tab="comercial">
           <div class="kanban-column-header">
             <div class="column-title-group">
               <span class="column-status-dot dot-acompanhamento"></span>
@@ -279,13 +322,10 @@
             </div>
             <button class="btn-add-card" title="Adicionar oportunidade" aria-label="Adicionar card">+</button>
           </div>
-          <div class="kanban-cards-container">
-            <!-- Cards serão inseridos aqui na próxima etapa -->
-          </div>
+          <div class="kanban-cards-container"></div>
         </div>
 
-        <!-- Coluna 4: Reunião -->
-        <div class="kanban-column" data-stage="reuniao">
+        <div class="kanban-column" data-stage="reuniao" data-tab="comercial">
           <div class="kanban-column-header">
             <div class="column-title-group">
               <span class="column-status-dot dot-reuniao"></span>
@@ -294,13 +334,10 @@
             </div>
             <button class="btn-add-card" title="Adicionar oportunidade" aria-label="Adicionar card">+</button>
           </div>
-          <div class="kanban-cards-container">
-            <!-- Cards serão inseridos aqui na próxima etapa -->
-          </div>
+          <div class="kanban-cards-container"></div>
         </div>
 
-        <!-- Coluna 5: Proposta -->
-        <div class="kanban-column" data-stage="proposta">
+        <div class="kanban-column" data-stage="proposta" data-tab="comercial">
           <div class="kanban-column-header">
             <div class="column-title-group">
               <span class="column-status-dot dot-proposta"></span>
@@ -309,9 +346,68 @@
             </div>
             <button class="btn-add-card" title="Adicionar oportunidade" aria-label="Adicionar card">+</button>
           </div>
-          <div class="kanban-cards-container">
-            <!-- Cards serão inseridos aqui na próxima etapa -->
+          <div class="kanban-cards-container"></div>
+        </div>
+
+        <!-- COLUNAS OPERAÇÃO (Ocultas por padrão) -->
+        <div class="kanban-column hidden" data-stage="documentacao" data-tab="operacao">
+          <div class="kanban-column-header">
+            <div class="column-title-group">
+              <span class="column-status-dot dot-documentacao"></span>
+              <h4 class="column-title">Documentação</h4>
+              <span class="column-count">0</span>
+            </div>
+            <button class="btn-add-card" title="Adicionar operação" aria-label="Adicionar card">+</button>
           </div>
+          <div class="kanban-cards-container"></div>
+        </div>
+
+        <div class="kanban-column hidden" data-stage="na_fila" data-tab="operacao">
+          <div class="kanban-column-header">
+            <div class="column-title-group">
+              <span class="column-status-dot dot-na_fila"></span>
+              <h4 class="column-title">Na Fila</h4>
+              <span class="column-count">0</span>
+            </div>
+            <button class="btn-add-card" title="Adicionar operação" aria-label="Adicionar card">+</button>
+          </div>
+          <div class="kanban-cards-container"></div>
+        </div>
+
+        <div class="kanban-column hidden" data-stage="requerido" data-tab="operacao">
+          <div class="kanban-column-header">
+            <div class="column-title-group">
+              <span class="column-status-dot dot-requerido"></span>
+              <h4 class="column-title">Requerido</h4>
+              <span class="column-count">0</span>
+            </div>
+            <button class="btn-add-card" title="Adicionar operação" aria-label="Adicionar card">+</button>
+          </div>
+          <div class="kanban-cards-container"></div>
+        </div>
+
+        <div class="kanban-column hidden" data-stage="concedido" data-tab="operacao">
+          <div class="kanban-column-header">
+            <div class="column-title-group">
+              <span class="column-status-dot dot-concedido"></span>
+              <h4 class="column-title">Concedido</h4>
+              <span class="column-count">0</span>
+            </div>
+            <button class="btn-add-card" title="Adicionar operação" aria-label="Adicionar card">+</button>
+          </div>
+          <div class="kanban-cards-container"></div>
+        </div>
+
+        <div class="kanban-column hidden" data-stage="insucessos" data-tab="operacao">
+          <div class="kanban-column-header">
+            <div class="column-title-group">
+              <span class="column-status-dot dot-insucessos"></span>
+              <h4 class="column-title">Insucessos</h4>
+              <span class="column-count">0</span>
+            </div>
+            <button class="btn-add-card" title="Adicionar operação" aria-label="Adicionar card">+</button>
+          </div>
+          <div class="kanban-cards-container"></div>
         </div>
 
       </section>
@@ -443,20 +539,36 @@
 
               <!-- Menu Dropdown de Seleção de Coluna -->
               <div id="statusDropdownMenu" class="status-dropdown-menu hidden">
-                <div class="status-option" data-status="novo">
+                <div class="status-option" data-status="novo" data-tab="comercial">
                   <span class="column-status-dot dot-novo"></span> Novo
                 </div>
-                <div class="status-option" data-status="qualificacao">
+                <div class="status-option" data-status="qualificacao" data-tab="comercial">
                   <span class="column-status-dot dot-qualificacao"></span> Qualificação
                 </div>
-                <div class="status-option" data-status="acompanhamento">
+                <div class="status-option" data-status="acompanhamento" data-tab="comercial">
                   <span class="column-status-dot dot-acompanhamento"></span> Acompanhamento
                 </div>
-                <div class="status-option" data-status="reuniao">
+                <div class="status-option" data-status="reuniao" data-tab="comercial">
                   <span class="column-status-dot dot-reuniao"></span> Reunião
                 </div>
-                <div class="status-option" data-status="proposta">
+                <div class="status-option" data-status="proposta" data-tab="comercial">
                   <span class="column-status-dot dot-proposta"></span> Proposta
+                </div>
+
+                <div class="status-option hidden" data-status="documentacao" data-tab="operacao">
+                  <span class="column-status-dot dot-documentacao"></span> Documentação
+                </div>
+                <div class="status-option hidden" data-status="na_fila" data-tab="operacao">
+                  <span class="column-status-dot dot-na_fila"></span> Na Fila
+                </div>
+                <div class="status-option hidden" data-status="requerido" data-tab="operacao">
+                  <span class="column-status-dot dot-requerido"></span> Requerido
+                </div>
+                <div class="status-option hidden" data-status="concedido" data-tab="operacao">
+                  <span class="column-status-dot dot-concedido"></span> Concedido
+                </div>
+                <div class="status-option hidden" data-status="insucessos" data-tab="operacao">
+                  <span class="column-status-dot dot-insucessos"></span> Insucessos
                 </div>
               </div>
             </div>
@@ -1002,6 +1114,6 @@
 
   <!-- Supabase JS Client SDK v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=51"></script>
+  <script src="script.js?v=55"></script>
 </body>
 </html>
