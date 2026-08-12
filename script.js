@@ -10,6 +10,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   function getCurrentTable() {
     return window.currentTab === 'comercial' ? 'oportunidades_crm' : 'operacao_crm';
   }
+
+  function getUserDisplayName(profile) {
+    if (!profile) return 'Usuário';
+    if (typeof profile === 'string') {
+      if (profile.includes('@')) {
+        const handle = profile.split('@')[0];
+        return handle
+          .replace(/[._-]/g, ' ')
+          .split(' ')
+          .filter(Boolean)
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ');
+      }
+      return profile;
+    }
+    const name = profile.full_name || profile.nome_completo || profile.nome || profile.name ||
+                 profile.user_metadata?.full_name || profile.user_metadata?.name ||
+                 profile.raw_user_meta_data?.full_name || profile.raw_user_meta_data?.name;
+
+    if (name && typeof name === 'string' && name.trim() !== '') {
+      return name.trim();
+    }
+
+    if (profile.email && typeof profile.email === 'string') {
+      const handle = profile.email.split('@')[0];
+      if (handle) {
+        return handle
+          .replace(/[._-]/g, ' ')
+          .split(' ')
+          .filter(Boolean)
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ');
+      }
+    }
+
+    return 'Usuário';
+  }
   // DOM Elements - Login
   const loginForm = document.getElementById('loginForm');
   const emailInput = document.getElementById('emailInput');
@@ -530,7 +567,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         bulkAssignUserList.innerHTML = '';
         users.forEach(u => {
-          const name = u.full_name || u.email?.split('@')[0] || 'Usuário';
+          const name = getUserDisplayName(u);
           const initial = name.charAt(0).toUpperCase();
           const opt = document.createElement('div');
           opt.className = 'bulk-assign-user-option';
@@ -2319,8 +2356,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     reassignUserList.innerHTML = '';
 
     const filtered = cachedProfiles.filter(p => {
-      const name = (p.nome_completo || p.email || '').toLowerCase();
-      return name.includes(searchTerm);
+      const name = getUserDisplayName(p).toLowerCase();
+      const email = (p.email || '').toLowerCase();
+      return name.includes(searchTerm) || email.includes(searchTerm);
     });
 
     if (filtered.length === 0) {
@@ -2359,7 +2397,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function createUserItemElement(profile) {
-    const displayName = profile.nome_completo || profile.email || 'Usuário';
+    const displayName = getUserDisplayName(profile);
     const initial = displayName.charAt(0).toUpperCase();
 
     const itemDiv = document.createElement('div');
