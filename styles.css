@@ -3316,3 +3316,30 @@ html, body {
     display: none;
   }
 }
+
+/* Modal de Confirmação de Concedido */
+.concedido-modal-card {
+  max-width: 440px;
+}
+
+.modal-icon-badge.concedido-badge {
+  background-color: #e6f7eb;
+  color: #10B981;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.concedido-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1.25rem 0;
+  text-align: left;
+}
+
+.form-row label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+  margin-bottom: 0.25rem;
+}

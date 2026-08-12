@@ -1237,6 +1237,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
+        // Se a coluna destino for 'concedido' na aba Operação, abre o pop-up de cobrança
+        if (targetStage === 'concedido' && window.currentTab === 'operacao') {
+          openConcedidoModal(cardObj, targetStage);
+          return;
+        }
+
         // Para outras colunas, executa a mudança diretamente
         await changeCardStatus(cardObj, targetStage);
       });
@@ -1397,6 +1403,108 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // ================= MODAL CONCEDIDO =================
+  const modalConcedido = document.getElementById('modalConcedido');
+  const closeConcedidoModal = document.getElementById('closeConcedidoModal');
+  const cancelConcedidoBtn = document.getElementById('cancelConcedidoBtn');
+  const confirmConcedidoBtn = document.getElementById('confirmConcedidoBtn');
+  const concedidoClientName = document.getElementById('concedidoClientName');
+  
+  let concedidoCardTarget = null;
+  let concedidoNewStatusTarget = null;
+
+  function openConcedidoModal(card, newStatus) {
+    concedidoCardTarget = card;
+    concedidoNewStatusTarget = newStatus;
+    if (concedidoClientName) concedidoClientName.textContent = `"${card.nome}"`;
+    
+    document.getElementById('concedidoValorRenda').value = '';
+    document.getElementById('concedidoMesesAtraso').value = '';
+    document.getElementById('concedidoDataCobranca').value = '';
+    document.getElementById('concedidoNumeroParcelas').value = '';
+
+    if (modalConcedido) modalConcedido.classList.remove('hidden');
+  }
+
+  function closeConcedidoModalWindow() {
+    concedidoCardTarget = null;
+    concedidoNewStatusTarget = null;
+    if (modalConcedido) modalConcedido.classList.add('hidden');
+  }
+
+  if (closeConcedidoModal) closeConcedidoModal.addEventListener('click', closeConcedidoModalWindow);
+  if (cancelConcedidoBtn) cancelConcedidoBtn.addEventListener('click', closeConcedidoModalWindow);
+
+  window.addEventListener('click', (e) => {
+    if (e.target === modalConcedido) closeConcedidoModalWindow();
+  });
+
+  if (confirmConcedidoBtn) {
+    confirmConcedidoBtn.addEventListener('click', async () => {
+      if (!concedidoCardTarget || !concedidoNewStatusTarget) return;
+
+      const valorRenda = document.getElementById('concedidoValorRenda').value;
+      const mesesAtraso = document.getElementById('concedidoMesesAtraso').value;
+      const dataCobranca = document.getElementById('concedidoDataCobranca').value;
+      const numeroParcelas = document.getElementById('concedidoNumeroParcelas').value;
+
+      confirmConcedidoBtn.disabled = true;
+      const btnSpan = confirmConcedidoBtn.querySelector('span');
+      if (btnSpan) btnSpan.textContent = 'Enviando...';
+
+      const webhookPayload = {
+        valor_renda: valorRenda,
+        meses_atraso: mesesAtraso,
+        data_cobranca: dataCobranca,
+        numero_parcelas: numeroParcelas,
+        id: concedidoCardTarget.id,
+        nome: concedidoCardTarget.nome,
+        cpf: concedidoCardTarget.cpf,
+        rg: concedidoCardTarget.rg,
+        data_nascimento: concedidoCardTarget.data_nascimento,
+        nome_mae: concedidoCardTarget.nome_mae,
+        telefone: concedidoCardTarget.telefone,
+        email: concedidoCardTarget.email,
+        cep: concedidoCardTarget.cep,
+        endereco: concedidoCardTarget.endereco,
+        numero: concedidoCardTarget.numero,
+        complemento: concedidoCardTarget.complemento,
+        bairro: concedidoCardTarget.bairro,
+        cidade: concedidoCardTarget.cidade,
+        estado: concedidoCardTarget.estado,
+        estado_civil: concedidoCardTarget.estado_civil,
+        profissao: concedidoCardTarget.profissao,
+        nit_pis: concedidoCardTarget.nit_pis,
+        senha_meu_inss: concedidoCardTarget.senha_meu_inss,
+        data_requerimento: concedidoCardTarget.data_requerimento,
+        status: concedidoNewStatusTarget,
+        criado_em: concedidoCardTarget.criado_em
+      };
+
+      try {
+        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/cobranca_rp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(webhookPayload)
+        });
+      } catch (webhookErr) {
+        console.warn('Erro ao acionar webhook de cobrança:', webhookErr);
+      }
+
+      const cardToUpdate = concedidoCardTarget;
+      const newStatus = concedidoNewStatusTarget;
+      closeConcedidoModalWindow();
+
+      await changeCardStatus(cardToUpdate, newStatus);
+      showToast(`Benefício concedido! Cobrança gerada.`);
+
+      confirmConcedidoBtn.disabled = false;
+      if (btnSpan) btnSpan.textContent = 'Confirmar e Enviar';
+    });
+  }
+
   function getStageLabel(stage) {
     const labels = {
       'novo': 'Novo',
@@ -1545,8 +1653,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Atualizar estado visual do botão Etiqueta (Status)
       updateStatusTagUI(card.status || 'novo');
 
-      // Resetar para a aba 'Respostas' ativa por padrão (primeira guia) e garantir toggles de Documentos recolhidos
-      switchTab('respostas');
+      // Resetar para a aba 'Documentos' se estiver em Operação, caso contrário 'Respostas'
+      switchTab(window.currentTab === 'operacao' ? 'documentos' : 'respostas');
 
       const btnObr = document.getElementById('toggleObrigatoriosBtn');
       const listObr = document.getElementById('listObrigatoriosContent');
@@ -2131,6 +2239,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (newStatus !== currentActiveCard.status) {
         if (newStatus === 'proposta') {
           openProposalModal(currentActiveCard, newStatus);
+          return;
+        }
+
+        if (newStatus === 'concedido' && window.currentTab === 'operacao') {
+          openConcedidoModal(currentActiveCard, newStatus);
           return;
         }
 
