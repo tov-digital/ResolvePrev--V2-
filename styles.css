@@ -1879,8 +1879,10 @@ html, body {
 .list-status-insucessos .status-dot { background: #F87171; }
 
 /* ---- Notes Button Cell ---- */
-.td-notes {
+.crm-list-table td.td-notes {
   text-align: center;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .list-notes-btn {

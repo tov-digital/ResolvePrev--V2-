@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       
       // Recarrega os dados para a aba atual
-      await fetchAllCards();
+      await loadUserCards();
     });
   });
 
@@ -427,10 +427,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       crmKanbanView.classList.add('hidden');
       // Renderiza a visualização em lista com os dados atuais
       const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
-      const filtered = searchTerm
-        ? allUserCards.filter(c => (c.nome && c.nome.toLowerCase().includes(searchTerm)) || (c.telefone && c.telefone.includes(searchTerm)))
-        : allUserCards;
-      renderListView(filtered);
+      filterAndRenderCards(searchTerm);
     });
   }
 
@@ -812,7 +809,11 @@ document.addEventListener('DOMContentLoaded', async () => {
      FILTRO PRINCIPAL — busca + status + data
      ========================================== */
   function filterAndRenderCards(searchTerm) {
-    let filtered = allUserCards;
+    const validStages = window.currentTab === 'comercial'
+      ? ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta']
+      : ['documentacao', 'na_fila', 'requerido', 'concedido', 'insucessos'];
+
+    let filtered = allUserCards.filter(card => validStages.includes(card.status || (window.currentTab === 'comercial' ? 'novo' : 'documentacao')));
 
     // 1. Filtro de texto (nome / telefone)
     if (searchTerm) {
