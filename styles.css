@@ -2087,6 +2087,10 @@ html, body {
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  min-width: 115px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-modal-cancel:hover {
@@ -2106,6 +2110,10 @@ html, body {
   cursor: pointer;
   transition: all var(--transition-fast);
   box-shadow: 0 2px 6px rgba(229, 62, 62, 0.25);
+  min-width: 115px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-modal-danger:hover {
@@ -2127,7 +2135,9 @@ html, body {
   box-shadow: 0 2px 6px rgba(30, 80, 128, 0.25);
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  min-width: 115px;
 }
 
 .btn-modal-primary:hover:not(:disabled) {
@@ -2140,9 +2150,61 @@ html, body {
   cursor: not-allowed;
 }
 
-/* Modal de Confirmação de Proposta */
-.proposal-modal-card {
+/* Modal de Confirmação de Proposta e Concessão */
+.proposal-modal-card,
+.concedido-modal-card {
   max-width: 440px;
+}
+
+.modal-icon-badge.concedido-badge {
+  background-color: #F0FDF4;
+  color: #16A34A;
+  border-color: rgba(22, 163, 74, 0.2);
+}
+
+.concedido-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 1rem;
+}
+
+.concedido-form-group .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.concedido-form-group label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--color-neutral);
+  letter-spacing: -0.2px;
+}
+
+.concedido-form-group input {
+  width: 100%;
+  height: 46px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 0 1rem;
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  color: var(--color-neutral);
+  outline: none;
+  box-shadow: var(--shadow-input);
+  transition: all var(--transition-fast);
+}
+
+.concedido-form-group input:focus {
+  border-color: var(--color-primary);
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.concedido-form-group input::placeholder {
+  color: var(--text-muted);
 }
 
 .modal-icon-badge.proposal-badge {

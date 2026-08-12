@@ -1059,7 +1059,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadUserCards(); // Atualiza contadores das colunas
 
         confirmDeleteBtn.disabled = false;
-        confirmDeleteBtn.textContent = 'Sim, Excluir';
+        confirmDeleteBtn.textContent = 'Excluir';
         closeDeleteConfirmModal();
         showToast('Oportunidade excluída com sucesso.');
       }
@@ -1344,8 +1344,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     confirmProposalBtn.addEventListener('click', async () => {
       if (!proposalCardTarget || !proposalNewStatusTarget) return;
 
-      const selectedRadio = document.querySelector('input[name="proposalChannel"]:checked');
-      const canalEnvio = selectedRadio ? selectedRadio.value : 'Email';
+      const canalEnvio = 'Sistema';
 
       confirmProposalBtn.disabled = true;
       const btnSpan = confirmProposalBtn.querySelector('span');
@@ -1369,6 +1368,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         bairro: proposalCardTarget.bairro,
         cidade: proposalCardTarget.cidade,
         estado: proposalCardTarget.estado,
+        uf: proposalCardTarget.uf,
         estado_civil: proposalCardTarget.estado_civil,
         profissao: proposalCardTarget.profissao,
         nit_pis: proposalCardTarget.nit_pis,
@@ -1396,10 +1396,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       closeProposalModalWindow();
 
       await changeCardStatus(cardToUpdate, newStatus);
-      showToast(`Proposta enviada via ${canalEnvio}!`);
+      showToast(`Proposta enviada com sucesso!`);
 
       confirmProposalBtn.disabled = false;
-      if (btnSpan) btnSpan.textContent = 'Enviar Proposta';
+      if (btnSpan) btnSpan.textContent = 'Enviar';
     });
   }
 
@@ -1472,6 +1472,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         bairro: concedidoCardTarget.bairro,
         cidade: concedidoCardTarget.cidade,
         estado: concedidoCardTarget.estado,
+        uf: concedidoCardTarget.uf,
         estado_civil: concedidoCardTarget.estado_civil,
         profissao: concedidoCardTarget.profissao,
         nit_pis: concedidoCardTarget.nit_pis,
@@ -1501,7 +1502,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       showToast(`Benefício concedido! Cobrança gerada.`);
 
       confirmConcedidoBtn.disabled = false;
-      if (btnSpan) btnSpan.textContent = 'Confirmar e Enviar';
+      if (btnSpan) btnSpan.textContent = 'Enviar';
     });
   }
 

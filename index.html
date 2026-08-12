@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Portal de Acesso - ResolvePrev Soluções Previdenciárias">
   <title>ResolvePrev | Login do Sistema</title>
+  <link rel="icon" href="assets/images/resolveprev-logo.png" type="image/png">
   
   <!-- Tipografia Google Fonts & CDN Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -945,7 +946,7 @@
       <div class="modal-actions-row">
         <button id="cancelConcedidoBtn" class="btn-modal-cancel">Cancelar</button>
         <button id="confirmConcedidoBtn" class="btn-modal-primary">
-          <span>Confirmar e Enviar</span>
+          <span>Enviar</span>
         </button>
       </div>
     </div>
@@ -964,42 +965,13 @@
           </svg>
         </div>
         <h3>Enviar Proposta</h3>
-        <p>Escolha o canal pelo qual deseja enviar a proposta para <strong id="proposalClientName">este cliente</strong>:</p>
-      </div>
-
-      <div class="proposal-options-group">
-        <label class="proposal-option-card active" id="proposalOptionEmailLabel">
-          <input type="radio" name="proposalChannel" value="Email" checked class="proposal-radio">
-          <div class="proposal-option-icon email-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-              <polyline points="22,6 12,13 2,6"/>
-            </svg>
-          </div>
-          <div class="proposal-option-info">
-            <span class="proposal-option-title">E-mail</span>
-            <span class="proposal-option-sub">Enviar proposta formal via e-mail</span>
-          </div>
-        </label>
-
-        <label class="proposal-option-card" id="proposalOptionWhatsappLabel">
-          <input type="radio" name="proposalChannel" value="Whatsapp" class="proposal-radio">
-          <div class="proposal-option-icon whatsapp-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
-          </div>
-          <div class="proposal-option-info">
-            <span class="proposal-option-title">WhatsApp</span>
-            <span class="proposal-option-sub">Enviar resumo e link via WhatsApp</span>
-          </div>
-        </label>
+        <p>Confirma o envio da proposta para <strong id="proposalClientName">este cliente</strong>?</p>
       </div>
 
       <div class="modal-actions-row">
         <button id="cancelProposalBtn" class="btn-modal-cancel">Cancelar</button>
         <button id="confirmProposalBtn" class="btn-modal-primary">
-          <span>Enviar Proposta</span>
+          <span>Enviar</span>
         </button>
       </div>
     </div>
@@ -1018,12 +990,12 @@
             <line x1="14" y1="11" x2="14" y2="17"/>
           </svg>
         </div>
-        <h3>Excluir Oportunidade</h3>
-        <p>Tem certeza de que deseja excluir <strong id="deleteCardName">esta oportunidade</strong>?<br>Esta ação não poderá ser desfeita.</p>
+        <h3>Excluir Oportunidade?</h3>
+        <p>Esta ação não poderá ser desfeita.</p>
       </div>
       <div class="modal-actions-row">
         <button id="cancelDeleteBtn" class="btn-modal-cancel">Cancelar</button>
-        <button id="confirmDeleteBtn" class="btn-modal-danger">Sim, Excluir</button>
+        <button id="confirmDeleteBtn" class="btn-modal-danger">Excluir</button>
       </div>
     </div>
   </div>
