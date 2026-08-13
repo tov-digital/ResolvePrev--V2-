@@ -108,7 +108,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Atualiza o estado
       window.currentTab = item.dataset.tab;
       
-      // Sempre que abrir uma aba do menu, restaura a visão para Kanban por padrão
+      // Sempre que abrir uma aba do menu, restaura a visão para Kanban por padrão e limpa os filtros
+      resetFilters();
       const vKanbanBtn = document.getElementById('viewKanbanBtn');
       const vListBtn = document.getElementById('viewListBtn');
       const vKanbanView = document.getElementById('crmKanbanView');
@@ -167,6 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'acompanhamento': 'Acompanhamento',
     'reuniao': 'Reunião',
     'proposta': 'Proposta',
+    'planejamento': 'Planejamento',
     'documentacao': 'Documentação',
     'na_fila': 'Na Fila',
     'requerido': 'Requerido',
@@ -469,6 +471,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Função auxiliar para resetar todos os filtros ativos (status, datas e pesquisa)
+  function resetFilters() {
+    document.querySelectorAll('.filter-status-cb').forEach(cb => cb.checked = false);
+    const anyDateRadio = document.querySelector('.filter-date-radio[value=""]');
+    if (anyDateRadio) anyDateRadio.checked = true;
+    if (crmSearchInput) crmSearchInput.value = '';
+    activeStatusFilters = [];
+    activeDateFilter = '';
+    updateFilterBadge();
+  }
+
   /* ==========================================
      5. ALTERNÂNCIA DE VISUALIZAÇÃO CRM (KANBAN x LISTA)
      ========================================== */
@@ -479,20 +492,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (viewKanbanBtn && viewListBtn && crmKanbanView && crmListView) {
     viewKanbanBtn.addEventListener('click', () => {
+      resetFilters();
       viewKanbanBtn.classList.add('active');
       viewListBtn.classList.remove('active');
       crmKanbanView.classList.remove('hidden');
       crmListView.classList.add('hidden');
+      filterAndRenderCards('');
     });
 
     viewListBtn.addEventListener('click', () => {
+      resetFilters();
       viewListBtn.classList.add('active');
       viewKanbanBtn.classList.remove('active');
       crmListView.classList.remove('hidden');
       crmKanbanView.classList.add('hidden');
-      // Renderiza a visualização em lista com os dados atuais
-      const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
-      filterAndRenderCards(searchTerm);
+      // Renderiza a visualização em lista com os dados sem filtros
+      filterAndRenderCards('');
     });
   }
 
@@ -874,11 +889,24 @@ document.addEventListener('DOMContentLoaded', async () => {
      FILTRO PRINCIPAL — busca + status + data
      ========================================== */
   function filterAndRenderCards(searchTerm) {
-    const validStages = window.currentTab === 'comercial'
-      ? ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta']
-      : ['documentacao', 'na_fila', 'requerido', 'concedido', 'insucessos'];
+    const isPlanejamentoSelected = activeStatusFilters.includes('planejamento');
 
-    let filtered = allUserCards.filter(card => validStages.includes(card.status || (window.currentTab === 'comercial' ? 'novo' : 'documentacao')));
+    let filtered = allUserCards.filter(card => {
+      const cardStatus = card.status || (window.currentTab === 'comercial' ? 'novo' : 'documentacao');
+
+      if (window.currentTab === 'comercial') {
+        // Se o filtro 'planejamento' estiver ativado, a lista DEVE conter apenas cartões com status 'planejamento'
+        if (isPlanejamentoSelected) {
+          return cardStatus === 'planejamento';
+        }
+        // Se NÃO estiver com o filtro 'planejamento' ativado, oculta completamente as linhas de 'planejamento'
+        const normalStages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
+        return normalStages.includes(cardStatus);
+      } else {
+        const operacaoStages = ['documentacao', 'na_fila', 'requerido', 'concedido', 'insucessos'];
+        return operacaoStages.includes(cardStatus);
+      }
+    });
 
     // 1. Filtro de texto (nome / telefone)
     if (searchTerm) {
@@ -892,8 +920,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // 2. Filtro de status
-    if (activeStatusFilters.length > 0) {
+    // 2. Filtro de outros status (se houver seleções adicionais e não for apenas planejamento)
+    if (activeStatusFilters.length > 0 && !isPlanejamentoSelected) {
       filtered = filtered.filter(card => activeStatusFilters.includes(card.status || 'novo'));
     }
 
@@ -979,7 +1007,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // ---- Status badge ----
       const statusLabels = { 
-        novo: 'Novo', qualificacao: 'Qualificação', acompanhamento: 'Acompanhamento', reuniao: 'Reunião', proposta: 'Proposta',
+        novo: 'Novo', qualificacao: 'Qualificação', acompanhamento: 'Acompanhamento', reuniao: 'Reunião', proposta: 'Proposta', planejamento: 'Planejamento',
         documentacao: 'Documentação', na_fila: 'Na Fila', requerido: 'Requerido', concedido: 'Concedido', insucessos: 'Negado'
       };
       const statusLabel = statusLabels[card.status] || card.status || 'Novo';

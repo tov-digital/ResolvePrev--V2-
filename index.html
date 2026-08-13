@@ -227,39 +227,73 @@
             <!-- Painel de Filtros -->
             <div id="filterPanel" class="filter-panel hidden">
               <div class="filter-panel-header">
-                <span class="filter-panel-title">Filtrar por</span>
+                <div class="filter-title-group">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                  </svg>
+                  <span class="filter-panel-title">Filtros</span>
+                </div>
                 <button class="filter-clear-btn" id="filterClearBtn" title="Limpar todos os filtros">Limpar tudo</button>
               </div>
 
+              <!-- Seção: Status -->
+              <div class="filter-section filter-status-section" id="filterStatusSection">
+                <span class="filter-section-label">Status</span>
+                <div class="filter-options-grid">
+                  <label class="filter-chip filter-chip-status">
+                    <input type="checkbox" class="filter-status-cb" value="planejamento">
+                    <span class="filter-chip-custom-check"></span>
+                    <span class="filter-chip-dot dot-planejamento"></span>
+                    <span class="filter-chip-text">Planejamento</span>
+                  </label>
+                </div>
+              </div>
 
-              <!-- Seção: Filtros por Período -->
+              <div class="filter-divider"></div>
+
+              <!-- Seção: Período de Requerimento -->
               <div class="filter-section">
+                <span class="filter-section-label">Período de Requerimento</span>
                 <div class="filter-radio-group">
                   <label class="filter-radio-chip">
-                    <input type="radio" name="filterDate" class="filter-date-radio" value="">
-                    <span>Qualquer data</span>
+                    <input type="radio" name="filterDate" class="filter-date-radio" value="" checked>
+                    <span class="filter-chip-custom-radio"></span>
+                    <span class="filter-chip-text">Qualquer data</span>
                   </label>
                   <label class="filter-radio-chip">
                     <input type="radio" name="filterDate" class="filter-date-radio" value="mais30">
-                    <span>Mais de 30 dias</span>
+                    <span class="filter-chip-custom-radio"></span>
+                    <span class="filter-chip-text">Mais de 30 dias</span>
                   </label>
                   <label class="filter-radio-chip">
                     <input type="radio" name="filterDate" class="filter-date-radio" value="menos30">
-                    <span>Menos de 30 dias</span>
+                    <span class="filter-chip-custom-radio"></span>
+                    <span class="filter-chip-text">Menos de 30 dias</span>
                   </label>
                   <label class="filter-radio-chip">
                     <input type="radio" name="filterDate" class="filter-date-radio" value="menos7">
-                    <span>Menos de 7 dias</span>
+                    <span class="filter-chip-custom-radio"></span>
+                    <span class="filter-chip-text">Menos de 7 dias</span>
                   </label>
-                  <label class="filter-radio-chip">
+                  <label class="filter-radio-chip filter-chip-vencido">
                     <input type="radio" name="filterDate" class="filter-date-radio" value="vencidos">
-                    <span class="filter-radio-vencido">Vencidos ⚠</span>
+                    <span class="filter-chip-custom-radio"></span>
+                    <span class="filter-chip-text filter-radio-vencido">
+                      Vencidos
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="icon-warning">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                    </span>
                   </label>
                 </div>
               </div>
 
               <div class="filter-panel-footer">
-                <button class="btn-apply-filters" id="filterApplyBtn">Aplicar Filtros</button>
+                <button class="btn-apply-filters" id="filterApplyBtn">
+                  <span>Aplicar Filtros</span>
+                </button>
               </div>
             </div>
           </div>

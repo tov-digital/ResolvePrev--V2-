@@ -842,25 +842,26 @@ html, body {
 }
 
 /* Painel flutuante */
+/* Painel flutuante de Filtros */
 .filter-panel {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   right: 0;
-  z-index: 200;
-  width: 300px;
+  z-index: 300;
+  width: 310px;
   background: #FFFFFF;
-  border: 1px solid var(--border-light);
+  border: 1px solid #E2E8F0;
   border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-  padding: 1rem;
-  animation: filterPanelIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.18), 0 0 1px 1px rgba(15, 23, 42, 0.04);
+  padding: 1.15rem;
+  animation: filterPanelIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: top right;
 }
 
 .filter-panel.hidden { display: none; }
 
 @keyframes filterPanelIn {
-  from { opacity: 0; transform: scale(0.95) translateY(-6px); }
+  from { opacity: 0; transform: scale(0.96) translateY(-8px); }
   to   { opacity: 1; transform: scale(1)    translateY(0);     }
 }
 
@@ -869,145 +870,225 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #F1F5F9;
+  margin-bottom: 0.9rem;
+}
+
+.filter-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-primary, #17375E);
 }
 
 .filter-panel-title {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 800;
-  color: var(--color-neutral);
+  letter-spacing: 0.3px;
+  color: #0F172A;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .filter-clear-btn {
   font-size: 0.76rem;
   font-weight: 600;
-  color: var(--color-primary);
-  background: none;
+  color: #64748B;
+  background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0;
-  opacity: 0.75;
-  transition: opacity 0.15s;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
 }
-.filter-clear-btn:hover { opacity: 1; }
+
+.filter-clear-btn:hover {
+  color: #EF4444;
+  background: #FEF2F2;
+}
 
 /* Seções */
-.filter-section { margin-bottom: 0.75rem; }
-
-.filter-section-label {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-bottom: 0.5rem;
-}
-
-/* Chips de status (checkbox) */
-.filter-options-grid {
+.filter-section {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.5rem;
 }
 
-.filter-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.42rem 0.65rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--color-neutral);
-  transition: background 0.12s;
-  user-select: none;
-}
-.filter-chip:hover { background: var(--bg-input); }
-
-.filter-chip input[type="checkbox"] { display: none; }
-
-/* Dot colorido de status */
-.filter-chip-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.dot-novo          { background: #60A5FA; }
-.dot-qualificacao  { background: #A78BFA; }
-.dot-acompanhamento{ background: #F59E0B; }
-.dot-reuniao       { background: #34D399; }
-.dot-proposta      { background: #F472B6; }
-
-/* Chip selecionado */
-.filter-chip:has(input:checked) {
-  background: var(--color-primary-light, #EBF3FA);
-  color: var(--color-primary);
+.filter-section-label {
+  font-size: 0.72rem;
   font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 0.15rem;
 }
 
-/* Divisor */
 .filter-divider {
   height: 1px;
-  background: var(--border-light);
-  margin: 0.65rem 0;
+  background: #F1F5F9;
+  margin: 0.85rem 0;
 }
 
-/* Radio group de data */
+/* Grupos de Opções (Chips / Radio / Checkbox) */
+.filter-options-grid,
 .filter-radio-group {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
+.filter-chip,
 .filter-radio-chip {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.42rem 0.65rem;
-  border-radius: 8px;
+  gap: 0.65rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 500;
-  color: var(--color-neutral);
-  transition: background 0.12s;
+  color: #334155;
+  background: #F8FAFC;
+  border: 1px solid #F1F5F9;
+  transition: all 0.15s ease;
   user-select: none;
 }
-.filter-radio-chip:hover { background: var(--bg-input); }
-.filter-radio-chip input[type="radio"] { display: none; }
 
+.filter-chip:hover,
+.filter-radio-chip:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+
+.filter-chip input[type="checkbox"],
+.filter-radio-chip input[type="radio"] {
+  display: none;
+}
+
+/* Checkbox / Radio Personalizados */
+.filter-chip-custom-check,
+.filter-chip-custom-radio {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #94A3B8;
+  border-radius: 4px;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.filter-chip-custom-radio {
+  border-radius: 50%;
+}
+
+.filter-chip:has(input:checked) .filter-chip-custom-check,
+.filter-radio-chip:has(input:checked) .filter-chip-custom-radio {
+  border-color: var(--color-primary, #17375E);
+  background: var(--color-primary, #17375E);
+}
+
+.filter-chip:has(input:checked) .filter-chip-custom-check::after {
+  content: '';
+  width: 4px;
+  height: 8px;
+  border: solid #FFFFFF;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.filter-radio-chip:has(input:checked) .filter-chip-custom-radio::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FFFFFF;
+}
+
+/* Estado Ativo/Selecionado nos Chips */
+.filter-chip:has(input:checked),
 .filter-radio-chip:has(input:checked) {
-  background: var(--color-primary-light, #EBF3FA);
-  color: var(--color-primary);
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+  color: var(--color-primary, #17375E);
+  font-weight: 600;
+}
+
+/* Dot de Status */
+.filter-chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-planejamento {
+  background: #EAB308;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
+}
+
+.filter-chip-text {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
+/* Opção Vencidos com alerta */
+.filter-radio-vencido {
+  color: #DC2626;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.icon-warning {
+  color: #DC2626;
+}
+
+.filter-radio-chip:has(input:checked) .filter-radio-vencido {
+  color: #B91C1C;
   font-weight: 700;
 }
 
-.filter-radio-vencido { color: #EF4444; }
-.filter-radio-chip:has(input:checked) .filter-radio-vencido { color: #EF4444; }
-
 /* Rodapé do painel */
 .filter-panel-footer {
-  margin-top: 0.85rem;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #F1F5F9;
   display: flex;
   justify-content: flex-end;
 }
 
 .btn-apply-filters {
-  background: var(--color-primary);
+  width: 100%;
+  background: linear-gradient(135deg, var(--color-primary, #17375E) 0%, #1E40AF 100%);
   color: #FFFFFF;
   border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1.1rem;
-  font-size: 0.82rem;
+  border-radius: 10px;
+  padding: 0.65rem 1.2rem;
+  font-size: 0.84rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: all 0.2s ease;
   font-family: var(--font-family);
+  box-shadow: 0 4px 12px rgba(23, 55, 94, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.btn-apply-filters:hover { background: var(--color-primary-hover, #1d4ed8); }
+
+.btn-apply-filters:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(23, 55, 94, 0.3);
+  filter: brightness(1.08);
+}
+
+.btn-apply-filters:active {
+  transform: translateY(0);
+}
 
 
 /* Toggle do Grupo de Visualizações (Kanban vs Lista) */
@@ -1865,6 +1946,9 @@ html, body {
 
 .list-status-proposta     { background: #FFF1F2; color: #9F1239; border: 1px solid rgba(159,18,57,0.2); }
 .list-status-proposta .status-dot     { background: #F43F5E; }
+
+.list-status-planejamento { background: #FEF9C3; color: #854D0E; border: 1px solid rgba(234,179,8,0.3); }
+.list-status-planejamento .status-dot { background: #EAB308; }
 
 /* Statuses da Lista - Operação */
 .list-status-documentacao { background: #F1F5F9; color: #334155; border: 1px solid rgba(51,65,85,0.2); }
