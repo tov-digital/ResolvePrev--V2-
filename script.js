@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (supabase) {
     const { data: { session } } = await supabase.auth.getSession();
     if (session && session.user) {
-      showDashboard(session.user);
+      await showDashboard(session.user);
     }
   }
 
@@ -187,21 +187,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     'insucessos': 'dot-insucessos'
   };
 
-  function showDashboard(user) {
-    let name = '';
+  async function showDashboard(user) {
+    let displayName = '';
 
     if (typeof user === 'object' && user !== null) {
-      name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário';
+      if (user.id && supabase) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (profile) {
+            displayName = getUserDisplayName(profile);
+          }
+        } catch (e) { /* fallback abaixo */ }
+      }
+
+      if (!displayName) {
+        displayName = getUserDisplayName(user);
+      }
     } else if (typeof user === 'string') {
-      name = user.split('@')[0] || 'Usuário';
+      displayName = getUserDisplayName(user);
     }
 
-    // Formatar nome com primeira letra maiúscula
-    const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
-    const initialLetter = formattedName.charAt(0).toUpperCase();
+    if (!displayName) displayName = 'Usuário';
+
+    const initialLetter = displayName.charAt(0).toUpperCase();
 
     if (userDisplayName) {
-      userDisplayName.textContent = formattedName;
+      userDisplayName.textContent = displayName;
     }
     if (userAvatar) {
       userAvatar.textContent = initialLetter;
@@ -288,13 +304,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      showDashboard(data.user);
+      await showDashboard(data.user);
       showToast('Autenticação realizada com sucesso! Bem-vindo.');
     } else {
       // Fallback de demonstração caso o SDK não carregue
-      setTimeout(() => {
+      setTimeout(async () => {
         setLoadingState(false);
-        showDashboard(emailValue);
+        await showDashboard(emailValue);
         showToast('Autenticação realizada com sucesso! (Modo Demo)');
       }, 1000);
     }
@@ -998,10 +1014,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         </td>
         <td>
           <a href="${waUrl}" target="_blank" class="list-phone-link" onclick="event.stopPropagation()" title="Abrir no WhatsApp">
+            ${escapeHtml(card.telefone || '—')}
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
             </svg>
-            ${escapeHtml(card.telefone || '—')}
           </a>
         </td>
         <td class="list-profession">${escapeHtml(card.profissao || '—')}</td>
@@ -1149,14 +1165,79 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('click', (e) => {
     if (e.target === modalDeleteConfirm) closeDeleteConfirmModal();
     if (e.target === modalDeleteOptions) closeDeleteOptionsModalFn();
+    if (e.target === modalDatePicker) closeDatePickerModalFn();
   });
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (modalDeleteConfirm) closeDeleteConfirmModal();
       if (modalDeleteOptions) closeDeleteOptionsModalFn();
+      if (modalDatePicker) closeDatePickerModalFn();
     }
   });
+
+  /* ==========================================
+     MODAL DE EDIÇÃO DA DATA DE REQUERIMENTO
+     ========================================== */
+  let cardToUpdateDate = null;
+  const modalDatePicker = document.getElementById('modalDatePicker');
+  const closeDatePickerModal = document.getElementById('closeDatePickerModal');
+  const cancelDatePickerBtn = document.getElementById('cancelDatePickerBtn');
+  const saveDatePickerBtn = document.getElementById('saveDatePickerBtn');
+  const datePickerInput = document.getElementById('datePickerInput');
+  const datePickerClientName = document.getElementById('datePickerClientName');
+
+  function openDatePickerModal(card) {
+    cardToUpdateDate = card;
+    if (datePickerClientName) datePickerClientName.textContent = card.nome ? `"${card.nome}"` : 'este cliente';
+    if (datePickerInput) {
+      datePickerInput.value = card.data_requerimento || new Date().toISOString().split('T')[0];
+    }
+    if (modalDatePicker) modalDatePicker.classList.remove('hidden');
+  }
+
+  function closeDatePickerModalFn() {
+    cardToUpdateDate = null;
+    if (modalDatePicker) modalDatePicker.classList.add('hidden');
+  }
+
+  if (closeDatePickerModal) closeDatePickerModal.addEventListener('click', closeDatePickerModalFn);
+  if (cancelDatePickerBtn) cancelDatePickerBtn.addEventListener('click', closeDatePickerModalFn);
+
+  if (saveDatePickerBtn) {
+    saveDatePickerBtn.addEventListener('click', async () => {
+      if (!cardToUpdateDate || !datePickerInput) return;
+      const newDate = datePickerInput.value;
+      if (!newDate) {
+        showToast('Por favor, selecione uma data válida.');
+        return;
+      }
+
+      saveDatePickerBtn.disabled = true;
+      saveDatePickerBtn.textContent = 'Salvando...';
+
+      if (supabase) {
+        const { error } = await supabase
+          .from(getCurrentTable())
+          .update({ data_requerimento: newDate })
+          .eq('id', cardToUpdateDate.id);
+
+        if (error) {
+          showToast('Erro ao atualizar data: ' + error.message);
+          saveDatePickerBtn.disabled = false;
+          saveDatePickerBtn.textContent = 'Salvar Data';
+          return;
+        }
+      }
+
+      saveDatePickerBtn.disabled = false;
+      saveDatePickerBtn.textContent = 'Salvar Data';
+      closeDatePickerModalFn();
+
+      loadUserCards(); // Atualiza os cards
+      showToast('Data de requerimento atualizada com sucesso!');
+    });
+  }
 
   if (confirmDeleteBtn) {
     confirmDeleteBtn.addEventListener('click', async () => {
@@ -1264,10 +1345,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
       <div class="card-detail-item">
         <a href="${whatsappUrl}" target="_blank" class="whatsapp-link" title="Abrir conversa no WhatsApp">
+          ${escapeHtml(card.telefone || 'Sem telefone')}
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
           </svg>
-          ${escapeHtml(card.telefone || 'Sem telefone')}
         </a>
       </div>
       <div class="card-detail-item card-date-badge ${dateStatusClass}">
@@ -1296,11 +1377,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('drag-over'));
     });
 
-    // Clique no Card para Abrir Ficha do Cliente (ignora cliques no botão de exclusão e no link do WhatsApp)
+    // Clique no Card para Abrir Ficha do Cliente (ignora cliques no botão de exclusão, no link do WhatsApp e na etiqueta de data)
     cardDiv.addEventListener('click', (e) => {
-      if (e.target.closest('.btn-delete-card') || e.target.closest('.whatsapp-link')) return;
+      if (e.target.closest('.btn-delete-card') || e.target.closest('.whatsapp-link') || e.target.closest('.card-date-badge')) return;
       openClientSheetModal(card);
     });
+
+    // Evento de Alteração de Data via Pop-up de Calendário
+    const dateBadge = cardDiv.querySelector('.card-date-badge');
+    if (dateBadge) {
+      dateBadge.title = "Clique para alterar a data de requerimento";
+      dateBadge.style.cursor = "pointer";
+      dateBadge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDatePickerModal(card);
+      });
+    }
 
     // Evento de Exclusão do Card com Modal Customizado
     const btnDelete = cardDiv.querySelector('.btn-delete-card');
@@ -1646,6 +1738,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const sheetEstadoCivil = document.getElementById('sheetEstadoCivil');
   const sheetRg = document.getElementById('sheetRg');
   const sheetCpf = document.getElementById('sheetCpf');
+  const sheetDataNascimento = document.getElementById('sheetDataNascimento');
   const sheetCep = document.getElementById('sheetCep');
   const sheetEndereco = document.getElementById('sheetEndereco');
   const sheetComplemento = document.getElementById('sheetComplemento');
@@ -1698,6 +1791,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  if (sheetDataNascimento) {
+    sheetDataNascimento.addEventListener('input', (e) => {
+      let v = e.target.value.replace(/\D/g, '');
+      if (v.length > 8) v = v.slice(0, 8);
+      if (v.length > 4) {
+        v = v.replace(/^(\d{2})(\d{2})(\d{1,4})$/, '$1/$2/$3');
+      } else if (v.length > 2) {
+        v = v.replace(/^(\d{2})(\d{1,2})$/, '$1/$2');
+      }
+      e.target.value = v;
+    });
+  }
+
   function openClientSheetModal(card) {
     try {
       currentActiveCard = card;
@@ -1724,6 +1830,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const elCpf = document.getElementById('sheetCpf');
       if (elCpf) elCpf.value = card.cpf || '';
+
+      const elDataNascimento = document.getElementById('sheetDataNascimento');
+      if (elDataNascimento) {
+        let rawDate = card.data_nascimento ? card.data_nascimento.split('T')[0] : '';
+        if (rawDate.includes('-')) {
+          const parts = rawDate.split('-');
+          if (parts.length === 3 && parts[0].length === 4) {
+            rawDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+          }
+        }
+        elDataNascimento.value = rawDate;
+      }
 
       const elCep = document.getElementById('sheetCep');
       if (elCep) elCep.value = card.cep || '';
@@ -1926,11 +2044,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!Array.isArray(docs)) docs = [];
 
     if (docs.length === 0) {
-      eventualDocsDynamicList.innerHTML = `
-        <div style="font-size: 0.84rem; color: #94A3B8; font-style: italic; padding: 0.35rem 0;">
-          Nenhum documento eventual adicionado.
-        </div>
-      `;
+      eventualDocsDynamicList.innerHTML = '';
       return;
     }
 
@@ -2054,6 +2168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         estado_civil: sheetEstadoCivil ? sheetEstadoCivil.value : '',
         rg: sheetRg ? sheetRg.value.trim() : '',
         cpf: sheetCpf ? sheetCpf.value.trim() : '',
+        data_nascimento: sheetDataNascimento ? sheetDataNascimento.value : '',
         cep: sheetCep ? sheetCep.value.trim() : '',
         endereco: sheetEndereco ? sheetEndereco.value.trim() : '',
         complemento: sheetComplemento ? sheetComplemento.value.trim() : '',
@@ -2071,7 +2186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         saveClientSheetBtn.disabled = false;
         saveClientSheetBtn.innerHTML = `
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          Salvar Ficha do Cliente
+          Salvar Ficha
         `;
       }
 
@@ -2437,39 +2552,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       return name.includes(searchTerm) || email.includes(searchTerm);
     });
 
-    if (filtered.length === 0) {
-      reassignUserList.innerHTML = '<div style="font-size:0.85rem; color:#64748B; text-align:center; padding:1rem;">Nenhuma pessoa encontrada.</div>';
+    // Excluir o próprio usuário logado ('Eu') e listar apenas os outros usuários
+    const otherUsers = filtered.filter(p => p.id !== currentUserId);
+
+    if (otherUsers.length === 0) {
+      reassignUserList.innerHTML = '<div style="font-size:0.85rem; color:#64748B; text-align:center; padding:1rem;">Nenhum usuário encontrado.</div>';
       return;
     }
 
-    // Separar Usuário Logado ('Eu') e Outros Usuários
-    const currentUserProfile = filtered.find(p => p.id === currentUserId);
-    const otherUsers = filtered.filter(p => p.id !== currentUserId);
+    // Seção 'Usuários'
+    const usersHeader = document.createElement('div');
+    usersHeader.className = 'reassign-section-title';
+    usersHeader.textContent = 'Usuários';
+    reassignUserList.appendChild(usersHeader);
 
-    // Seção 'Eu'
-    if (currentUserProfile) {
-      const euHeader = document.createElement('div');
-      euHeader.className = 'reassign-section-title';
-      euHeader.textContent = 'Eu';
-      reassignUserList.appendChild(euHeader);
-
-      reassignUserList.appendChild(createUserItemElement(currentUserProfile));
-    }
-
-    // Seção 'Outras Pessoas' (Se houver)
-    if (otherUsers.length > 0) {
-      if (currentUserProfile) {
-        const othersHeader = document.createElement('div');
-        othersHeader.className = 'reassign-section-title';
-        othersHeader.style.marginTop = '0.5rem';
-        othersHeader.textContent = 'Outras Pessoas';
-        reassignUserList.appendChild(othersHeader);
-      }
-
-      otherUsers.forEach(profile => {
-        reassignUserList.appendChild(createUserItemElement(profile));
-      });
-    }
+    otherUsers.forEach(profile => {
+      reassignUserList.appendChild(createUserItemElement(profile));
+    });
   }
 
   function createUserItemElement(profile) {
