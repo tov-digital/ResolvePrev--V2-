@@ -1874,6 +1874,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const elSolicitouBeneficio = document.getElementById('respSolicitouBeneficio');
       if (elSolicitouBeneficio) elSolicitouBeneficio.value = card.solicitou_beneficio || '';
 
+      const elExerceuAtividadeEspecial = document.getElementById('respExerceuAtividadeEspecial');
+      if (elExerceuAtividadeEspecial) elExerceuAtividadeEspecial.value = card.exerceu_atividade_especial || '';
+
       const elDetalhes = document.getElementById('respDetalhes');
       if (elDetalhes) elDetalhes.value = card.detalhes || '';
 
@@ -2220,6 +2223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const respTempoContribuicao = document.getElementById('respTempoContribuicao');
       const respTipoTrabalho = document.getElementById('respTipoTrabalho');
       const respSolicitouBeneficio = document.getElementById('respSolicitouBeneficio');
+      const respExerceuAtividadeEspecial = document.getElementById('respExerceuAtividadeEspecial');
       const respDetalhes = document.getElementById('respDetalhes');
 
       const updatedAnswers = {
@@ -2227,6 +2231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         tempo_contribuicao: respTempoContribuicao && respTempoContribuicao.value !== '' ? parseInt(respTempoContribuicao.value, 10) : null,
         tipo_trabalho: respTipoTrabalho ? respTipoTrabalho.value : '',
         solicitou_beneficio: respSolicitouBeneficio ? respSolicitouBeneficio.value : '',
+        exerceu_atividade_especial: respExerceuAtividadeEspecial ? respExerceuAtividadeEspecial.value : '',
         detalhes: respDetalhes ? respDetalhes.value.trim() : ''
       };
 
