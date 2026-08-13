@@ -1151,6 +1151,10 @@ html, body {
   border-color: var(--color-primary);
 }
 
+.kanban-column[data-tab="operacao"] .btn-add-card {
+  display: none !important;
+}
+
 .kanban-cards-container {
   flex: 1;
   padding: 0.85rem;
@@ -2460,6 +2464,73 @@ html, body {
 
 .sheet-close-btn:hover {
   color: var(--color-neutral);
+}
+
+/* Modal de Opções de Lixeira */
+.modal-delete-options-card {
+  max-width: 420px;
+  width: 90%;
+  padding: 1.75rem;
+  border-radius: 20px;
+}
+
+.delete-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.btn-delete-option {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.8rem 1.1rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid var(--border-light);
+  background-color: #F8FAFC;
+  color: #334155;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-delete-option:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.btn-opt-desqualificado:hover {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border-color: #FCD34D;
+}
+
+.btn-opt-recusado:hover {
+  background-color: #FFEDD5;
+  color: #9A3412;
+  border-color: #FDBA74;
+}
+
+.btn-opt-recuperacao:hover {
+  background-color: #EFF6FF;
+  color: #1E40AF;
+  border-color: #93C5FD;
+}
+
+.btn-opt-deletar {
+  background-color: #FEF2F2;
+  color: #DC2626;
+  border-color: #FECACA;
+}
+
+.btn-opt-deletar:hover {
+  background-color: #DC2626;
+  color: #FFFFFF;
+  border-color: #DC2626;
 }
 
 /* Modal/Popup de Atribuição (Estilo Dropdown Filtro / Print do Usuário) */

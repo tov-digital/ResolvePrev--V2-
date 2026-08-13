@@ -108,6 +108,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Atualiza o estado
       window.currentTab = item.dataset.tab;
       
+      // Sempre que abrir uma aba do menu, restaura a visão para Kanban por padrão
+      const vKanbanBtn = document.getElementById('viewKanbanBtn');
+      const vListBtn = document.getElementById('viewListBtn');
+      const vKanbanView = document.getElementById('crmKanbanView');
+      const vListView = document.getElementById('crmListView');
+      if (vKanbanBtn && vListBtn && vKanbanView && vListView) {
+        vKanbanBtn.classList.add('active');
+        vListBtn.classList.remove('active');
+        vKanbanView.classList.remove('hidden');
+        vListView.classList.add('hidden');
+      }
+
       // Atualiza títulos
       if (window.currentTab === 'comercial') {
         crmTitle.textContent = 'Comercial';
@@ -159,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'na_fila': 'Na Fila',
     'requerido': 'Requerido',
     'concedido': 'Concedido',
-    'insucessos': 'Insucessos'
+    'insucessos': 'Negado'
   };
 
   const stageDotClasses = {
@@ -952,7 +964,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // ---- Status badge ----
       const statusLabels = { 
         novo: 'Novo', qualificacao: 'Qualificação', acompanhamento: 'Acompanhamento', reuniao: 'Reunião', proposta: 'Proposta',
-        documentacao: 'Documentação', na_fila: 'Na Fila', requerido: 'Requerido', concedido: 'Concedido', insucessos: 'Insucessos'
+        documentacao: 'Documentação', na_fila: 'Na Fila', requerido: 'Requerido', concedido: 'Concedido', insucessos: 'Negado'
       };
       const statusLabel = statusLabels[card.status] || card.status || 'Novo';
       const statusClass = `list-status-${card.status || 'novo'}`;
@@ -1058,17 +1070,77 @@ document.addEventListener('DOMContentLoaded', async () => {
   let cardToDelete = null;
   let cardElementToDelete = null;
 
+  const modalDeleteOptions = document.getElementById('modalDeleteOptions');
+  const closeDeleteOptionsModal = document.getElementById('closeDeleteOptionsModal');
+  const deleteOptionsCardName = document.getElementById('deleteOptionsCardName');
+  const btnOptDesqualificado = document.getElementById('btnOptDesqualificado');
+  const btnOptRecusado = document.getElementById('btnOptRecusado');
+  const btnOptRecuperacao = document.getElementById('btnOptRecuperacao');
+  const btnOptDeletar = document.getElementById('btnOptDeletar');
+
   function openDeleteModal(card, cardElement) {
     cardToDelete = card;
     cardElementToDelete = cardElement;
-    if (deleteCardName) deleteCardName.textContent = `"${card.nome}"`;
-    if (modalDeleteConfirm) modalDeleteConfirm.classList.remove('hidden');
+    if (deleteOptionsCardName) deleteOptionsCardName.textContent = card.nome ? `"${card.nome}"` : 'este cliente';
+    if (modalDeleteOptions) modalDeleteOptions.classList.remove('hidden');
+  }
+
+  function closeDeleteOptionsModalFn() {
+    if (modalDeleteOptions) modalDeleteOptions.classList.add('hidden');
   }
 
   function closeDeleteConfirmModal() {
     cardToDelete = null;
     cardElementToDelete = null;
     if (modalDeleteConfirm) modalDeleteConfirm.classList.add('hidden');
+    closeDeleteOptionsModalFn();
+  }
+
+  if (closeDeleteOptionsModal) closeDeleteOptionsModal.addEventListener('click', closeDeleteOptionsModalFn);
+
+  // Ações das opções de status (Desqualificado, Recusado, Recuperação)
+  async function updateCardSpecialStatus(newStatusLabel, newStatusValue) {
+    if (!cardToDelete || !supabase) return;
+
+    const targetCardId = cardToDelete.id;
+    const cardElToRem = cardElementToDelete;
+    closeDeleteOptionsModalFn();
+
+    const { error } = await supabase
+      .from(getCurrentTable())
+      .update({ status: newStatusValue })
+      .eq('id', targetCardId);
+
+    if (error) {
+      showToast('Erro ao atualizar status: ' + error.message);
+      return;
+    }
+
+    if (cardElToRem) cardElToRem.remove();
+    loadUserCards(); // Atualiza o funil de vendas removendo o card
+    showToast(`Status alterado para ${newStatusLabel}!`);
+
+    cardToDelete = null;
+    cardElementToDelete = null;
+  }
+
+  if (btnOptDesqualificado) {
+    btnOptDesqualificado.addEventListener('click', () => updateCardSpecialStatus('Desqualificado', 'desqualificado'));
+  }
+  if (btnOptRecusado) {
+    btnOptRecusado.addEventListener('click', () => updateCardSpecialStatus('Recusado', 'recusado'));
+  }
+  if (btnOptRecuperacao) {
+    btnOptRecuperacao.addEventListener('click', () => updateCardSpecialStatus('Recuperação', 'recuperacao'));
+  }
+
+  // Clicou em 'Deletar' na lista de opções: exibe a tela de confirmação de exclusão
+  if (btnOptDeletar) {
+    btnOptDeletar.addEventListener('click', () => {
+      closeDeleteOptionsModalFn();
+      if (deleteCardName && cardToDelete) deleteCardName.textContent = `"${cardToDelete.nome}"`;
+      if (modalDeleteConfirm) modalDeleteConfirm.classList.remove('hidden');
+    });
   }
 
   if (closeDeleteModal) closeDeleteModal.addEventListener('click', closeDeleteConfirmModal);
@@ -1076,10 +1148,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.addEventListener('click', (e) => {
     if (e.target === modalDeleteConfirm) closeDeleteConfirmModal();
+    if (e.target === modalDeleteOptions) closeDeleteOptionsModalFn();
   });
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modalDeleteConfirm) closeDeleteConfirmModal();
+    if (e.key === 'Escape') {
+      if (modalDeleteConfirm) closeDeleteConfirmModal();
+      if (modalDeleteOptions) closeDeleteOptionsModalFn();
+    }
   });
 
   if (confirmDeleteBtn) {
@@ -1201,7 +1277,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <line x1="8" x2="8" y1="2" y2="6"/>
           <line x1="3" x2="21" y1="10" y2="10"/>
         </svg>
-        Req: ${formattedDate}
+        ${formattedDate}
         <span class="date-dot" title="Status da Data"></span>
       </div>
     `;
