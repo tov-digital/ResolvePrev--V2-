@@ -1142,48 +1142,99 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (closeDeleteOptionsModal) closeDeleteOptionsModal.addEventListener('click', closeDeleteOptionsModalFn);
 
-  // Ações das opções de status (Desqualificado, Recusado, Recuperação)
-  async function updateCardSpecialStatus(newStatusLabel, newStatusValue) {
-    if (!cardToDelete || !supabase) return;
+  // Ações das opções de status (Desqualificado, Recusado, Recuperação) -> Envio para Webhook
+  async function triggerInsuccessWebhook(actionLabel, actionValue) {
+    if (!cardToDelete) return;
 
-    const targetCardId = cardToDelete.id;
+    const targetCard = cardToDelete;
     const cardElToRem = cardElementToDelete;
     closeDeleteOptionsModalFn();
 
-    const { error } = await supabase
-      .from(getCurrentTable())
-      .update({ status: newStatusValue })
-      .eq('id', targetCardId);
+    // Monta o payload incluindo a ação/status selecionado e todas as informações existentes do card/linha
+    const payload = {
+      opcao_selecionada: actionValue,
+      status_selecionado: actionLabel,
+      tabela_origem: getCurrentTable(),
+      data_envio: new Date().toISOString(),
+      ...targetCard
+    };
 
-    if (error) {
-      showToast('Erro ao atualizar status: ' + error.message);
-      return;
-    }
-
+    // Remove o card da lista local e atualiza a interface imediatamente sem precisar de F5
+    allUserCards = allUserCards.filter(c => c.id !== targetCard.id);
     if (cardElToRem) cardElToRem.remove();
-    loadUserCards(); // Atualiza o funil de vendas removendo o card
-    showToast(`Status alterado para ${newStatusLabel}!`);
+    const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
+    filterAndRenderCards(searchTerm);
+
+    try {
+      showToast(`Enviando dados para processamento (${actionLabel})...`);
+
+      const response = await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/insucessos-rp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        showToast(`Enviado com sucesso (${actionLabel})!`);
+      } else {
+        showToast(`Webhook acionado, retorno: ${response.status}`);
+      }
+    } catch (err) {
+      console.error('Erro ao chamar webhook:', err);
+      showToast('Erro ao conectar com o webhook.');
+    }
 
     cardToDelete = null;
     cardElementToDelete = null;
   }
 
   if (btnOptDesqualificado) {
-    btnOptDesqualificado.addEventListener('click', () => updateCardSpecialStatus('Desqualificado', 'desqualificado'));
+    btnOptDesqualificado.addEventListener('click', () => triggerInsuccessWebhook('Desqualificado', 'desqualificado'));
   }
   if (btnOptRecusado) {
-    btnOptRecusado.addEventListener('click', () => updateCardSpecialStatus('Recusado', 'recusado'));
+    btnOptRecusado.addEventListener('click', () => triggerInsuccessWebhook('Recusado', 'recusado'));
   }
   if (btnOptRecuperacao) {
-    btnOptRecuperacao.addEventListener('click', () => updateCardSpecialStatus('Recuperação', 'recuperacao'));
+    btnOptRecuperacao.addEventListener('click', () => triggerInsuccessWebhook('Recuperação', 'recuperacao'));
   }
 
-  // Clicou em 'Deletar' na lista de opções: exibe a tela de confirmação de exclusão
+  // Clicou em 'Deletar' na lista de opções: remove o registro do banco de dados (Supabase)
   if (btnOptDeletar) {
     btnOptDeletar.addEventListener('click', () => {
       closeDeleteOptionsModalFn();
       if (deleteCardName && cardToDelete) deleteCardName.textContent = `"${cardToDelete.nome}"`;
       if (modalDeleteConfirm) modalDeleteConfirm.classList.remove('hidden');
+    });
+  }
+
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', async () => {
+      if (!cardToDelete || !supabase) return;
+
+      const targetCardId = cardToDelete.id;
+      const cardElToRem = cardElementToDelete;
+      closeDeleteConfirmModal();
+
+      const { error } = await supabase
+        .from(getCurrentTable())
+        .delete()
+        .eq('id', targetCardId);
+
+      if (error) {
+        showToast('Erro ao excluir do banco de dados: ' + error.message);
+        return;
+      }
+
+      allUserCards = allUserCards.filter(c => c.id !== targetCardId);
+      if (cardElToRem) cardElToRem.remove();
+      const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
+      filterAndRenderCards(searchTerm);
+      showToast('Card excluído da base de dados com sucesso!');
+
+      cardToDelete = null;
+      cardElementToDelete = null;
     });
   }
 
@@ -1832,6 +1883,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  if (sheetClientNameInput) {
+    const saveClientNameChange = async () => {
+      if (!currentActiveCard || !supabase) return;
+      const newName = sheetClientNameInput.value.trim();
+      if (!newName || newName === currentActiveCard.nome) return;
+
+      const { error } = await supabase
+        .from(getCurrentTable())
+        .update({ nome: newName })
+        .eq('id', currentActiveCard.id);
+
+      if (error) {
+        showToast('Erro ao atualizar nome: ' + error.message);
+        sheetClientNameInput.value = currentActiveCard.nome || '';
+        return;
+      }
+
+      currentActiveCard.nome = newName;
+      loadUserCards();
+      showToast('Nome atualizado com sucesso!');
+    };
+
+    sheetClientNameInput.addEventListener('blur', saveClientNameChange);
+    sheetClientNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sheetClientNameInput.blur();
+      }
+    });
+  }
+
   function openClientSheetModal(card) {
     try {
       currentActiveCard = card;
@@ -2178,7 +2260,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
       if (!currentActiveCard || !supabase) return;
 
-      const updatedNome = sheetClientNameInput ? sheetClientNameInput.value.trim() : '';
+      const nameEl = document.getElementById('sheetClientNameInput');
+      const updatedNome = nameEl ? nameEl.value.trim() : (sheetClientNameInput ? sheetClientNameInput.value.trim() : '');
       const updatedPhone = sheetPhone ? sheetPhone.value.trim() : '';
 
       if (!updatedNome) {
