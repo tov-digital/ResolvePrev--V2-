@@ -768,6 +768,47 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Inicializa os ouvintes de Drag & Drop para as colunas do Kanban
   setupKanbanDragAndDrop();
 
+  // Realtime Subscriptions (Sincronização em Tempo Real com o Supabase)
+  let realtimeChannel = null;
+
+  function subscribeRealtimeUpdates() {
+    if (!supabase || realtimeChannel) return;
+
+    realtimeChannel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'oportunidades_crm'
+        },
+        () => {
+          if (window.currentTab === 'comercial') {
+            loadUserCards();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'operacao_crm'
+        },
+        () => {
+          if (window.currentTab === 'operacao') {
+            loadUserCards();
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Sincronização em tempo real ativa no Supabase.');
+        }
+      });
+  }
+
   // Atualizar a renderização do CRM com os cards do usuário logado
   async function loadUserCards() {
     if (!supabase) return;
@@ -775,6 +816,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !session.user) return;
     currentUserId = session.user.id;
+
+    subscribeRealtimeUpdates();
 
     // Buscar oportunidades atreladas exclusivamente ao usuário logado
     const { data: cards, error } = await supabase
