@@ -156,11 +156,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ID do Usuário Administrador
   const ADMIN_USER_ID = '91a1904c-8f54-4943-bc8c-0b97cbcdcd26';
 
-  // Verificar sessão ativa do Supabase ao carregar
-  if (supabase) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session && session.user) {
-      await handleUserRedirect(session.user);
+  // Verificar sessão ativa do Supabase em segundo plano (Sem bloquear ouvintes do DOM)
+  async function checkActiveSession() {
+    if (supabase) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+          await handleUserRedirect(session.user);
+        }
+      } catch (e) {
+        console.warn('Erro ao verificar sessão inicial:', e);
+      }
     }
   }
 
@@ -1039,15 +1045,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ==========================================
      3. LOGOUT (VOLTAR PARA A TELA DE LOGIN)
      ========================================== */
-  logoutBtn.addEventListener('click', async () => {
+  async function performLogout() {
     if (supabase) {
-      await supabase.auth.signOut();
+      try {
+        await supabase.auth.signOut();
+      } catch (e) { console.warn('Erro ao deslogar do Supabase:', e); }
     }
+
     blankDashboardScreen.classList.add('hidden');
+    if (adminDashboardScreen) adminDashboardScreen.classList.add('hidden');
     loginScreen.classList.remove('hidden');
-    passwordInput.value = '';
+
+    if (passwordInput) {
+      passwordInput.value = '';
+      passwordInput.setAttribute('type', 'password');
+    }
+    if (eyeIcon) eyeIcon.classList.remove('hidden');
+    if (eyeOffIcon) eyeOffIcon.classList.add('hidden');
+
+    setLoadingState(false);
     showToast('Sessão encerrada.');
-  });
+  }
+
+  if (logoutBtn) logoutBtn.addEventListener('click', performLogout);
+  if (adminLogoutBtn) adminLogoutBtn.addEventListener('click', performLogout);
 
   /* ==========================================
      4. CONTROLE DOS MODAIS
@@ -3570,4 +3591,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setTimeout(() => toast.remove(), 300);
     }, 3500);
   }
+
+  // Inicializar verificação de sessão após registrar todos os ouvintes do DOM
+  checkActiveSession();
 });
