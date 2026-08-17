@@ -153,11 +153,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  // ID do Usuário Administrador
+  const ADMIN_USER_ID = '91a1904c-8f54-4943-bc8c-0b97cbcdcd26';
+
   // Verificar sessão ativa do Supabase ao carregar
   if (supabase) {
     const { data: { session } } = await supabase.auth.getSession();
     if (session && session.user) {
-      await showDashboard(session.user);
+      await handleUserRedirect(session.user);
+    }
+  }
+
+  async function handleUserRedirect(user) {
+    if (!user) return;
+    let isAdmin = false;
+    let userProfile = null;
+
+    const userId = typeof user === 'object' ? user.id : null;
+    if (userId === ADMIN_USER_ID) {
+      isAdmin = true;
+    }
+
+    if (userId && supabase) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (profile) {
+          userProfile = profile;
+          if (profile.role === 'admin' || profile.is_admin === true || profile.id === ADMIN_USER_ID) {
+            isAdmin = true;
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao consultar profile:', err);
+      }
+    }
+
+    if (isAdmin) {
+      await showAdminPanel(user, userProfile);
+    } else {
+      await showDashboard(user);
     }
   }
 
@@ -189,8 +228,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     'insucessos': 'dot-insucessos'
   };
 
+  const backToAdminBtn = document.getElementById('backToAdminBtn');
+
   async function showDashboard(user) {
     let displayName = '';
+    let userProfile = null;
 
     if (typeof user === 'object' && user !== null) {
       if (user.id && supabase) {
@@ -202,6 +244,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .maybeSingle();
 
           if (profile) {
+            userProfile = profile;
             displayName = getUserDisplayName(profile);
           }
         } catch (e) { /* fallback abaixo */ }
@@ -225,11 +268,672 @@ document.addEventListener('DOMContentLoaded', async () => {
       userAvatar.textContent = initialLetter;
     }
 
+    // Checar se é admin para exibir o botão exclusivo de retorno ao Painel Gerencial
+    const userId = typeof user === 'object' ? user.id : null;
+    const isAdmin = userId === ADMIN_USER_ID || (userProfile && (userProfile.role === 'admin' || userProfile.is_admin === true));
+
+    if (backToAdminBtn) {
+      if (isAdmin) {
+        backToAdminBtn.classList.remove('hidden');
+      } else {
+        backToAdminBtn.classList.add('hidden');
+      }
+    }
+
     loginScreen.classList.add('hidden');
+    if (adminDashboardScreen) adminDashboardScreen.classList.add('hidden');
     blankDashboardScreen.classList.remove('hidden');
 
     // Carregar automaticamente os cards do CRM do usuário logado ao exibir o dashboard
     loadUserCards();
+  }
+
+  // Listener para retornar ao Painel Gerencial (Admin Apenas)
+  if (backToAdminBtn) {
+    backToAdminBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      const user = session ? session.user : currentAdminUser;
+      await showAdminPanel(user);
+    });
+  }
+
+  /* ==========================================
+     LÓGICA DO PAINEL DE ADMINISTRADOR
+     ========================================== */
+  const adminDashboardScreen = document.getElementById('adminDashboardScreen');
+  const adminDisplayName = document.getElementById('adminDisplayName');
+  const adminAvatar = document.getElementById('adminAvatar');
+  const toggleAdminSidebarBtn = document.getElementById('toggleAdminSidebarBtn');
+  const adminSidebar = document.getElementById('adminSidebar');
+  const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+  const switchToCrmBtn = document.getElementById('switchToCrmBtn');
+  const refreshAdminDataBtn = document.getElementById('refreshAdminDataBtn');
+  const adminUserSearchInput = document.getElementById('adminUserSearchInput');
+  const btnOpenCreateUserModal = document.getElementById('btnOpenCreateUserModal');
+
+  let currentAdminUser = null;
+  let cachedUsersList = [];
+
+  async function showAdminPanel(user, profile) {
+    currentAdminUser = user;
+    let displayName = getUserDisplayName(profile || user);
+    if (!displayName || displayName === 'Usuário') displayName = 'Administrador';
+
+    if (adminDisplayName) adminDisplayName.textContent = displayName;
+    if (adminAvatar) adminAvatar.textContent = displayName.charAt(0).toUpperCase();
+
+    loginScreen.classList.add('hidden');
+    blankDashboardScreen.classList.add('hidden');
+    if (adminDashboardScreen) adminDashboardScreen.classList.remove('hidden');
+
+    await loadAdminDashboardData();
+    await loadAdminUsersTable();
+  }
+
+  // Toggle da Sidebar Admin
+  if (toggleAdminSidebarBtn && adminSidebar) {
+    toggleAdminSidebarBtn.addEventListener('click', () => {
+      adminSidebar.classList.toggle('collapsed');
+    });
+  }
+
+  // Alternância de Abas Admin
+  const adminNavItems = document.querySelectorAll('[data-admin-tab]');
+  const adminHeaderTitle = document.getElementById('adminHeaderTitle');
+  const adminHeaderSubtitle = document.getElementById('adminHeaderSubtitle');
+  const adminTabDashboard = document.getElementById('adminTabDashboard');
+  const adminTabUsers = document.getElementById('adminTabUsers');
+
+  adminNavItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetTab = item.dataset.adminTab;
+
+      adminNavItems.forEach(nav => nav.classList.remove('active'));
+      item.classList.add('active');
+
+      if (targetTab === 'dashboard') {
+        adminTabDashboard.classList.remove('hidden');
+        adminTabUsers.classList.add('hidden');
+        if (adminHeaderTitle) adminHeaderTitle.textContent = 'Dashboard de Administração';
+        if (adminHeaderSubtitle) adminHeaderSubtitle.textContent = 'Visão geral do banco de dados e métricas do sistema';
+      } else if (targetTab === 'users') {
+        adminTabDashboard.classList.add('hidden');
+        adminTabUsers.classList.remove('hidden');
+        if (adminHeaderTitle) adminHeaderTitle.textContent = 'Gerenciamento de Usuários';
+        if (adminHeaderSubtitle) adminHeaderSubtitle.textContent = 'Cadastre, edite e gerencie o acesso dos usuários';
+      }
+    });
+  });
+
+  // Alternar para visão regular do CRM
+  if (switchToCrmBtn) {
+    switchToCrmBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (currentAdminUser) {
+        await showDashboard(currentAdminUser);
+      }
+    });
+  }
+
+  // Botão de Atualizar Métricas
+  if (refreshAdminDataBtn) {
+    refreshAdminDataBtn.addEventListener('click', async () => {
+      refreshAdminDataBtn.style.opacity = '0.6';
+      await loadAdminDashboardData();
+      await loadAdminUsersTable(adminUserSearchInput ? adminUserSearchInput.value.trim() : '');
+      refreshAdminDataBtn.style.opacity = '1';
+      showToast('Dados atualizados com sucesso!');
+    });
+  }
+
+  // Logout Admin
+  if (adminLogoutBtn) {
+    adminLogoutBtn.addEventListener('click', async () => {
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+      if (adminDashboardScreen) adminDashboardScreen.classList.add('hidden');
+      blankDashboardScreen.classList.add('hidden');
+      loginScreen.classList.remove('hidden');
+      passwordInput.value = '';
+      showToast('Sessão encerrada.');
+    });
+  }
+
+  // 1. Aba Dashboard - Carregar Estatísticas do Banco de Dados
+  async function loadAdminDashboardData() {
+    if (!supabase) return;
+    try {
+      const { count: countProfiles } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      const { count: countComercial } = await supabase
+        .from('oportunidades_crm')
+        .select('*', { count: 'exact', head: true });
+
+      const { count: countOperacao } = await supabase
+        .from('operacao_crm')
+        .select('*', { count: 'exact', head: true });
+
+      const profilesTotal = countProfiles || 0;
+      const comercialTotal = countComercial || 0;
+      const operacaoTotal = countOperacao || 0;
+      const grandTotal = profilesTotal + comercialTotal + operacaoTotal;
+
+      const statTotalProfiles = document.getElementById('statTotalProfiles');
+      const statTotalComercial = document.getElementById('statTotalComercial');
+      const statTotalOperacao = document.getElementById('statTotalOperacao');
+      const statTotalRecords = document.getElementById('statTotalRecords');
+
+      if (statTotalProfiles) statTotalProfiles.textContent = profilesTotal.toLocaleString('pt-BR');
+      if (statTotalComercial) statTotalComercial.textContent = comercialTotal.toLocaleString('pt-BR');
+      if (statTotalOperacao) statTotalOperacao.textContent = operacaoTotal.toLocaleString('pt-BR');
+      if (statTotalRecords) statTotalRecords.textContent = grandTotal.toLocaleString('pt-BR');
+
+      const summaryBody = document.getElementById('dbTablesSummaryBody');
+      if (summaryBody) {
+        summaryBody.innerHTML = `
+          <tr>
+            <td><strong>profiles</strong></td>
+            <td>Contas de Usuários, perfis e permissões do sistema</td>
+            <td><strong>${profilesTotal.toLocaleString('pt-BR')}</strong></td>
+            <td><span class="status-pill status-online">● Operacional</span></td>
+            <td><button class="btn-secondary" onclick="window.switchAdminTab('users')">Gerenciar</button></td>
+          </tr>
+          <tr>
+            <td><strong>oportunidades_crm</strong></td>
+            <td>Funil de Vendas CRM - Oportunidades Comerciais</td>
+            <td><strong>${comercialTotal.toLocaleString('pt-BR')}</strong></td>
+            <td><span class="status-pill status-online">● Operacional</span></td>
+            <td><button class="btn-secondary" onclick="window.switchAdminTab('crm')">Visualizar CRM</button></td>
+          </tr>
+          <tr>
+            <td><strong>operacao_crm</strong></td>
+            <td>Gestão e Acompanhamento de Casos Operacionais</td>
+            <td><strong>${operacaoTotal.toLocaleString('pt-BR')}</strong></td>
+            <td><span class="status-pill status-online">● Operacional</span></td>
+            <td><button class="btn-secondary" onclick="window.switchAdminTab('crm')">Visualizar Operação</button></td>
+          </tr>
+        `;
+      }
+    } catch (e) {
+      console.error('Erro ao carregar métricas admin:', e);
+    }
+  }
+
+  // 2. Aba Usuários - Tabela de Usuários e Ações
+  async function loadAdminUsersTable(query = '') {
+    if (!supabase) return;
+    const tableBody = document.getElementById('adminUsersTableBody');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">Carregando usuários...</td></tr>`;
+
+    try {
+      const { data: users, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('id', { ascending: true });
+
+      if (error) throw error;
+      cachedUsersList = users || [];
+
+      renderUsersTable(cachedUsersList, query);
+    } catch (e) {
+      console.error('Erro ao carregar usuários:', e);
+      tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--danger-color);">Erro ao carregar usuários da base.</td></tr>`;
+    }
+  }
+
+  function renderUsersTable(users, query = '') {
+    const tableBody = document.getElementById('adminUsersTableBody');
+    if (!tableBody) return;
+
+    const filtered = users.filter(u => {
+      if (!query) return true;
+      const q = query.toLowerCase();
+      const name = (u.full_name || u.nome || u.name || '').toLowerCase();
+      const email = (u.email || '').toLowerCase();
+      const role = (u.role || '').toLowerCase();
+      const id = (u.id || '').toLowerCase();
+      return name.includes(q) || email.includes(q) || role.includes(q) || id.includes(q);
+    });
+
+    if (filtered.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">Nenhum usuário encontrado.</td></tr>`;
+      return;
+    }
+
+    tableBody.innerHTML = filtered.map(u => {
+      const name = u.full_name || u.nome || u.name || u.email || 'Usuário Sem Nome';
+      const email = u.email || 'Não informado';
+      const role = u.role || (u.id === ADMIN_USER_ID ? 'admin' : 'usuario');
+      const initial = name.charAt(0).toUpperCase();
+      const shortId = u.id ? `${u.id.substring(0, 8)}...` : '--';
+
+      const isCurrentAdmin = u.id === ADMIN_USER_ID;
+
+      return `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <div class="user-cell-avatar">${initial}</div>
+              <div class="user-cell-info">
+                <span class="user-cell-name">${escapeHtml(name)}</span>
+              </div>
+            </div>
+          </td>
+          <td>${escapeHtml(email)}</td>
+          <td>
+            <span class="status-pill ${role === 'admin' ? 'status-admin' : 'status-user'}">
+              ${role === 'admin' ? '★ Administrador' : '● Usuário'}
+            </span>
+          </td>
+          <td><span class="user-cell-id" title="${escapeHtml(u.id)}">${escapeHtml(shortId)}</span></td>
+          <td>
+            <div class="table-actions">
+              <button class="btn-action-icon" onclick="window.openEditUserModal('${u.id}')" title="Editar Usuário">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              ${!isCurrentAdmin ? `
+              <button class="btn-action-icon danger" onclick="window.openDeleteUserModal('${u.id}')" title="Excluir Usuário">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"/>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                </svg>
+              </button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Busca em tempo real na tabela de usuários
+  if (adminUserSearchInput) {
+    adminUserSearchInput.addEventListener('input', (e) => {
+      renderUsersTable(cachedUsersList, e.target.value.trim());
+    });
+  }
+
+  // Globais para ações da tabela
+  window.switchAdminTab = function(tabName) {
+    if (tabName === 'users') {
+      const usersNavBtn = document.querySelector('[data-admin-tab="users"]');
+      if (usersNavBtn) usersNavBtn.click();
+    } else if (tabName === 'crm') {
+      if (switchToCrmBtn) switchToCrmBtn.click();
+    }
+  };
+
+  window.openEditUserModal = function(userId) {
+    const user = cachedUsersList.find(u => u.id === userId);
+    if (!user) return;
+    document.getElementById('adminEditUserId').value = user.id;
+    document.getElementById('adminEditName').value = user.full_name || user.nome || user.name || '';
+    document.getElementById('adminEditEmail').value = user.email || '';
+    document.getElementById('adminEditPassword').value = '';
+    document.getElementById('adminEditRole').value = user.role || 'usuario';
+
+    document.getElementById('modalAdminEditUser').classList.remove('hidden');
+  };
+
+  window.openDeleteUserModal = function(userId) {
+    const user = cachedUsersList.find(u => u.id === userId);
+    if (!user) return;
+    document.getElementById('adminDeleteUserId').value = user.id;
+    document.getElementById('deleteUserName').textContent = user.full_name || user.nome || user.name || 'Usuário';
+    document.getElementById('deleteUserEmail').textContent = user.email || 'Sem e-mail';
+
+    document.getElementById('modalAdminDeleteUser').classList.remove('hidden');
+  };
+
+  // Abrir Modal de Criar Usuário
+  if (btnOpenCreateUserModal) {
+    btnOpenCreateUserModal.addEventListener('click', () => {
+      const form = document.getElementById('adminCreateUserForm');
+      if (form) form.reset();
+      document.getElementById('modalAdminCreateUser').classList.remove('hidden');
+    });
+  }
+
+  // Fechar Modais do Admin
+  const closeAdminCreateUserModal = document.getElementById('closeAdminCreateUserModal');
+  const closeAdminEditUserModal = document.getElementById('closeAdminEditUserModal');
+  const closeAdminDeleteUserModal = document.getElementById('closeAdminDeleteUserModal');
+  const cancelAdminDeleteUserBtn = document.getElementById('cancelAdminDeleteUserBtn');
+
+  if (closeAdminCreateUserModal) {
+    closeAdminCreateUserModal.addEventListener('click', () => {
+      document.getElementById('modalAdminCreateUser').classList.add('hidden');
+    });
+  }
+  if (closeAdminEditUserModal) {
+    closeAdminEditUserModal.addEventListener('click', () => {
+      document.getElementById('modalAdminEditUser').classList.add('hidden');
+    });
+  }
+  if (closeAdminDeleteUserModal) {
+    closeAdminDeleteUserModal.addEventListener('click', () => {
+      document.getElementById('modalAdminDeleteUser').classList.add('hidden');
+    });
+  }
+  if (cancelAdminDeleteUserBtn) {
+    cancelAdminDeleteUserBtn.addEventListener('click', () => {
+      document.getElementById('modalAdminDeleteUser').classList.add('hidden');
+    });
+  }
+
+  // Função Auxiliar para invocar a Supabase Edge Function 'admin-manage-user'
+  async function callAdminManageUserApi(action, payload) {
+    if (!supabase || !supabase.functions) return null;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session ? session.access_token : null;
+
+      const invokeOptions = {
+        body: { action, ...payload }
+      };
+
+      if (accessToken) {
+        invokeOptions.headers = {
+          Authorization: `Bearer ${accessToken}`
+        };
+      }
+
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', invokeOptions);
+
+      if (error) {
+        console.warn('Edge Function admin-manage-user retornou erro:', error);
+        return { success: false, error: error.message || 'Falha na comunicação com a Edge Function' };
+      }
+
+      if (data && data.error) {
+        return { success: false, error: data.error };
+      }
+
+      return { success: true, data };
+    } catch (e) {
+      console.warn('Falha na chamada da Edge Function:', e);
+      return { success: false, error: e.message };
+    }
+  }
+
+  // Submit Criar Usuário
+  const adminCreateUserForm = document.getElementById('adminCreateUserForm');
+  if (adminCreateUserForm) {
+    adminCreateUserForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nameInput = document.getElementById('adminNewName') || document.getElementById('adminCreateName');
+      const emailInput = document.getElementById('adminNewEmail') || document.getElementById('adminCreateEmail');
+      const passwordInput = document.getElementById('adminNewPassword') || document.getElementById('adminCreatePassword');
+      const roleInput = document.getElementById('adminNewRole') || document.getElementById('adminCreateRole');
+
+      const name = nameInput ? nameInput.value.trim() : '';
+      const email = emailInput ? emailInput.value.trim() : '';
+      const password = passwordInput ? passwordInput.value.trim() : '';
+      const role = roleInput ? roleInput.value : 'usuario';
+      const submitBtn = document.getElementById('adminCreateUserSubmitBtn');
+      const spinner = document.getElementById('adminCreateUserSpinner');
+      const btnText = submitBtn ? submitBtn.querySelector('.btn-text') : null;
+
+      if (!name || !email || !password) return;
+
+      btnText.textContent = 'Criando...';
+      spinner.classList.remove('hidden');
+      submitBtn.disabled = true;
+
+      try {
+        let newUserId = 'usr_' + Date.now();
+        let apiHandled = false;
+
+        // 1. Tentar criar via Edge Function (Auth + Profiles)
+        const edgeRes = await callAdminManageUserApi('createUser', { name, email, password, role });
+        if (edgeRes && edgeRes.success) {
+          apiHandled = true;
+          if (edgeRes.data && edgeRes.data.user && edgeRes.data.user.id) {
+            newUserId = edgeRes.data.user.id;
+          }
+        } else if (edgeRes && edgeRes.error) {
+          const isNetworkOrNotDeployed = 
+            edgeRes.error.toLowerCase().includes('failed to send') ||
+            edgeRes.error.toLowerCase().includes('functions_fetch_error') ||
+            edgeRes.error.toLowerCase().includes('not found') ||
+            edgeRes.error.toLowerCase().includes('indisponível');
+
+          if (!isNetworkOrNotDeployed) {
+            showToast(`Erro ao criar no Auth: ${edgeRes.error}`);
+            return;
+          }
+        }
+
+        // 2. Fallback local se a Edge Function não estiver ativa
+        if (!apiHandled && supabase) {
+          const createPayload = {
+            id: newUserId,
+            full_name: name,
+            nome: name,
+            email: email,
+            role: role
+          };
+
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert(createPayload, { onConflict: 'id' });
+
+          if (profileError) {
+            await supabase
+              .from('profiles')
+              .upsert({ id: newUserId, full_name: name, email: email, role: role }, { onConflict: 'id' });
+          }
+        }
+
+        // Adicionar localmente para atualização imediata da UI
+        cachedUsersList.unshift({
+          id: newUserId,
+          full_name: name,
+          nome: name,
+          email: email,
+          role: role
+        });
+
+        if (apiHandled) {
+          showToast('Usuário criado com sucesso no Auth e Profiles!');
+        } else {
+          showToast('Usuário registrado na tabela de perfis.');
+        }
+
+        document.getElementById('modalAdminCreateUser').classList.add('hidden');
+        adminCreateUserForm.reset();
+        await loadAdminUsersTable(adminUserSearchInput ? adminUserSearchInput.value.trim() : '');
+        await loadAdminDashboardData();
+      } catch (err) {
+        console.error('Erro ao criar usuário:', err);
+        showToast(`Erro ao criar usuário: ${err.message || 'Falha na requisição'}`);
+      } finally {
+        if (btnText) btnText.textContent = 'Criar Usuário';
+        if (spinner) spinner.classList.add('hidden');
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+  }
+
+  // Submit Editar Usuário (com alteração de Senha no Auth)
+  const adminEditUserForm = document.getElementById('adminEditUserForm');
+  if (adminEditUserForm) {
+    adminEditUserForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userId = document.getElementById('adminEditUserId').value;
+      const name = document.getElementById('adminEditName').value.trim();
+      const email = document.getElementById('adminEditEmail').value.trim();
+      const newPassword = document.getElementById('adminEditPassword').value.trim();
+      const role = document.getElementById('adminEditRole').value;
+      const submitBtn = document.getElementById('adminEditUserSubmitBtn');
+      const spinner = document.getElementById('adminEditUserSpinner');
+      const btnText = submitBtn.querySelector('.btn-text');
+
+      if (!userId || !name || !email) return;
+
+      btnText.textContent = 'Salvando...';
+      spinner.classList.remove('hidden');
+      submitBtn.disabled = true;
+
+      try {
+        let edgeHandled = false;
+
+        // 1. Tentar atualizar via Edge Function (Auth + Profiles, incluindo troca de senha)
+        const edgeRes = await callAdminManageUserApi('updateUser', {
+          userId,
+          name,
+          email,
+          password: newPassword,
+          role
+        });
+
+        if (edgeRes && edgeRes.success) {
+          edgeHandled = true;
+        } else if (edgeRes && edgeRes.error) {
+          const isNetworkOrNotDeployed = 
+            edgeRes.error.toLowerCase().includes('failed to send') ||
+            edgeRes.error.toLowerCase().includes('functions_fetch_error') ||
+            edgeRes.error.toLowerCase().includes('not found') ||
+            edgeRes.error.toLowerCase().includes('indisponível');
+
+          if (!isNetworkOrNotDeployed) {
+            showToast(`Erro Supabase Auth: ${edgeRes.error}`);
+            return;
+          }
+        }
+
+        // 2. Fallback caso a Edge Function não esteja ativa
+        if (!edgeHandled && supabase) {
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .maybeSingle();
+
+          const updatePayload = { id: userId };
+
+          if (existingProfile) {
+            if ('full_name' in existingProfile) updatePayload.full_name = name;
+            if ('nome' in existingProfile) updatePayload.nome = name;
+            if ('name' in existingProfile) updatePayload.name = name;
+            if ('email' in existingProfile) updatePayload.email = email;
+            if ('role' in existingProfile) updatePayload.role = role;
+            if ('updated_at' in existingProfile) updatePayload.updated_at = new Date().toISOString();
+          } else {
+            updatePayload.full_name = name;
+            updatePayload.nome = name;
+            updatePayload.email = email;
+            updatePayload.role = role;
+          }
+
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .upsert(updatePayload, { onConflict: 'id' });
+
+          if (updateError) {
+            await supabase
+              .from('profiles')
+              .update({ full_name: name, email: email, role: role })
+              .eq('id', userId);
+          }
+
+          // Se for a própria sessão do admin logado, atualizar via SDK cliente
+          if (newPassword) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session && session.user && session.user.id === userId) {
+              await supabase.auth.updateUser({ password: newPassword });
+            }
+          }
+        }
+
+        // Atualizar lista em memória e re-renderizar para resposta imediata na UI
+        const cachedUser = cachedUsersList.find(u => u.id === userId);
+        if (cachedUser) {
+          cachedUser.full_name = name;
+          cachedUser.nome = name;
+          cachedUser.email = email;
+          cachedUser.role = role;
+        }
+
+        if (edgeHandled) {
+          showToast(newPassword ? 'Perfil e nova senha salvos com sucesso no Supabase Auth!' : 'Perfil do usuário atualizado com sucesso!');
+        } else {
+          showToast(newPassword ? 'Perfil salvo no banco. Publicar Edge Function para sincronizar a nova senha de outros usuários no Auth.' : 'Perfil do usuário atualizado com sucesso!');
+        }
+
+        document.getElementById('modalAdminEditUser').classList.add('hidden');
+        adminEditUserForm.reset();
+        await loadAdminUsersTable(adminUserSearchInput ? adminUserSearchInput.value.trim() : '');
+      } catch (err) {
+        console.error('Erro ao atualizar usuário:', err);
+        showToast(`Erro ao atualizar usuário: ${err.message || 'Falha na requisição'}`);
+      } finally {
+        btnText.textContent = 'Salvar Alterações';
+        spinner.classList.add('hidden');
+        submitBtn.disabled = false;
+      }
+    });
+  }
+
+  // Submit Excluir Usuário
+  const confirmAdminDeleteUserBtn = document.getElementById('confirmAdminDeleteUserBtn');
+  if (confirmAdminDeleteUserBtn) {
+    confirmAdminDeleteUserBtn.addEventListener('click', async () => {
+      const userId = document.getElementById('adminDeleteUserId').value;
+      const spinner = document.getElementById('adminDeleteUserSpinner');
+      const btnText = confirmAdminDeleteUserBtn.querySelector('.btn-text');
+
+      if (!userId) return;
+
+      btnText.textContent = 'Excluindo...';
+      spinner.classList.remove('hidden');
+      confirmAdminDeleteUserBtn.disabled = true;
+
+      try {
+        let edgeHandled = false;
+
+        // 1. Tentar excluir via Edge Function (Auth + Profiles)
+        const edgeRes = await callAdminManageUserApi('deleteUser', { userId });
+        if (edgeRes && edgeRes.success) {
+          edgeHandled = true;
+        }
+
+        // 2. Fallback para exclusão na tabela profiles
+        if (!edgeHandled && supabase) {
+          const { error } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', userId);
+
+          if (error) throw error;
+        }
+
+        cachedUsersList = cachedUsersList.filter(u => u.id !== userId);
+
+        showToast('Usuário excluído com sucesso.');
+        document.getElementById('modalAdminDeleteUser').classList.add('hidden');
+        await loadAdminUsersTable(adminUserSearchInput ? adminUserSearchInput.value.trim() : '');
+        await loadAdminDashboardData();
+      } catch (err) {
+        console.error('Erro ao excluir usuário:', err);
+        showToast(`Erro ao excluir usuário: ${err.message || 'Falha na operação'}`);
+      } finally {
+        btnText.textContent = 'Confirmar Exclusão';
+        spinner.classList.add('hidden');
+        confirmAdminDeleteUserBtn.disabled = false;
+      }
+    });
   }
 
   /* ==========================================
@@ -306,13 +1010,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      await showDashboard(data.user);
+      await handleUserRedirect(data.user);
       showToast('Autenticação realizada com sucesso! Bem-vindo.');
     } else {
       // Fallback de demonstração caso o SDK não carregue
       setTimeout(async () => {
         setLoadingState(false);
-        await showDashboard(emailValue);
+        await handleUserRedirect({ id: emailValue === 'admin@resolveprev.com' ? ADMIN_USER_ID : 'user_demo', email: emailValue });
         showToast('Autenticação realizada com sucesso! (Modo Demo)');
       }, 1000);
     }
@@ -809,7 +1513,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
   }
 
-  // Atualizar a renderização do CRM com os cards do usuário logado
+  // Atualizar a renderização do CRM (Visão Total para Administradores)
   async function loadUserCards() {
     if (!supabase) return;
 
@@ -819,12 +1523,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     subscribeRealtimeUpdates();
 
-    // Buscar oportunidades atreladas exclusivamente ao usuário logado
-    const { data: cards, error } = await supabase
-      .from(getCurrentTable())
-      .select('*')
-      .eq('user_id', currentUserId)
-      .order('criado_em', { ascending: false });
+    // Checar se o usuário atual é Administrador (ID específico ou role 'admin')
+    let isAdmin = currentUserId === ADMIN_USER_ID;
+    if (!isAdmin) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, is_admin')
+          .eq('id', currentUserId)
+          .maybeSingle();
+
+        if (profile && (profile.role === 'admin' || profile.is_admin === true)) {
+          isAdmin = true;
+        }
+      } catch (e) { /* fallback */ }
+    }
+
+    let query = supabase.from(getCurrentTable()).select('*');
+
+    // Se for usuário comum, filtrar apenas os cards atrelados a ele
+    if (!isAdmin) {
+      query = query.eq('user_id', currentUserId);
+    }
+
+    const { data: cards, error } = await query.order('criado_em', { ascending: false });
 
     if (error) {
       console.warn('Erro ao carregar oportunidades:', error.message);

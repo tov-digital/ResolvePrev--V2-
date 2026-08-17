@@ -172,6 +172,17 @@
           </svg>
           <span class="nav-label">Operação</span>
         </a>
+
+        <!-- Botão exclusivo do Administrador para voltar ao Painel Gerencial -->
+        <a href="#" id="backToAdminBtn" class="nav-item nav-item-admin-link hidden" title="Painel Gerencial">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="9" rx="1"/>
+            <rect x="14" y="3" width="7" height="5" rx="1"/>
+            <rect x="14" y="12" width="7" height="9" rx="1"/>
+            <rect x="3" y="16" width="7" height="5" rx="1"/>
+          </svg>
+          <span class="nav-label">Painel Gerencial</span>
+        </a>
       </nav>
 
       <!-- Rodapé da Sidebar: Perfil do Usuário e Logout -->
@@ -1118,6 +1129,386 @@
       <!-- Lista de Usuários (Seção 'Eu' / 'Outras Pessoas') -->
       <div class="reassign-users-container" id="reassignUserList">
         <div class="loading-users-spinner">Carregando usuários...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAINEL DE ADMINISTRADOR ==================== -->
+  <div id="adminDashboardScreen" class="dashboard-layout hidden">
+    
+    <!-- Sidebar Admin (Inicia Recolhida por Padrão) -->
+    <aside id="adminSidebar" class="sidebar collapsed">
+      
+      <!-- Topo Sidebar Admin -->
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo">
+            <img src="assets/images/resolveprev-logo.png" alt="Logo ResolvePrev">
+          </div>
+          <div class="brand-text-group">
+            <span class="sidebar-title">ResolvePrev</span>
+            <span class="admin-badge">Painel Admin</span>
+          </div>
+        </div>
+        <button id="toggleAdminSidebarBtn" class="sidebar-toggle-btn" title="Recolher / Expandir Menu" aria-label="Alternar Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Navegação Admin / Abas -->
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-admin-tab="dashboard" title="Dashboard">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="9" rx="1"/>
+            <rect x="14" y="3" width="7" height="5" rx="1"/>
+            <rect x="14" y="12" width="7" height="9" rx="1"/>
+            <rect x="3" y="16" width="7" height="5" rx="1"/>
+          </svg>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-admin-tab="users" title="Gerenciar Usuários">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span class="nav-label">Usuários</span>
+        </a>
+
+        <!-- Botão para alternar para o CRM comum -->
+        <a href="#" id="switchToCrmBtn" class="nav-item nav-item-admin-link" title="Acessar CRM">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+          <span class="nav-label">CRM</span>
+        </a>
+      </nav>
+
+      <!-- Rodapé da Sidebar Admin -->
+      <div class="sidebar-footer">
+        <div class="user-profile" title="Administrador Logado">
+          <div class="user-avatar admin-avatar-icon" id="adminAvatar">A</div>
+          <div class="user-info">
+            <span id="adminDisplayName" class="user-name">Administrador</span>
+            <span class="user-role-badge">Super Admin</span>
+          </div>
+        </div>
+        <button id="adminLogoutBtn" class="btn-logout" title="Sair do Sistema" aria-label="Sair">
+          <svg class="logout-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" x2="9" y1="12" y2="12"/>
+          </svg>
+          <span class="logout-label">Sair</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Área Principal Admin -->
+    <main class="dashboard-main admin-container">
+      
+      <!-- Top Bar Admin -->
+      <header class="crm-toolbar admin-header">
+        <div class="crm-toolbar-left">
+          <h2 id="adminHeaderTitle" class="crm-title">Dashboard de Administração</h2>
+          <p id="adminHeaderSubtitle" class="crm-subtitle">Visão geral do banco de dados e métricas do sistema</p>
+        </div>
+        <div class="crm-toolbar-right">
+          <button id="refreshAdminDataBtn" class="crm-btn-secondary" title="Atualizar Dados">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            <span>Atualizar Dados</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Conteúdo da Aba 1: Dashboard -->
+      <section id="adminTabDashboard" class="admin-tab-content active">
+        <!-- Cards de Resumo Principal -->
+        <div class="admin-stats-grid">
+          
+          <div class="admin-stat-card card-profiles">
+            <div class="stat-icon-wrapper icon-blue">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Total de Usuários</span>
+              <h3 id="statTotalProfiles" class="stat-value">--</h3>
+              <span class="stat-subtext">Tabela: <code>profiles</code></span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card card-crm">
+            <div class="stat-icon-wrapper icon-green">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Oportunidades CRM</span>
+              <h3 id="statTotalComercial" class="stat-value">--</h3>
+              <span class="stat-subtext">Tabela: <code>oportunidades_crm</code></span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card card-operacao">
+            <div class="stat-icon-wrapper icon-purple">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                <path d="M12 11h4"/>
+                <path d="M12 16h4"/>
+              </svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Casos Operacionais</span>
+              <h3 id="statTotalOperacao" class="stat-value">--</h3>
+              <span class="stat-subtext">Tabela: <code>operacao_crm</code></span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card card-total">
+            <div class="stat-icon-wrapper icon-gold">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+              </svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Total de Registros Base</span>
+              <h3 id="statTotalRecords" class="stat-value">--</h3>
+              <span class="stat-subtext">Soma de todas as tabelas</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tabela Detalhada de Visão Geral do Banco de Dados -->
+        <div class="admin-section-box">
+          <div class="section-box-header">
+            <h3>Visão Geral das Tabelas do Banco de Dados</h3>
+            <p>Estatísticas simples e status de integridade de cada tabela</p>
+          </div>
+          
+          <div class="table-responsive">
+            <table class="admin-tables-summary">
+              <thead>
+                <tr>
+                  <th>Tabela</th>
+                  <th>Descrição / Finalidade</th>
+                  <th>Total Registros</th>
+                  <th>Status Integridade</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="dbTablesSummaryBody">
+                <!-- Preenchido via script.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Conteúdo da Aba 2: Gerenciar Usuários -->
+      <section id="adminTabUsers" class="admin-tab-content hidden">
+        <div class="admin-section-box">
+          
+          <!-- Barra Superior de Controle de Usuários -->
+          <div class="users-control-bar">
+            <div class="crm-search-wrapper">
+              <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" id="adminUserSearchInput" placeholder="Buscar usuário por nome ou e-mail..." class="crm-search-input">
+            </div>
+
+            <div class="users-filter-group">
+              <button id="btnOpenCreateUserModal" class="btn-create-user">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                <span>Novo Usuário</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabela de Usuários -->
+          <div class="table-responsive">
+            <table class="admin-users-table">
+              <thead>
+                <tr>
+                  <th>Usuário</th>
+                  <th>E-mail</th>
+                  <th>Cargo / Perfil</th>
+                  <th>ID do Usuário</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersTableBody">
+                <!-- Preenchido via script.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ==================== MODAL: CRIAR USUÁRIO ==================== -->
+  <div id="modalAdminCreateUser" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" id="closeAdminCreateUserModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+        </div>
+        <h3>Criar Novo Usuário</h3>
+        <p>Cadastre as credenciais e dados do novo usuário no sistema.</p>
+      </div>
+      <form id="adminCreateUserForm" class="modal-form">
+        <div class="input-group">
+          <label for="adminNewName" class="input-label">Nome Completo</label>
+          <div class="input-field-wrapper">
+            <input type="text" id="adminNewName" class="form-control" placeholder="Nome do usuário" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="adminNewEmail" class="input-label">E-mail</label>
+          <div class="input-field-wrapper">
+            <input type="email" id="adminNewEmail" class="form-control" placeholder="usuario@resolveprev.com" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="adminNewPassword" class="input-label">Senha Inicial</label>
+          <div class="input-field-wrapper">
+            <input type="password" id="adminNewPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="adminNewRole" class="input-label">Cargo / Perfil</label>
+          <div class="input-field-wrapper">
+            <select id="adminNewRole" class="form-control">
+              <option value="usuario">Usuário Comum</option>
+              <option value="advogado">Advogado / Consultor</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="adminCreateUserSubmitBtn" class="btn-submit">
+          <span class="btn-text">Criar Usuário</span>
+          <span class="spinner hidden" id="adminCreateUserSpinner"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: EDITAR USUÁRIO ==================== -->
+  <div id="modalAdminEditUser" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" id="closeAdminEditUserModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </div>
+        <h3>Editar Usuário</h3>
+        <p>Atualize os principais dados cadastrais do usuário.</p>
+      </div>
+      <form id="adminEditUserForm" class="modal-form">
+        <input type="hidden" id="adminEditUserId">
+
+        <div class="input-group">
+          <label for="adminEditName" class="input-label">Nome Completo</label>
+          <div class="input-field-wrapper">
+            <input type="text" id="adminEditName" class="form-control" placeholder="Nome do usuário" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="adminEditEmail" class="input-label">E-mail</label>
+          <div class="input-field-wrapper">
+            <input type="email" id="adminEditEmail" class="form-control" placeholder="email@resolveprev.com" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="adminEditPassword" class="input-label">Nova Senha (deixe em branco se não desejar alterar)</label>
+          <div class="input-field-wrapper">
+            <input type="password" id="adminEditPassword" class="form-control" placeholder="Nova senha (opcional)" minlength="6">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="adminEditRole" class="input-label">Cargo / Perfil</label>
+          <div class="input-field-wrapper">
+            <select id="adminEditRole" class="form-control">
+              <option value="usuario">Usuário Comum</option>
+              <option value="advogado">Advogado / Consultor</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="adminEditUserSubmitBtn" class="btn-submit">
+          <span class="btn-text">Salvar Alterações</span>
+          <span class="spinner hidden" id="adminEditUserSpinner"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: EXCLUIR USUÁRIO ==================== -->
+  <div id="modalAdminDeleteUser" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" id="closeAdminDeleteUserModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge icon-danger-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+          </svg>
+        </div>
+        <h3>Excluir Usuário</h3>
+        <p>Tem certeza que deseja excluir este usuário? Esta ação não poderá ser desfeita.</p>
+      </div>
+      <div class="delete-user-info-box">
+        <span id="deleteUserName" class="delete-user-name">--</span>
+        <span id="deleteUserEmail" class="delete-user-email">--</span>
+        <input type="hidden" id="adminDeleteUserId">
+      </div>
+      <div class="modal-actions-row">
+        <button type="button" id="cancelAdminDeleteUserBtn" class="btn-secondary">Cancelar</button>
+        <button type="button" id="confirmAdminDeleteUserBtn" class="btn-danger">
+          <span class="btn-text">Confirmar Exclusão</span>
+          <span class="spinner hidden" id="adminDeleteUserSpinner"></span>
+        </button>
       </div>
     </div>
   </div>
