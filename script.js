@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filtered = users.filter(u => {
       if (!query) return true;
       const q = query.toLowerCase();
-      const name = (u.full_name || u.nome || u.name || '').toLowerCase();
+      const name = getUserDisplayName(u).toLowerCase();
       const email = (u.email || '').toLowerCase();
       const role = (u.role || '').toLowerCase();
       const id = (u.id || '').toLowerCase();
@@ -513,8 +513,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    tableBody.innerHTML = filtered.map(u => {
-      const name = u.full_name || u.nome || u.name || u.email || 'Usuário Sem Nome';
+    // Ordenação alfabética pelo nome de exibição do usuário
+    const sorted = [...filtered].sort((a, b) => {
+      const nameA = getUserDisplayName(a);
+      const nameB = getUserDisplayName(b);
+      return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'base' });
+    });
+
+    tableBody.innerHTML = sorted.map(u => {
+      const name = getUserDisplayName(u);
       const email = u.email || 'Não informado';
       const role = u.role || (u.id === ADMIN_USER_ID ? 'admin' : 'usuario');
       const initial = name.charAt(0).toUpperCase();
@@ -935,7 +942,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Erro ao excluir usuário:', err);
         showToast(`Erro ao excluir usuário: ${err.message || 'Falha na operação'}`);
       } finally {
-        btnText.textContent = 'Confirmar Exclusão';
+        btnText.textContent = 'Confirmar';
         spinner.classList.add('hidden');
         confirmAdminDeleteUserBtn.disabled = false;
       }

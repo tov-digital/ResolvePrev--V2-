@@ -1405,6 +1405,10 @@
         <div class="input-group">
           <label for="adminNewName" class="input-label">Nome Completo</label>
           <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
             <input type="text" id="adminNewName" class="form-control" placeholder="Nome do usuário" required>
           </div>
         </div>
@@ -1412,13 +1416,21 @@
         <div class="input-group">
           <label for="adminNewEmail" class="input-label">E-mail</label>
           <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
             <input type="email" id="adminNewEmail" class="form-control" placeholder="usuario@resolveprev.com" required>
           </div>
         </div>
 
         <div class="input-group">
-          <label for="adminNewPassword" class="input-label">Senha Inicial</label>
+          <label for="adminNewPassword" class="input-label">Senha</label>
           <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
             <input type="password" id="adminNewPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
           </div>
         </div>
@@ -1426,6 +1438,9 @@
         <div class="input-group">
           <label for="adminNewRole" class="input-label">Cargo / Perfil</label>
           <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
             <select id="adminNewRole" class="form-control">
               <option value="usuario">Usuário Comum</option>
               <option value="advogado">Advogado / Consultor</option>
@@ -1462,6 +1477,10 @@
         <div class="input-group">
           <label for="adminEditName" class="input-label">Nome Completo</label>
           <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
             <input type="text" id="adminEditName" class="form-control" placeholder="Nome do usuário" required>
           </div>
         </div>
@@ -1469,13 +1488,21 @@
         <div class="input-group">
           <label for="adminEditEmail" class="input-label">E-mail</label>
           <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
             <input type="email" id="adminEditEmail" class="form-control" placeholder="email@resolveprev.com" required>
           </div>
         </div>
 
         <div class="input-group">
-          <label for="adminEditPassword" class="input-label">Nova Senha (deixe em branco se não desejar alterar)</label>
+          <label for="adminEditPassword" class="input-label">Senha</label>
           <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
             <input type="password" id="adminEditPassword" class="form-control" placeholder="Nova senha (opcional)" minlength="6">
           </div>
         </div>
@@ -1483,6 +1510,9 @@
         <div class="input-group">
           <label for="adminEditRole" class="input-label">Cargo / Perfil</label>
           <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
             <select id="adminEditRole" class="form-control">
               <option value="usuario">Usuário Comum</option>
               <option value="advogado">Advogado / Consultor</option>
@@ -1522,7 +1552,7 @@
       <div class="modal-actions-row">
         <button type="button" id="cancelAdminDeleteUserBtn" class="btn-secondary">Cancelar</button>
         <button type="button" id="confirmAdminDeleteUserBtn" class="btn-danger">
-          <span class="btn-text">Confirmar Exclusão</span>
+          <span class="btn-text">Confirmar</span>
           <span class="spinner hidden" id="adminDeleteUserSpinner"></span>
         </button>
       </div>
