@@ -2708,6 +2708,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       const inputName = document.getElementById('sheetClientNameInput');
       if (inputName) inputName.value = card.nome || '';
       
+      // Preencher etiqueta e botão de código / Google Drive (Guia Documentos)
+      const docsCardCodeTag = document.getElementById('docsCardCodeTag');
+      if (docsCardCodeTag) {
+        docsCardCodeTag.textContent = card.codigo || 'RP00';
+      }
+
+      const docsCardCodeBtn = document.getElementById('docsCardCodeBtn');
+      if (docsCardCodeBtn) {
+        let driveUrl = card.drive_link ? card.drive_link.trim() : '';
+        if (driveUrl && !driveUrl.startsWith('http://') && !driveUrl.startsWith('https://')) {
+          driveUrl = 'https://' + driveUrl;
+        }
+
+        if (driveUrl) {
+          docsCardCodeBtn.href = driveUrl;
+          docsCardCodeBtn.target = '_blank';
+          docsCardCodeBtn.title = `Abrir Google Drive (${card.codigo || 'Pasta'})`;
+          docsCardCodeBtn.onclick = null;
+        } else {
+          docsCardCodeBtn.removeAttribute('href');
+          docsCardCodeBtn.title = 'Link do Google Drive não cadastrado para este card';
+          docsCardCodeBtn.onclick = (e) => {
+            e.preventDefault();
+            showToast('Link do Google Drive não cadastrado.');
+          };
+        }
+      }
+      
       // Preencher demais campos da Ficha com segurança
       const elPhone = document.getElementById('sheetPhone');
       if (elPhone) elPhone.value = card.telefone || '';
