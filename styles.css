@@ -2746,6 +2746,8 @@ html, body {
   background-color: #FFFFFF;
   padding: 0 2.25rem 2rem; /* Espaçamento interno (superior no header fixo, lateral, inferior) */
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Barra de Ferramentas Superior Interna Fixa (Parte Branca da Ficha) */
@@ -3179,13 +3181,29 @@ select {
   color: #94A3B8;
 }
 
-/* Botão Salvar Ficha */
+.tab-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.tab-pane.hidden {
+  display: none !important;
+}
+
+.sheet-form-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Botão Salvar (Ficha e Respostas) */
 .sheet-form-actions {
   display: flex;
   justify-content: flex-end;
-  padding-top: 1rem;
+  padding-top: 1.5rem;
   border-top: none;
-  margin-top: 0.5rem;
+  margin-top: auto;
 }
 
 .btn-save-sheet {
@@ -3335,7 +3353,9 @@ select {
 }
 
 .tab-pane {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 /* Classe utilitária de ocultação genérica */
