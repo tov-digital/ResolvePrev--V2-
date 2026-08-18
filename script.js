@@ -2612,6 +2612,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   const sheetBairro = document.getElementById('sheetBairro');
   const saveClientSheetBtn = document.getElementById('saveClientSheetBtn');
 
+  function updateSheetPhoneWaLink(phoneVal) {
+    const waBtn = document.getElementById('sheetPhoneWaBtn');
+    if (!waBtn) return;
+    const digits = phoneVal ? phoneVal.replace(/\D/g, '') : '';
+    if (digits) {
+      waBtn.href = `https://wa.me/55${digits}`;
+      waBtn.target = '_blank';
+      waBtn.onclick = null;
+      waBtn.title = `Abrir conversa no WhatsApp (${phoneVal})`;
+    } else {
+      waBtn.removeAttribute('href');
+      waBtn.title = 'Telefone não informado';
+      waBtn.onclick = (e) => {
+        e.preventDefault();
+        showToast('Telefone não informado.');
+      };
+    }
+  }
+
   // Máscaras de entrada em tempo real
   if (sheetPhone) {
     sheetPhone.addEventListener('input', (e) => {
@@ -2627,6 +2646,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         v = v.replace(/^(\d*)$/, '($1');
       }
       e.target.value = v;
+      updateSheetPhoneWaLink(v);
     });
   }
 
@@ -2656,6 +2676,52 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  function calculateAge(birthDateString) {
+    if (!birthDateString) return '—';
+    let raw = String(birthDateString).trim();
+    if (raw.includes('T')) raw = raw.split('T')[0];
+
+    let year, month, day;
+    if (raw.includes('-')) {
+      const parts = raw.split('-');
+      if (parts.length === 3) {
+        if (parts[0].length === 4) {
+          year = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10);
+          day = parseInt(parts[2], 10);
+        } else {
+          day = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10);
+          year = parseInt(parts[2], 10);
+        }
+      }
+    } else if (raw.includes('/')) {
+      const parts = raw.split('/');
+      if (parts.length === 3) {
+        if (parts[2].length === 4) {
+          day = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10);
+          year = parseInt(parts[2], 10);
+        } else if (parts[0].length === 4) {
+          year = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10);
+          day = parseInt(parts[2], 10);
+        }
+      }
+    }
+
+    if (!year || !month || !day || isNaN(year) || isNaN(month) || isNaN(day)) return '—';
+
+    const today = new Date();
+    let age = today.getFullYear() - year;
+    const monthDiff = (today.getMonth() + 1) - month;
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < day)) {
+      age--;
+    }
+
+    return (age >= 0 && age < 130) ? `${age} anos` : '—';
+  }
+
   if (sheetDataNascimento) {
     sheetDataNascimento.addEventListener('input', (e) => {
       let v = e.target.value.replace(/\D/g, '');
@@ -2666,6 +2732,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         v = v.replace(/^(\d{2})(\d{1,2})$/, '$1/$2');
       }
       e.target.value = v;
+
+      const elIdade = document.getElementById('respIdade');
+      if (elIdade) {
+        elIdade.value = calculateAge(v);
+      }
     });
   }
 
@@ -2738,7 +2809,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       // Preencher demais campos da Ficha com segurança
       const elPhone = document.getElementById('sheetPhone');
-      if (elPhone) elPhone.value = card.telefone || '';
+      if (elPhone) {
+        elPhone.value = card.telefone || '';
+        updateSheetPhoneWaLink(card.telefone || '');
+      }
 
       const elEmail = document.getElementById('sheetEmail');
       if (elEmail) elEmail.value = card.email || '';
@@ -2786,6 +2860,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (elBairro) elBairro.value = card.bairro || '';
 
       // Preencher campos da guia Respostas
+      const elIdade = document.getElementById('respIdade');
+      if (elIdade) elIdade.value = calculateAge(card.data_nascimento);
+
       const elJaContribuiu = document.getElementById('respJaContribuiu');
       if (elJaContribuiu) elJaContribuiu.value = card.ja_contribuiu || '';
 
