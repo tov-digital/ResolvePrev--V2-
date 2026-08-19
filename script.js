@@ -1101,16 +1101,183 @@ document.addEventListener('DOMContentLoaded', async () => {
     modalFirstAccess.classList.add('hidden');
   });
 
+  // DOM Elements - User Profile Edit Modal
+  const modalUserProfile = document.getElementById('modalUserProfile');
+  const closeUserProfileModal = document.getElementById('closeUserProfileModal');
+  const userProfileForm = document.getElementById('userProfileForm');
+  const userProfileBadge = document.getElementById('userProfileBadge');
+  const adminProfileBadge = document.getElementById('adminProfileBadge');
+
+  async function openUserProfileModal() {
+    if (!supabase) {
+      showToast('Sistema de autenticação indisponível.');
+      return;
+    }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) {
+        showToast('Sessão expirada. Faça login novamente.');
+        return;
+      }
+      const user = session.user;
+      let currentName = user.user_metadata?.full_name || user.user_metadata?.name || '';
+      let currentEmail = user.email || '';
+
+      // Tentar pegar do profile no Supabase
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profile) {
+        currentName = profile.full_name || profile.nome || profile.name || currentName;
+        currentEmail = profile.email || currentEmail;
+      }
+
+      if (!currentName) {
+        currentName = getUserDisplayName(user);
+      }
+
+      document.getElementById('upName').value = currentName;
+      document.getElementById('upEmail').value = currentEmail;
+      document.getElementById('upPassword').value = '';
+
+      modalUserProfile.classList.remove('hidden');
+    } catch (err) {
+      console.error('Erro ao carregar dados do perfil:', err);
+      showToast('Erro ao carregar seus dados.');
+    }
+  }
+
+  if (userProfileBadge) {
+    userProfileBadge.addEventListener('click', openUserProfileModal);
+  }
+  if (adminProfileBadge) {
+    adminProfileBadge.addEventListener('click', openUserProfileModal);
+  }
+  if (closeUserProfileModal) {
+    closeUserProfileModal.addEventListener('click', () => {
+      modalUserProfile.classList.add('hidden');
+    });
+  }
+
+  if (userProfileForm) {
+    userProfileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!supabase) return;
+
+      const newName = document.getElementById('upName').value.trim();
+      const newEmail = document.getElementById('upEmail').value.trim();
+      const newPassword = document.getElementById('upPassword').value.trim();
+      const submitBtn = document.getElementById('userProfileSubmitBtn');
+      const btnText = submitBtn.querySelector('.btn-text');
+      const spinner = document.getElementById('userProfileSpinner');
+
+      if (!newName || !newEmail) {
+        showToast('Por favor, preencha o Nome e o E-mail.');
+        return;
+      }
+
+      if (newPassword && newPassword.length < 6) {
+        showToast('A nova senha deve ter no mínimo 6 caracteres.');
+        return;
+      }
+
+      btnText.textContent = 'Salva...';
+      spinner.classList.remove('hidden');
+      submitBtn.disabled = true;
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !session.user) {
+          throw new Error('Sessão inválida.');
+        }
+
+        const userId = session.user.id;
+        const updateAttrs = {
+          email: newEmail,
+          data: { full_name: newName, name: newName }
+        };
+        if (newPassword) {
+          updateAttrs.password = newPassword;
+        }
+
+        // 1. Atualizar no Auth via Supabase SDK
+        const { error: authError } = await supabase.auth.updateUser(updateAttrs);
+        if (authError) {
+          console.warn('Aviso auth.updateUser:', authError);
+        }
+
+        // 2. Atualizar na tabela profiles
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+
+        let profilePayload = {
+          id: userId,
+          email: newEmail,
+          updated_at: new Date().toISOString()
+        };
+
+        if (existingProfile) {
+          profilePayload = { ...existingProfile, ...profilePayload };
+          if ('full_name' in existingProfile) profilePayload.full_name = newName;
+          if ('nome' in existingProfile) profilePayload.nome = newName;
+          if ('name' in existingProfile) profilePayload.name = newName;
+        } else {
+          profilePayload.full_name = newName;
+          profilePayload.nome = newName;
+        }
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert(profilePayload, { onConflict: 'id' });
+
+        if (profileError) {
+          console.warn('Erro upsert profile:', profileError);
+          await supabase
+            .from('profiles')
+            .update({ full_name: newName, email: newEmail })
+            .eq('id', userId);
+        }
+
+        // Atualizar visualmente o nome e inicial na interface
+        const initialLetter = newName.charAt(0).toUpperCase();
+        if (userDisplayName) userDisplayName.textContent = newName;
+        if (userAvatar) userAvatar.textContent = initialLetter;
+        const adminDisplayName = document.getElementById('adminDisplayName');
+        const adminAvatar = document.getElementById('adminAvatar');
+        if (adminDisplayName) adminDisplayName.textContent = newName;
+        if (adminAvatar) adminAvatar.textContent = initialLetter;
+
+        showToast('Dados cadastrais atualizados com sucesso!');
+        modalUserProfile.classList.add('hidden');
+      } catch (err) {
+        console.error('Erro ao atualizar perfil:', err);
+        showToast(`Erro ao atualizar dados: ${err.message || 'Falha na operação'}`);
+      } finally {
+        btnText.textContent = 'Salvar Alterações';
+        spinner.classList.add('hidden');
+        submitBtn.disabled = false;
+      }
+    });
+  }
+
   // Fechar ao clicar fora do card ou pressionar ESC
   window.addEventListener('click', (e) => {
     if (e.target === modalRecovery) modalRecovery.classList.add('hidden');
     if (e.target === modalFirstAccess) modalFirstAccess.classList.add('hidden');
+    if (e.target === modalUserProfile) modalUserProfile.classList.add('hidden');
   });
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       modalRecovery.classList.add('hidden');
       modalFirstAccess.classList.add('hidden');
+      if (modalUserProfile) modalUserProfile.classList.add('hidden');
     }
   });
 

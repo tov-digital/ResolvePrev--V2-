@@ -187,7 +187,7 @@
 
       <!-- Rodapé da Sidebar: Perfil do Usuário e Logout -->
       <div class="sidebar-footer">
-        <div class="user-profile" id="userProfileBadge" title="Usuário Logado">
+        <div class="user-profile clickable-profile" id="userProfileBadge" title="Clique para editar seus dados" style="cursor: pointer;">
           <div class="user-avatar" id="userAvatar">U</div>
           <div class="user-info">
             <span id="userDisplayName" class="user-name">Carregando...</span>
@@ -1206,7 +1206,7 @@
 
       <!-- Rodapé da Sidebar Admin -->
       <div class="sidebar-footer">
-        <div class="user-profile" title="Administrador Logado">
+        <div class="user-profile clickable-profile" id="adminProfileBadge" title="Clique para editar seus dados" style="cursor: pointer;">
           <div class="user-avatar admin-avatar-icon" id="adminAvatar">A</div>
           <div class="user-info">
             <span id="adminDisplayName" class="user-name">Administrador</span>
@@ -1639,6 +1639,62 @@
       <div id="firstAccessSuccess" class="alert-success hidden">
         ✓ Solicitação enviada, verifique seu email!
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: MEUS DADOS / EDITAR PERFIL ==================== -->
+  <div id="modalUserProfile" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" id="closeUserProfileModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <h3>Meus Dados</h3>
+        <p>Atualize seu nome, e-mail e/ou senha de acesso.</p>
+      </div>
+      <form id="userProfileForm" class="modal-form">
+        <div class="input-group">
+          <label for="upName" class="input-label">Nome</label>
+          <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <input type="text" id="upName" class="form-control" placeholder="Seu nome" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="upEmail" class="input-label">E-mail</label>
+          <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <input type="email" id="upEmail" class="form-control" placeholder="seuemail@exemplo.com" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="upPassword" class="input-label">Senha</label>
+          <div class="input-field-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input type="password" id="upPassword" class="form-control" placeholder="Mínimo 6 caracteres">
+          </div>
+        </div>
+
+        <button type="submit" id="userProfileSubmitBtn" class="btn-submit">
+          <span class="btn-text">Salvar Alterações</span>
+          <span class="spinner hidden" id="userProfileSpinner"></span>
+        </button>
+      </form>
     </div>
   </div>
 

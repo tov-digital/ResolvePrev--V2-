@@ -649,6 +649,20 @@ html, body {
   padding: 0.5rem 0.5rem;
   border-radius: 10px;
   overflow: hidden;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.clickable-profile:hover {
+  background-color: rgba(30, 80, 128, 0.08);
+}
+
+.clickable-profile:hover .user-avatar {
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(30, 80, 128, 0.3);
+}
+
+.clickable-profile .user-avatar {
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .user-avatar {
