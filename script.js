@@ -2738,12 +2738,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   let concedidoCardTarget = null;
   let concedidoNewStatusTarget = null;
 
+  function formatCurrencyBRL(value) {
+    let clean = String(value || '').replace(/\D/g, '');
+    if (!clean) return '';
+    const numberVal = parseFloat(clean) / 100;
+    return numberVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  const concedidoValorRendaInput = document.getElementById('concedidoValorRenda');
+  if (concedidoValorRendaInput) {
+    concedidoValorRendaInput.addEventListener('input', (e) => {
+      e.target.value = formatCurrencyBRL(e.target.value);
+    });
+  }
+
   function openConcedidoModal(card, newStatus) {
     concedidoCardTarget = card;
     concedidoNewStatusTarget = newStatus;
     if (concedidoClientName) concedidoClientName.textContent = `"${card.nome}"`;
     
-    document.getElementById('concedidoValorRenda').value = '';
+    if (concedidoValorRendaInput) concedidoValorRendaInput.value = '';
     document.getElementById('concedidoMesesAtraso').value = '';
     document.getElementById('concedidoDataCobranca').value = '';
     document.getElementById('concedidoNumeroParcelas').value = '';
