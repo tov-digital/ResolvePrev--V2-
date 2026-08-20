@@ -1207,6 +1207,9 @@ html, body {
 .dot-exigencia { background-color: #3B82F6; }    /* 4. Azul */
 .dot-concedido { background-color: #22C55E; }    /* 5. Verde */
 
+/* Dots - Judicial */
+.dot-negado { background-color: #F87171; }       /* Red */
+
 .column-title {
   font-size: 0.92rem;
   font-weight: 700;
@@ -1979,6 +1982,10 @@ html, body {
 
 .list-status-concedido { background: #DCFCE7; color: #166534; border: 1px solid rgba(22,101,52,0.2); }
 .list-status-concedido .status-dot { background: #22C55E; }
+
+/* Statuses da Lista - Judicial */
+.list-status-negado { background: #FEE2E2; color: #991B1B; border: 1px solid rgba(153,27,27,0.2); }
+.list-status-negado .status-dot { background: #F87171; }
 
 /* ---- Notes Button Cell ---- */
 .crm-list-table td.td-notes {

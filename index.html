@@ -172,6 +172,16 @@
           </svg>
           <span class="nav-label">Operação</span>
         </a>
+        <a href="#" class="nav-item" data-tab="judicial" title="Judicial">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+            <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+            <path d="M7 21h10"/>
+            <path d="M12 3v18"/>
+            <path d="M3 7h18"/>
+          </svg>
+          <span class="nav-label">Judicial</span>
+        </a>
 
         <!-- Botão exclusivo do Administrador para voltar ao Painel Gerencial -->
         <a href="#" id="backToAdminBtn" class="nav-item nav-item-admin-link hidden" title="Painel Gerencial">
@@ -454,6 +464,18 @@
           <div class="kanban-cards-container"></div>
         </div>
 
+        <!-- COLUNAS JUDICIAL -->
+        <div class="kanban-column hidden" data-stage="negado" data-tab="judicial">
+          <div class="kanban-column-header">
+            <div class="column-title-group">
+              <span class="column-status-dot dot-negado"></span>
+              <h4 class="column-title">Negado</h4>
+              <span class="column-count">0</span>
+            </div>
+          </div>
+          <div class="kanban-cards-container"></div>
+        </div>
+
       </section>
 
       <!-- Corpo da Visualização: LISTA (Inicialmente oculta) -->
@@ -613,6 +635,10 @@
                 </div>
                 <div class="status-option hidden" data-status="concedido" data-tab="operacao">
                   <span class="column-status-dot dot-concedido"></span> Concedido
+                </div>
+
+                <div class="status-option hidden" data-status="negado" data-tab="judicial">
+                  <span class="column-status-dot dot-negado"></span> Negado
                 </div>
               </div>
             </div>

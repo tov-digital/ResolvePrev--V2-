@@ -8,7 +8,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Estado da aba atual (Comercial vs Operação)
   window.currentTab = 'comercial';
   function getCurrentTable() {
-    return window.currentTab === 'comercial' ? 'oportunidades_crm' : 'operacao_crm';
+    if (window.currentTab === 'comercial') return 'oportunidades_crm';
+    if (window.currentTab === 'operacao') return 'operacao_crm';
+    if (window.currentTab === 'judicial') return 'insucessos_crm';
+    return 'oportunidades_crm';
   }
 
   function getUserDisplayName(profile) {
@@ -128,6 +131,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (window.currentTab === 'operacao') {
         crmTitle.textContent = 'Operação';
         crmSubtitle.textContent = 'Acompanhamento de Operações';
+      } else if (window.currentTab === 'judicial') {
+        crmTitle.textContent = 'Judicial';
+        crmSubtitle.textContent = 'Processos Judiciais e Negados';
       }
       
       // Exibe/Oculta colunas do Kanban com base na aba
@@ -218,7 +224,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     'na_fila': 'Na Fila',
     'requerido': 'Requerido',
     'concedido': 'Concedido',
-    'exigencia': 'Exigência'
+    'exigencia': 'Exigência',
+    'negado': 'Negado'
   };
 
   const stageDotClasses = {
@@ -231,7 +238,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     'na_fila': 'dot-na_fila',
     'requerido': 'dot-requerido',
     'concedido': 'dot-concedido',
-    'exigencia': 'dot-exigencia'
+    'exigencia': 'dot-exigencia',
+    'negado': 'dot-negado'
   };
 
   const backToAdminBtn = document.getElementById('backToAdminBtn');
@@ -1701,6 +1709,19 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'insucessos_crm'
+        },
+        () => {
+          if (window.currentTab === 'judicial') {
+            loadUserCards();
+          }
+        }
+      )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.log('Sincronização em tempo real ativa no Supabase.');
@@ -1862,9 +1883,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Se NÃO estiver com o filtro 'planejamento' ativado, oculta completamente as linhas de 'planejamento'
         const normalStages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
         return normalStages.includes(cardStatus);
-      } else {
+      } else if (window.currentTab === 'operacao') {
         const operacaoStages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
         return operacaoStages.includes(cardStatus);
+      } else if (window.currentTab === 'judicial') {
+        return cardStatus === 'negado';
       }
     });
 
@@ -2350,9 +2373,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderKanbanCards(cards) {
-    const stages = window.currentTab === 'comercial' 
-      ? ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta']
-      : ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
+    let stages = [];
+    if (window.currentTab === 'comercial') {
+      stages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
+    } else if (window.currentTab === 'operacao') {
+      stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
+    } else if (window.currentTab === 'judicial') {
+      stages = ['negado'];
+    }
 
     stages.forEach(stage => {
       // Pega apenas a coluna da tab atual
