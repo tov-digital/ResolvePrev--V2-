@@ -2080,6 +2080,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnOptDesqualificado = document.getElementById('btnOptDesqualificado');
   const btnOptRecusado = document.getElementById('btnOptRecusado');
   const btnOptRecuperacao = document.getElementById('btnOptRecuperacao');
+  const btnOptNoShow = document.getElementById('btnOptNoShow');
   const btnOptDeletar = document.getElementById('btnOptDeletar');
 
   function openDeleteModal(card, cardElement) {
@@ -2158,6 +2159,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   if (btnOptRecuperacao) {
     btnOptRecuperacao.addEventListener('click', () => triggerInsuccessWebhook('Recuperação', 'recuperacao'));
+  }
+  if (btnOptNoShow) {
+    btnOptNoShow.addEventListener('click', () => triggerInsuccessWebhook('No-Show', 'no_show'));
   }
 
   // Clicou em 'Deletar' na lista de opções: remove o registro do banco de dados (Supabase)

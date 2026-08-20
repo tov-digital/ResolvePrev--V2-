@@ -2603,7 +2603,8 @@ html, body {
 
 .btn-opt-desqualificado:hover,
 .btn-opt-recusado:hover,
-.btn-opt-recuperacao:hover {
+.btn-opt-recuperacao:hover,
+.btn-opt-noshow:hover {
   background-color: #FEF3C7;
   color: #92400E;
   border-color: #FCD34D;
