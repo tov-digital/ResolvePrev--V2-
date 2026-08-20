@@ -130,10 +130,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         crmSubtitle.textContent = 'CRM / Funil de Vendas';
       } else if (window.currentTab === 'operacao') {
         crmTitle.textContent = 'Operação';
-        crmSubtitle.textContent = 'Acompanhamento de Operações';
+        crmSubtitle.textContent = 'Gestão de Requerimentos';
       } else if (window.currentTab === 'judicial') {
         crmTitle.textContent = 'Judicial';
-        crmSubtitle.textContent = 'Processos Judiciais e Negados';
+        crmSubtitle.textContent = 'Processos de Requerimentos Negados';
       }
       
       // Exibe/Oculta colunas do Kanban com base na aba
