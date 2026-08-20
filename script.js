@@ -2081,6 +2081,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnOptRecusado = document.getElementById('btnOptRecusado');
   const btnOptRecuperacao = document.getElementById('btnOptRecuperacao');
   const btnOptNoShow = document.getElementById('btnOptNoShow');
+  const btnOptNegado = document.getElementById('btnOptNegado');
   const btnOptDeletar = document.getElementById('btnOptDeletar');
 
   function openDeleteModal(card, cardElement) {
@@ -2103,13 +2104,55 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (closeDeleteOptionsModal) closeDeleteOptionsModal.addEventListener('click', closeDeleteOptionsModalFn);
 
-  // Ações das opções de status (Desqualificado, Recusado, Recuperação) -> Envio para Webhook
+  // Modal de Confirmação de Ação Webhook
+  const modalWebhookConfirm = document.getElementById('modalWebhookConfirm');
+  const closeWebhookConfirmModal = document.getElementById('closeWebhookConfirmModal');
+  const cancelWebhookConfirmBtn = document.getElementById('cancelWebhookConfirmBtn');
+  const confirmWebhookConfirmBtn = document.getElementById('confirmWebhookConfirmBtn');
+  const webhookConfirmCardName = document.getElementById('webhookConfirmCardName');
+  const webhookConfirmActionName = document.getElementById('webhookConfirmActionName');
+
+  let pendingWebhookAction = null; // { label, value }
+
+  function closeWebhookConfirmModalFn() {
+    pendingWebhookAction = null;
+    if (modalWebhookConfirm) modalWebhookConfirm.classList.add('hidden');
+  }
+
+  if (closeWebhookConfirmModal) closeWebhookConfirmModal.addEventListener('click', closeWebhookConfirmModalFn);
+  if (cancelWebhookConfirmBtn) cancelWebhookConfirmBtn.addEventListener('click', closeWebhookConfirmModalFn);
+
+  window.addEventListener('click', (e) => {
+    if (e.target === modalWebhookConfirm) closeWebhookConfirmModalFn();
+  });
+
+  // Abre modal de confirmação para a ação de status
+  function requestStatusChangeConfirmation(actionLabel, actionValue) {
+    if (!cardToDelete) return;
+    pendingWebhookAction = { label: actionLabel, value: actionValue };
+    closeDeleteOptionsModalFn();
+
+    if (webhookConfirmCardName) webhookConfirmCardName.textContent = cardToDelete.nome ? `"${cardToDelete.nome}"` : 'este cliente';
+    if (webhookConfirmActionName) webhookConfirmActionName.textContent = actionLabel;
+    if (modalWebhookConfirm) modalWebhookConfirm.classList.remove('hidden');
+  }
+
+  // Ao clicar em 'Confirmar' no modal de ação
+  if (confirmWebhookConfirmBtn) {
+    confirmWebhookConfirmBtn.addEventListener('click', async () => {
+      if (!pendingWebhookAction || !cardToDelete) return;
+      const { label, value } = pendingWebhookAction;
+      closeWebhookConfirmModalFn();
+      await triggerInsuccessWebhook(label, value);
+    });
+  }
+
+  // Ações das opções de status (Desqualificado, Recusado, Recuperação, No-Show) -> Solicita Confirmação
   async function triggerInsuccessWebhook(actionLabel, actionValue) {
     if (!cardToDelete) return;
 
     const targetCard = cardToDelete;
     const cardElToRem = cardElementToDelete;
-    closeDeleteOptionsModalFn();
 
     // Monta o payload incluindo a ação/status selecionado e todas as informações existentes do card/linha
     const payload = {
@@ -2152,16 +2195,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (btnOptDesqualificado) {
-    btnOptDesqualificado.addEventListener('click', () => triggerInsuccessWebhook('Desqualificado', 'desqualificado'));
+    btnOptDesqualificado.addEventListener('click', () => requestStatusChangeConfirmation('Desqualificado', 'desqualificado'));
   }
   if (btnOptRecusado) {
-    btnOptRecusado.addEventListener('click', () => triggerInsuccessWebhook('Recusado', 'recusado'));
+    btnOptRecusado.addEventListener('click', () => requestStatusChangeConfirmation('Recusado', 'recusado'));
   }
   if (btnOptRecuperacao) {
-    btnOptRecuperacao.addEventListener('click', () => triggerInsuccessWebhook('Recuperação', 'recuperacao'));
+    btnOptRecuperacao.addEventListener('click', () => requestStatusChangeConfirmation('Recuperação', 'recuperacao'));
   }
   if (btnOptNoShow) {
-    btnOptNoShow.addEventListener('click', () => triggerInsuccessWebhook('No-Show', 'no_show'));
+    btnOptNoShow.addEventListener('click', () => requestStatusChangeConfirmation('No-Show', 'no_show'));
+  }
+  if (btnOptNegado) {
+    btnOptNegado.addEventListener('click', () => requestStatusChangeConfirmation('Negado', 'negado'));
   }
 
   // Clicou em 'Deletar' na lista de opções: remove o registro do banco de dados (Supabase)
