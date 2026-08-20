@@ -1194,18 +1194,18 @@ html, body {
   border-radius: 50%;
 }
 
-.dot-novo { background-color: #3B82F6; }         /* Azul */
-.dot-qualificacao { background-color: #A855F7; } /* Roxo */
-.dot-acompanhamento { background-color: #F97316; }/* Laranja */
-.dot-reuniao { background-color: #22C55E; }      /* Verde */
-.dot-proposta { background-color: #F43F5E; }     /* Rosa/Vermelho */
+.dot-novo { background-color: #94A3B8; }         /* 1. Cinza */
+.dot-qualificacao { background-color: #F97316; } /* 2. Laranja */
+.dot-acompanhamento { background-color: #FACC15; }/* 3. Amarelo */
+.dot-reuniao { background-color: #3B82F6; }      /* 4. Azul */
+.dot-proposta { background-color: #22C55E; }     /* 5. Verde */
 
 /* Dots - Operação */
-.dot-documentacao { background-color: #94A3B8; } /* Slate/Gray */
-.dot-na_fila { background-color: #FACC15; }      /* Yellow */
-.dot-requerido { background-color: #60A5FA; }    /* Blue */
-.dot-concedido { background-color: #4ADE80; }    /* Green */
-.dot-insucessos { background-color: #F87171; }   /* Red */
+.dot-documentacao { background-color: #94A3B8; } /* 1. Cinza */
+.dot-na_fila { background-color: #F97316; }      /* 2. Laranja */
+.dot-requerido { background-color: #FACC15; }    /* 3. Amarelo */
+.dot-exigencia { background-color: #3B82F6; }    /* 4. Azul */
+.dot-concedido { background-color: #22C55E; }    /* 5. Verde */
 
 .column-title {
   font-size: 0.92rem;
@@ -1946,20 +1946,20 @@ html, body {
   flex-shrink: 0;
 }
 
-.list-status-novo         { background: #EBF8FF; color: #1A56DB; border: 1px solid rgba(26,86,219,0.2); }
-.list-status-novo .status-dot         { background: #3B82F6; }
+.list-status-novo { background: #F1F5F9; color: #334155; border: 1px solid rgba(51,65,85,0.2); }
+.list-status-novo .status-dot { background: #94A3B8; }
 
-.list-status-qualificacao { background: #FDF4FF; color: #7E22CE; border: 1px solid rgba(126,34,206,0.2); }
-.list-status-qualificacao .status-dot { background: #A855F7; }
+.list-status-qualificacao { background: #FFF7ED; color: #C2410C; border: 1px solid rgba(194,65,12,0.2); }
+.list-status-qualificacao .status-dot { background: #F97316; }
 
-.list-status-acompanhamento { background: #FFF7ED; color: #C2410C; border: 1px solid rgba(194,65,12,0.2); }
-.list-status-acompanhamento .status-dot { background: #F97316; }
+.list-status-acompanhamento { background: #FEF9C3; color: #854D0E; border: 1px solid rgba(133,77,14,0.2); }
+.list-status-acompanhamento .status-dot { background: #FACC15; }
 
-.list-status-reuniao      { background: #F0FDF4; color: #166534; border: 1px solid rgba(22,101,52,0.2); }
-.list-status-reuniao .status-dot      { background: #22C55E; }
+.list-status-reuniao { background: #DBEAFE; color: #1E40AF; border: 1px solid rgba(30,64,175,0.2); }
+.list-status-reuniao .status-dot { background: #3B82F6; }
 
-.list-status-proposta     { background: #FFF1F2; color: #9F1239; border: 1px solid rgba(159,18,57,0.2); }
-.list-status-proposta .status-dot     { background: #F43F5E; }
+.list-status-proposta { background: #DCFCE7; color: #166534; border: 1px solid rgba(22,101,52,0.2); }
+.list-status-proposta .status-dot { background: #22C55E; }
 
 .list-status-planejamento { background: #FEF9C3; color: #854D0E; border: 1px solid rgba(234,179,8,0.3); }
 .list-status-planejamento .status-dot { background: #EAB308; }
@@ -1968,17 +1968,17 @@ html, body {
 .list-status-documentacao { background: #F1F5F9; color: #334155; border: 1px solid rgba(51,65,85,0.2); }
 .list-status-documentacao .status-dot { background: #94A3B8; }
 
-.list-status-na_fila { background: #FEF9C3; color: #854D0E; border: 1px solid rgba(133,77,14,0.2); }
-.list-status-na_fila .status-dot { background: #FACC15; }
+.list-status-na_fila { background: #FFF7ED; color: #C2410C; border: 1px solid rgba(194,65,12,0.2); }
+.list-status-na_fila .status-dot { background: #F97316; }
 
-.list-status-requerido { background: #DBEAFE; color: #1E40AF; border: 1px solid rgba(30,64,175,0.2); }
-.list-status-requerido .status-dot { background: #60A5FA; }
+.list-status-requerido { background: #FEF9C3; color: #854D0E; border: 1px solid rgba(133,77,14,0.2); }
+.list-status-requerido .status-dot { background: #FACC15; }
+
+.list-status-exigencia { background: #DBEAFE; color: #1E40AF; border: 1px solid rgba(30,64,175,0.2); }
+.list-status-exigencia .status-dot { background: #3B82F6; }
 
 .list-status-concedido { background: #DCFCE7; color: #166534; border: 1px solid rgba(22,101,52,0.2); }
-.list-status-concedido .status-dot { background: #4ADE80; }
-
-.list-status-insucessos { background: #FEE2E2; color: #991B1B; border: 1px solid rgba(153,27,27,0.2); }
-.list-status-insucessos .status-dot { background: #F87171; }
+.list-status-concedido .status-dot { background: #22C55E; }
 
 /* ---- Notes Button Cell ---- */
 .crm-list-table td.td-notes {

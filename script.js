@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'na_fila': 'Na Fila',
     'requerido': 'Requerido',
     'concedido': 'Concedido',
-    'insucessos': 'Negado'
+    'exigencia': 'Exigência'
   };
 
   const stageDotClasses = {
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'na_fila': 'dot-na_fila',
     'requerido': 'dot-requerido',
     'concedido': 'dot-concedido',
-    'insucessos': 'dot-insucessos'
+    'exigencia': 'dot-exigencia'
   };
 
   const backToAdminBtn = document.getElementById('backToAdminBtn');
@@ -1863,7 +1863,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const normalStages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
         return normalStages.includes(cardStatus);
       } else {
-        const operacaoStages = ['documentacao', 'na_fila', 'requerido', 'concedido', 'insucessos'];
+        const operacaoStages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
         return operacaoStages.includes(cardStatus);
       }
     });
@@ -1968,7 +1968,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // ---- Status badge ----
       const statusLabels = { 
         novo: 'Novo', qualificacao: 'Qualificação', acompanhamento: 'Acompanhamento', reuniao: 'Reunião', proposta: 'Proposta', planejamento: 'Planejamento',
-        documentacao: 'Documentação', na_fila: 'Na Fila', requerido: 'Requerido', concedido: 'Concedido', insucessos: 'Negado'
+        documentacao: 'Documentação', na_fila: 'Na Fila', requerido: 'Requerido', exigencia: 'Exigência', concedido: 'Concedido'
       };
       const statusLabel = statusLabels[card.status] || card.status || 'Novo';
       const statusClass = `list-status-${card.status || 'novo'}`;
@@ -2306,7 +2306,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderKanbanCards(cards) {
     const stages = window.currentTab === 'comercial' 
       ? ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta']
-      : ['documentacao', 'na_fila', 'requerido', 'concedido', 'insucessos'];
+      : ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
 
     stages.forEach(stage => {
       // Pega apenas a coluna da tab atual
