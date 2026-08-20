@@ -2336,6 +2336,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       }
     });
+
+    setupKanbanDragAndDrop();
   }
 
   function createCardElement(card) {
@@ -2523,6 +2525,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .eq('id', cardObj.id);
 
       if (error) {
+        console.error('Erro Supabase ao atualizar status:', error);
         cardObj.status = oldStage;
         cardObj.atualizado_em = oldAtualizadoEm;
         filterAndRenderCards(searchTerm);
@@ -2531,7 +2534,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         showToast('Erro ao mover card: ' + error.message);
       } else {
-        showToast(`Status alterado para "${getStageLabel(newStage)}".`);
+        showToast(`Status alterado para "${stageLabels[newStage] || newStage}".`);
       }
     }
   }
@@ -2755,19 +2758,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function getStageLabel(stage) {
-    const labels = {
-      'novo': 'Novo',
-      'qualificacao': 'Qualificação',
-      'acompanhamento': 'Acompanhamento',
-      'reuniao': 'Reunião',
-      'proposta': 'Proposta'
-    };
-    return labels[stage] || stage;
+    return stageLabels[stage] || stage;
   }
 
   /* ==========================================
      GERENCIAMENTO DO MODAL: FICHA DO CLIENTE (A4 E GUIAS)
      ========================================== */
+  let currentActiveCard = null;
   const modalClientSheet = document.getElementById('modalClientSheet');
   const closeClientSheetModal = document.getElementById('closeClientSheetModal');
   const browserTabs = document.querySelectorAll('.browser-tab');
