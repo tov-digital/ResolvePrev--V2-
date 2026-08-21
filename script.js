@@ -244,6 +244,77 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const backToAdminBtn = document.getElementById('backToAdminBtn');
 
+  function getRoleAllowedTabs(role, userId) {
+    if (userId === ADMIN_USER_ID || role === 'admin') {
+      return ['comercial', 'operacao', 'judicial'];
+    }
+    if (role === 'operador_juridico' || role === 'supervisor_juridico' || role === 'advogado') {
+      return ['operacao', 'judicial'];
+    }
+    // Operador Comercial / Supervisor Comercial / usuario / default
+    return ['comercial'];
+  }
+
+  function updateNavigationByRole(profile, userId) {
+    const role = profile ? (profile.role || 'operador_comercial') : 'operador_comercial';
+    const allowedTabs = getRoleAllowedTabs(role, userId);
+
+    const navItems = document.querySelectorAll('.sidebar-nav .nav-item[data-tab]');
+    navItems.forEach(item => {
+      const tabName = item.dataset.tab;
+      if (allowedTabs.includes(tabName)) {
+        item.classList.remove('hidden');
+      } else {
+        item.classList.add('hidden');
+      }
+    });
+
+    // Se a aba atualmente ativa não é permitida para o perfil, muda para a primeira aba permitida
+    if (!allowedTabs.includes(window.currentTab)) {
+      window.currentTab = allowedTabs[0];
+
+      navItems.forEach(nav => {
+        if (nav.dataset.tab === window.currentTab) {
+          nav.classList.add('active');
+        } else {
+          nav.classList.remove('active');
+        }
+      });
+
+      // Atualiza títulos do cabeçalho
+      if (crmTitle && crmSubtitle) {
+        if (window.currentTab === 'comercial') {
+          crmTitle.textContent = 'Comercial';
+          crmSubtitle.textContent = 'CRM / Funil de Vendas';
+        } else if (window.currentTab === 'operacao') {
+          crmTitle.textContent = 'Operação';
+          crmSubtitle.textContent = 'Gestão de Requerimentos';
+        } else if (window.currentTab === 'judicial') {
+          crmTitle.textContent = 'Judicial';
+          crmSubtitle.textContent = 'Processos de Requerimentos Negados';
+        }
+      }
+
+      // Ocultar/Exibir colunas do Kanban com base na nova aba
+      document.querySelectorAll('.kanban-column').forEach(col => {
+        if (col.dataset.tab === window.currentTab) {
+          col.classList.remove('hidden');
+        } else {
+          col.classList.add('hidden');
+        }
+      });
+
+      // Ocultar/Exibir opções no dropdown de status
+      document.querySelectorAll('.status-option').forEach(opt => {
+        if (opt.dataset.tab === window.currentTab) {
+          opt.classList.remove('hidden');
+        } else {
+          opt.classList.add('hidden');
+        }
+      });
+    }
+  }
+
   async function showDashboard(user) {
     let displayName = '';
     let userProfile = null;
@@ -293,6 +364,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         backToAdminBtn.classList.add('hidden');
       }
     }
+
+    // Atualiza navegação por perfil
+    updateNavigationByRole(userProfile, userId);
 
     loginScreen.classList.add('hidden');
     if (adminDashboardScreen) adminDashboardScreen.classList.add('hidden');
@@ -502,6 +576,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  function getRoleBadgeText(role, userId) {
+    if (userId === ADMIN_USER_ID || role === 'admin') return '★ Administrador';
+    if (role === 'supervisor_comercial') return '● Supervisor Comercial';
+    if (role === 'operador_juridico' || role === 'advogado') return '● Operador Jurídico';
+    if (role === 'supervisor_juridico') return '● Supervisor Jurídico';
+    return '● Operador Comercial';
+  }
+
   function renderUsersTable(users, query = '') {
     const tableBody = document.getElementById('adminUsersTableBody');
     if (!tableBody) return;
@@ -531,7 +613,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     tableBody.innerHTML = sorted.map(u => {
       const name = getUserDisplayName(u);
       const email = u.email || 'Não informado';
-      const role = u.role || (u.id === ADMIN_USER_ID ? 'admin' : 'usuario');
+      const role = u.role || (u.id === ADMIN_USER_ID ? 'admin' : 'operador_comercial');
       const initial = name.charAt(0).toUpperCase();
       const shortId = u.id ? `${u.id.substring(0, 8)}...` : '--';
 
@@ -549,8 +631,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           </td>
           <td>${escapeHtml(email)}</td>
           <td>
-            <span class="status-pill ${role === 'admin' ? 'status-admin' : 'status-user'}">
-              ${role === 'admin' ? '★ Administrador' : '● Usuário'}
+            <span class="status-pill ${role === 'admin' || u.id === ADMIN_USER_ID ? 'status-admin' : 'status-user'}">
+              ${getRoleBadgeText(role, u.id)}
             </span>
           </td>
           <td><span class="user-cell-id" title="${escapeHtml(u.id)}">${escapeHtml(shortId)}</span></td>
@@ -601,7 +683,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminEditName').value = user.full_name || user.nome || user.name || '';
     document.getElementById('adminEditEmail').value = user.email || '';
     document.getElementById('adminEditPassword').value = '';
-    document.getElementById('adminEditRole').value = user.role || 'usuario';
+    let roleVal = user.role || 'operador_comercial';
+    if (roleVal === 'usuario') roleVal = 'operador_comercial';
+    if (roleVal === 'advogado') roleVal = 'operador_juridico';
+    document.getElementById('adminEditRole').value = roleVal;
 
     document.getElementById('modalAdminEditUser').classList.remove('hidden');
   };
@@ -701,7 +786,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const name = nameInput ? nameInput.value.trim() : '';
       const email = emailInput ? emailInput.value.trim() : '';
       const password = passwordInput ? passwordInput.value.trim() : '';
-      const role = roleInput ? roleInput.value : 'usuario';
+      const role = roleInput ? roleInput.value : 'operador_comercial';
       const submitBtn = document.getElementById('adminCreateUserSubmitBtn');
       const spinner = document.getElementById('adminCreateUserSpinner');
       const btnText = submitBtn ? submitBtn.querySelector('.btn-text') : null;
@@ -1729,7 +1814,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
   }
 
-  // Atualizar a renderização do CRM (Visão Total para Administradores)
+  // Atualizar a renderização do CRM (Níveis de Acesso por Cargo / Perfil)
   async function loadUserCards() {
     if (!supabase) return;
 
@@ -1739,26 +1824,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     subscribeRealtimeUpdates();
 
-    // Checar se o usuário atual é Administrador (ID específico ou role 'admin')
+    // Obter perfil do usuário para checar permissões
     let isAdmin = currentUserId === ADMIN_USER_ID;
-    if (!isAdmin) {
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, is_admin')
-          .eq('id', currentUserId)
-          .maybeSingle();
+    let userRole = 'operador_comercial';
+    let userProfile = null;
 
-        if (profile && (profile.role === 'admin' || profile.is_admin === true)) {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUserId)
+        .maybeSingle();
+
+      if (profile) {
+        userProfile = profile;
+        userRole = profile.role || 'operador_comercial';
+        if (profile.role === 'admin' || profile.is_admin === true) {
           isAdmin = true;
         }
-      } catch (e) { /* fallback */ }
-    }
+      }
+    } catch (e) { /* fallback */ }
+
+    if (isAdmin) userRole = 'admin';
+
+    // Atualiza visibilidade de abas no menu conforme perfil
+    updateNavigationByRole(userProfile, currentUserId);
 
     let query = supabase.from(getCurrentTable()).select('*');
 
-    // Se for usuário comum, filtrar apenas os cards atrelados a ele
-    if (!isAdmin) {
+    // Quem vê TODOS os cards da aba: Administradores e Supervisores
+    const canSeeAllCards = isAdmin || userRole === 'supervisor_comercial' || userRole === 'supervisor_juridico';
+
+    // Operadores (operador_comercial, operador_juridico e legacy usuario/advogado) vêem apenas cards atribuídos a eles
+    if (!canSeeAllCards) {
       query = query.eq('user_id', currentUserId);
     }
 
