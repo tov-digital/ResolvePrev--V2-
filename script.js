@@ -1968,17 +1968,16 @@ document.addEventListener('DOMContentLoaded', async () => {
      FILTRO PRINCIPAL — busca + status + data
      ========================================== */
   function filterAndRenderCards(searchTerm) {
-    const isPlanejamentoSelected = activeStatusFilters.includes('planejamento');
-
     let filtered = allUserCards.filter(card => {
       const cardStatus = card.status || (window.currentTab === 'comercial' ? 'novo' : 'documentacao');
 
+      // Se houver filtros de status selecionados no painel
+      if (activeStatusFilters.length > 0) {
+        return activeStatusFilters.includes(cardStatus);
+      }
+
+      // Se nenhum filtro de status estiver selecionado (comportamento padrão por aba)
       if (window.currentTab === 'comercial') {
-        // Se o filtro 'planejamento' estiver ativado, a lista DEVE conter apenas cartões com status 'planejamento'
-        if (isPlanejamentoSelected) {
-          return cardStatus === 'planejamento';
-        }
-        // Se NÃO estiver com o filtro 'planejamento' ativado, oculta completamente as linhas de 'planejamento'
         const normalStages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
         return normalStages.includes(cardStatus);
       } else if (window.currentTab === 'operacao') {
@@ -1999,11 +1998,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const phoneDigitsMatch    = cleanSearchTerm && rawPhone.includes(cleanSearchTerm);
         return nameMatch || phoneFormattedMatch || phoneDigitsMatch;
       });
-    }
-
-    // 2. Filtro de outros status (se houver seleções adicionais e não for apenas planejamento)
-    if (activeStatusFilters.length > 0 && !isPlanejamentoSelected) {
-      filtered = filtered.filter(card => activeStatusFilters.includes(card.status || 'novo'));
     }
 
     // 3. Filtro de data de requerimento

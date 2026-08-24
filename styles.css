@@ -944,7 +944,15 @@ html, body {
 }
 
 /* Grupos de Opções (Chips / Radio / Checkbox) */
-.filter-options-grid,
+.filter-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 .filter-radio-group {
   display: flex;
   flex-direction: column;
