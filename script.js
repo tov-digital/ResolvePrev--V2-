@@ -2006,10 +2006,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const diff = daysDiff(card.data_requerimento);
         if (diff === null) return false;
         switch (activeDateFilter) {
-          case 'mais30':  return diff > 30;           // mais de 30 dias no futuro
-          case 'menos30': return diff >= 0 && diff <= 30; // até 30 dias no futuro
-          case 'menos7':  return diff >= 0 && diff <= 7;  // até 7 dias no futuro
-          case 'vencidos': return diff < 0;            // data já passou
+          case 'menos365': return diff >= 0 && diff <= 365; // até 365 dias no futuro
+          case 'menos30':  return diff >= 0 && diff <= 30;  // até 30 dias no futuro
+          case 'menos7':   return diff >= 0 && diff <= 7;   // até 7 dias no futuro
+          case 'vencidos': return diff < 0;             // data já passou
           default: return true;
         }
       });
@@ -2070,10 +2070,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const today = new Date(); today.setHours(0, 0, 0, 0);
         const target = new Date(year, month - 1, day); target.setHours(0, 0, 0, 0);
         const diff = Math.ceil((target - today) / 86400000);
-        if (diff < 0)      dateClass = 'date-purple';
-        else if (diff <= 7)  dateClass = 'date-red';
-        else if (diff <= 30) dateClass = 'date-yellow';
-        else                 dateClass = 'date-gray';
+        if (diff < 0)         dateClass = 'date-purple';
+        else if (diff <= 7)   dateClass = 'date-red';
+        else if (diff <= 30)  dateClass = 'date-yellow';
+        else if (diff <= 365) dateClass = 'date-blue';
+        else                  dateClass = 'date-gray';
       }
 
       // ---- WhatsApp link ----
@@ -2535,8 +2536,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         dateStatusClass = 'date-red';    // A data está a 7 ou menos dias -> Vermelho
       } else if (diffDays <= 30) {
         dateStatusClass = 'date-yellow'; // A data está entre 30 e 7 dias -> Amarelo
+      } else if (diffDays <= 365) {
+        dateStatusClass = 'date-blue';   // A data está entre 365 e 30 dias -> Azul
       } else {
-        dateStatusClass = 'date-gray';   // Outras datas -> Cinza
+        dateStatusClass = 'date-gray';   // Acima de 365 dias -> Cinza
       }
     }
 

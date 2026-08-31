@@ -1441,7 +1441,21 @@ html, body {
   box-shadow: 0 0 4px rgba(245, 158, 11, 0.4);
 }
 
-/* Cinza: Outras datas (+30 dias) */
+/* Azul: Até 365 dias (entre 30 e 365 dias) */
+.card-detail-item.date-blue {
+  background-color: #EFF6FF; /* Fundo Azul Suave */
+  color: #1E40AF;            /* Texto Azul Escuro */
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  box-shadow: 0 1px 3px rgba(30, 64, 175, 0.08);
+  font-weight: 600;
+}
+.card-detail-item.date-blue .date-dot {
+  background-color: #3B82F6;
+  border: 1px solid #2563EB;
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);
+}
+
+/* Cinza: Outras datas (+365 dias) */
 .card-detail-item.date-gray {
   background-color: #F1F5F9; /* Fundo Cinza Suave */
   color: #475569;            /* Texto Cinza Escuro */
@@ -1919,6 +1933,12 @@ html, body {
   border: 1px solid rgba(217, 119, 6, 0.25);
 }
 
+.list-date-badge.date-blue {
+  background-color: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
 .list-date-badge.date-gray {
   background-color: #F1F5F9;
   color: #475569;
@@ -1935,6 +1955,7 @@ html, body {
 .list-date-badge.date-purple .list-date-dot { background-color: #9333EA; }
 .list-date-badge.date-red    .list-date-dot { background-color: #EF4444; }
 .list-date-badge.date-yellow .list-date-dot { background-color: #F59E0B; }
+.list-date-badge.date-blue   .list-date-dot { background-color: #3B82F6; }
 .list-date-badge.date-gray   .list-date-dot { background-color: #94A3B8; }
 
 /* ---- Status Badge Cell ---- */
