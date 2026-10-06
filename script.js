@@ -2079,7 +2079,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // ---- WhatsApp link ----
       const rawPhone = card.telefone ? card.telefone.replace(/\D/g, '') : '';
-      const waUrl = rawPhone ? `https://wa.me/55${rawPhone}` : '#';
+      const waUrl = rawPhone ? `https://web.whatsapp.com/send/?phone=55${rawPhone}` : '#';
 
       // ---- Status badge ----
       const statusLabels = { 
@@ -2545,7 +2545,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Formatação do Link para WhatsApp (apenas números)
     const rawPhone = card.telefone ? card.telefone.replace(/\D/g, '') : '';
-    const whatsappUrl = rawPhone ? `https://wa.me/55${rawPhone}` : '#';
+    const whatsappUrl = rawPhone ? `https://web.whatsapp.com/send/?phone=55${rawPhone}` : '#';
 
     cardDiv.innerHTML = `
       <div class="card-top-row">
@@ -2975,7 +2975,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!waBtn) return;
     const digits = phoneVal ? phoneVal.replace(/\D/g, '') : '';
     if (digits) {
-      waBtn.href = `https://wa.me/55${digits}`;
+      waBtn.href = `https://web.whatsapp.com/send/?phone=55${digits}`;
       waBtn.target = '_blank';
       waBtn.onclick = null;
       waBtn.title = `Abrir conversa no WhatsApp (${phoneVal})`;
@@ -3523,6 +3523,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         saveClientSheetBtn.innerHTML = 'Salvando...';
       }
 
+      let rawDataNascimento = sheetDataNascimento ? sheetDataNascimento.value : '';
+
       const updatedData = {
         nome: updatedNome,
         telefone: updatedPhone,
@@ -3531,7 +3533,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         estado_civil: sheetEstadoCivil ? sheetEstadoCivil.value : '',
         rg: sheetRg ? sheetRg.value.trim() : '',
         cpf: sheetCpf ? sheetCpf.value.trim() : '',
-        data_nascimento: sheetDataNascimento ? sheetDataNascimento.value : '',
+        data_nascimento: rawDataNascimento,
         cep: sheetCep ? sheetCep.value.trim() : '',
         endereco: sheetEndereco ? sheetEndereco.value.trim() : '',
         complemento: sheetComplemento ? sheetComplemento.value.trim() : '',
@@ -3539,6 +3541,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         cidade: sheetCidade ? sheetCidade.value.trim() : '',
         bairro: sheetBairro ? sheetBairro.value.trim() : ''
       };
+
+      if (rawDataNascimento && rawDataNascimento.length === 10) {
+        let oldRaw = currentActiveCard.data_nascimento ? currentActiveCard.data_nascimento.split('T')[0] : '';
+        let oldFormatted = oldRaw;
+        if (oldRaw.includes('-') && oldRaw.split('-')[0].length === 4) {
+          const parts = oldRaw.split('-');
+          oldFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        if (rawDataNascimento !== oldFormatted) {
+          const genero = currentActiveCard.genero || currentActiveCard.sexo || '';
+          const generoUpper = typeof genero === 'string' ? genero.toUpperCase() : '';
+
+          let anosParaAdd = 0;
+          if (generoUpper.includes('HOMEM') || generoUpper.includes('MASC') || generoUpper === 'M') {
+            anosParaAdd = 65;
+          } else if (generoUpper.includes('MULHER') || generoUpper.includes('FEM') || generoUpper === 'F') {
+            anosParaAdd = 62;
+          }
+
+          if (anosParaAdd > 0) {
+            const parts = rawDataNascimento.split('/');
+            if (parts.length === 3) {
+              const reqYear = parseInt(parts[2], 10) + anosParaAdd;
+              updatedData.data_requerimento = `${reqYear}-${parts[1]}-${parts[0]}`;
+            }
+          }
+        }
+      }
 
       const { error } = await supabase
         .from(getCurrentTable())
