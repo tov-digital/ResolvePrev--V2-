@@ -4021,13 +4021,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (closeClientSheetModal) closeClientSheetModal.addEventListener('click', closeClientSheet);
 
-  window.addEventListener('click', (e) => {
-    if (e.target === modalClientSheet) closeClientSheet();
-  });
+  // window.addEventListener('click', (e) => {
+  //   if (e.target === modalClientSheet) closeClientSheet();
+  // });
 
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modalClientSheet) closeClientSheet();
-  });
+
+  // window.addEventListener('keydown', (e) => {
+  //   if (e.key === 'Escape' && modalClientSheet) closeClientSheet();
+  // });
 
   function escapeHtml(text) {
     if (!text) return '';
@@ -4266,14 +4267,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  window.addEventListener('click', (e) => {
-    if (e.target === modalAddInfo) closeAddInfoModalHandler();
-  });
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modalAddInfo && !modalAddInfo.classList.contains('hidden')) {
-      closeAddInfoModalHandler();
-    }
-  });
+  // window.addEventListener('click', (e) => {
+  //   if (e.target === modalAddInfo) closeAddInfoModalHandler();
+  // });
+  // window.addEventListener('keydown', (e) => {
+  //   if (e.key === 'Escape' && modalAddInfo && !modalAddInfo.classList.contains('hidden')) {
+  //     closeAddInfoModalHandler();
+  //   }
+  // });
 
   // ==================== LÓGICA DO MODAL: EXPANDIR DETALHES ====================
   const btnExpandDetalhes = document.getElementById('btnExpandDetalhes');
@@ -4312,13 +4313,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  window.addEventListener('click', (e) => {
-    if (e.target === modalExpandDetalhes) closeExpandDetalhesModalHandler();
-  });
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modalExpandDetalhes && !modalExpandDetalhes.classList.contains('hidden')) {
-      closeExpandDetalhesModalHandler();
-    }
-  });
+  // window.addEventListener('click', (e) => {
+  //   if (e.target === modalExpandDetalhes) closeExpandDetalhesModalHandler();
+  // });
+  // window.addEventListener('keydown', (e) => {
+  //   if (e.key === 'Escape' && modalExpandDetalhes && !modalExpandDetalhes.classList.contains('hidden')) {
+  //     closeExpandDetalhesModalHandler();
+  //   }
+  // });
 
 });
