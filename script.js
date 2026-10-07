@@ -3503,149 +3503,119 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Salvamento das informações da Ficha no Supabase
+  // Salvamento Automático das Informações (Ficha + Respostas)
+  async function saveClientData(showToastMsg = true) {
+    if (!currentActiveCard || !supabase) return;
+
+    const nameEl = document.getElementById('sheetClientNameInput');
+    const updatedNome = nameEl ? nameEl.value.trim() : (sheetClientNameInput ? sheetClientNameInput.value.trim() : '');
+    const updatedPhone = sheetPhone ? sheetPhone.value.trim() : '';
+
+    if (!updatedNome) {
+      if (showToastMsg) showToast('O nome do cliente é obrigatório.');
+      return;
+    }
+
+    let rawDataNascimento = sheetDataNascimento ? sheetDataNascimento.value : '';
+
+    const updatedData = {
+      nome: updatedNome,
+      telefone: updatedPhone,
+      email: sheetEmail ? sheetEmail.value.trim() : '',
+      profissao: sheetProfissao ? sheetProfissao.value.trim() : '',
+      estado_civil: sheetEstadoCivil ? sheetEstadoCivil.value : '',
+      rg: sheetRg ? sheetRg.value.trim() : '',
+      cpf: sheetCpf ? sheetCpf.value.trim() : '',
+      data_nascimento: rawDataNascimento,
+      cep: sheetCep ? sheetCep.value.trim() : '',
+      endereco: sheetEndereco ? sheetEndereco.value.trim() : '',
+      complemento: sheetComplemento ? sheetComplemento.value.trim() : '',
+      uf: sheetUf ? sheetUf.value : '',
+      cidade: sheetCidade ? sheetCidade.value.trim() : '',
+      bairro: sheetBairro ? sheetBairro.value.trim() : ''
+    };
+
+    if (rawDataNascimento && rawDataNascimento.length === 10) {
+      let oldRaw = currentActiveCard.data_nascimento ? currentActiveCard.data_nascimento.split('T')[0] : '';
+      let oldFormatted = oldRaw;
+      if (oldRaw.includes('-') && oldRaw.split('-')[0].length === 4) {
+        const parts = oldRaw.split('-');
+        oldFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+
+      if (rawDataNascimento !== oldFormatted) {
+        const genero = currentActiveCard.genero || currentActiveCard.sexo || '';
+        const generoUpper = typeof genero === 'string' ? genero.toUpperCase() : '';
+
+        let anosParaAdd = 0;
+        if (generoUpper.includes('HOMEM') || generoUpper.includes('MASC') || generoUpper === 'M') {
+          anosParaAdd = 65;
+        } else if (generoUpper.includes('MULHER') || generoUpper.includes('FEM') || generoUpper === 'F') {
+          anosParaAdd = 62;
+        }
+
+        if (anosParaAdd > 0) {
+          const parts = rawDataNascimento.split('/');
+          if (parts.length === 3) {
+            const reqYear = parseInt(parts[2], 10) + anosParaAdd;
+            updatedData.data_requerimento = `${reqYear}-${parts[1]}-${parts[0]}`;
+          }
+        }
+      }
+    }
+
+    const respJaContribuiu = document.getElementById('respJaContribuiu');
+    const respTempoContribuicao = document.getElementById('respTempoContribuicao');
+    const respTipoTrabalho = document.getElementById('respTipoTrabalho');
+    const respSolicitouBeneficio = document.getElementById('respSolicitouBeneficio');
+    const respExerceuAtividadeEspecial = document.getElementById('respExerceuAtividadeEspecial');
+    const respDetalhes = document.getElementById('respDetalhes');
+
+    const updatedAnswers = {
+      ja_contribuiu: respJaContribuiu ? respJaContribuiu.value : '',
+      tempo_contribuicao: respTempoContribuicao && respTempoContribuicao.value !== '' ? parseInt(respTempoContribuicao.value, 10) : null,
+      tipo_trabalho: respTipoTrabalho ? respTipoTrabalho.value : '',
+      solicitou_beneficio: respSolicitouBeneficio ? respSolicitouBeneficio.value : '',
+      exerceu_atividade_especial: respExerceuAtividadeEspecial ? respExerceuAtividadeEspecial.value : '',
+      detalhes: respDetalhes ? respDetalhes.value.trim() : ''
+    };
+
+    const finalData = { ...updatedData, ...updatedAnswers };
+
+    const { error } = await supabase
+      .from(getCurrentTable())
+      .update(finalData)
+      .eq('id', currentActiveCard.id);
+
+    if (error) {
+      if (showToastMsg) showToast('Erro ao salvar dados: ' + error.message);
+      return;
+    }
+
+    Object.assign(currentActiveCard, finalData);
+    loadUserCards(); // Atualiza kanban (como o nome pode ter mudado)
+    if (showToastMsg) showToast('Dados salvos automaticamente!');
+  }
+
+  // Previne os submits dos formulários
   if (clientSheetForm) {
-    clientSheetForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentActiveCard || !supabase) return;
-
-      const nameEl = document.getElementById('sheetClientNameInput');
-      const updatedNome = nameEl ? nameEl.value.trim() : (sheetClientNameInput ? sheetClientNameInput.value.trim() : '');
-      const updatedPhone = sheetPhone ? sheetPhone.value.trim() : '';
-
-      if (!updatedNome) {
-        showToast('O nome do cliente é obrigatório.');
-        return;
+    clientSheetForm.addEventListener('submit', (e) => e.preventDefault());
+    clientSheetForm.addEventListener('focusout', () => saveClientData(true));
+    clientSheetForm.addEventListener('change', (e) => {
+      if (e.target.tagName === 'SELECT' || e.target.type === 'checkbox' || e.target.type === 'radio') {
+        saveClientData(true);
       }
-
-      if (saveClientSheetBtn) {
-        saveClientSheetBtn.disabled = true;
-        saveClientSheetBtn.innerHTML = 'Salvando...';
-      }
-
-      let rawDataNascimento = sheetDataNascimento ? sheetDataNascimento.value : '';
-
-      const updatedData = {
-        nome: updatedNome,
-        telefone: updatedPhone,
-        email: sheetEmail ? sheetEmail.value.trim() : '',
-        profissao: sheetProfissao ? sheetProfissao.value.trim() : '',
-        estado_civil: sheetEstadoCivil ? sheetEstadoCivil.value : '',
-        rg: sheetRg ? sheetRg.value.trim() : '',
-        cpf: sheetCpf ? sheetCpf.value.trim() : '',
-        data_nascimento: rawDataNascimento,
-        cep: sheetCep ? sheetCep.value.trim() : '',
-        endereco: sheetEndereco ? sheetEndereco.value.trim() : '',
-        complemento: sheetComplemento ? sheetComplemento.value.trim() : '',
-        uf: sheetUf ? sheetUf.value : '',
-        cidade: sheetCidade ? sheetCidade.value.trim() : '',
-        bairro: sheetBairro ? sheetBairro.value.trim() : ''
-      };
-
-      if (rawDataNascimento && rawDataNascimento.length === 10) {
-        let oldRaw = currentActiveCard.data_nascimento ? currentActiveCard.data_nascimento.split('T')[0] : '';
-        let oldFormatted = oldRaw;
-        if (oldRaw.includes('-') && oldRaw.split('-')[0].length === 4) {
-          const parts = oldRaw.split('-');
-          oldFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-
-        if (rawDataNascimento !== oldFormatted) {
-          const genero = currentActiveCard.genero || currentActiveCard.sexo || '';
-          const generoUpper = typeof genero === 'string' ? genero.toUpperCase() : '';
-
-          let anosParaAdd = 0;
-          if (generoUpper.includes('HOMEM') || generoUpper.includes('MASC') || generoUpper === 'M') {
-            anosParaAdd = 65;
-          } else if (generoUpper.includes('MULHER') || generoUpper.includes('FEM') || generoUpper === 'F') {
-            anosParaAdd = 62;
-          }
-
-          if (anosParaAdd > 0) {
-            const parts = rawDataNascimento.split('/');
-            if (parts.length === 3) {
-              const reqYear = parseInt(parts[2], 10) + anosParaAdd;
-              updatedData.data_requerimento = `${reqYear}-${parts[1]}-${parts[0]}`;
-            }
-          }
-        }
-      }
-
-      const { error } = await supabase
-        .from(getCurrentTable())
-        .update(updatedData)
-        .eq('id', currentActiveCard.id);
-
-      if (saveClientSheetBtn) {
-        saveClientSheetBtn.disabled = false;
-        saveClientSheetBtn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          Salvar
-        `;
-      }
-
-      if (error) {
-        showToast('Erro ao salvar ficha: ' + error.message);
-        return;
-      }
-
-      // Atualizar objeto local ativo e recarregar os cards no Kanban
-      Object.assign(currentActiveCard, updatedData);
-      loadUserCards();
-      showToast('Ficha do cliente salva com sucesso!');
     });
   }
 
-  // Salvamento das informações da guia RESPOSTAS no Supabase
   const clientAnswersForm = document.getElementById('clientAnswersForm');
-  const saveClientAnswersBtn = document.getElementById('saveClientAnswersBtn');
-
   if (clientAnswersForm) {
-    clientAnswersForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentActiveCard || !supabase) return;
-
-      if (saveClientAnswersBtn) {
-        saveClientAnswersBtn.disabled = true;
-        saveClientAnswersBtn.innerHTML = 'Salvando...';
+    clientAnswersForm.addEventListener('submit', (e) => e.preventDefault());
+    clientAnswersForm.addEventListener('focusout', () => saveClientData(true));
+    clientAnswersForm.addEventListener('change', (e) => {
+      if (e.target.tagName === 'SELECT' || e.target.type === 'checkbox' || e.target.type === 'radio') {
+        saveClientData(true);
       }
-
-      const respJaContribuiu = document.getElementById('respJaContribuiu');
-      const respTempoContribuicao = document.getElementById('respTempoContribuicao');
-      const respTipoTrabalho = document.getElementById('respTipoTrabalho');
-      const respSolicitouBeneficio = document.getElementById('respSolicitouBeneficio');
-      const respExerceuAtividadeEspecial = document.getElementById('respExerceuAtividadeEspecial');
-      const respDetalhes = document.getElementById('respDetalhes');
-
-      const updatedAnswers = {
-        ja_contribuiu: respJaContribuiu ? respJaContribuiu.value : '',
-        tempo_contribuicao: respTempoContribuicao && respTempoContribuicao.value !== '' ? parseInt(respTempoContribuicao.value, 10) : null,
-        tipo_trabalho: respTipoTrabalho ? respTipoTrabalho.value : '',
-        solicitou_beneficio: respSolicitouBeneficio ? respSolicitouBeneficio.value : '',
-        exerceu_atividade_especial: respExerceuAtividadeEspecial ? respExerceuAtividadeEspecial.value : '',
-        detalhes: respDetalhes ? respDetalhes.value.trim() : ''
-      };
-
-      const { error } = await supabase
-        .from(getCurrentTable())
-        .update(updatedAnswers)
-        .eq('id', currentActiveCard.id);
-
-      if (saveClientAnswersBtn) {
-        saveClientAnswersBtn.disabled = false;
-        saveClientAnswersBtn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          Salvar
-        `;
-      }
-
-      if (error) {
-        showToast('Erro ao salvar respostas: ' + error.message);
-        return;
-      }
-
-      Object.assign(currentActiveCard, updatedAnswers);
-      showToast('Respostas salvas com sucesso!');
     });
   }
 
@@ -3657,6 +3627,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function closeClientSheet() {
+    saveClientData(false); // Salva os dados silenciosamente ao fechar
     currentActiveCard = null;
     closeNotesSidebar();
     if (statusDropdownMenu) statusDropdownMenu.classList.add('hidden');
@@ -4088,4 +4059,266 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Inicializar verificação de sessão após registrar todos os ouvintes do DOM
   checkActiveSession();
+  // ==================== LÓGICA DO MODAL: ADD INFO QUESTION ====================
+  const modalAddInfo = document.getElementById('modalAddInfo');
+  const closeAddInfoModal = document.getElementById('closeAddInfoModal');
+  const confirmAddInfoBtn = document.getElementById('confirmAddInfoBtn');
+  const addInfoDynamicFields = document.getElementById('addInfoDynamicFields');
+  const btnAddInfoList = document.querySelectorAll('.btn-add-info');
+
+  function openAddInfoModal(fieldId, originalLabel) {
+    if (!modalAddInfo) return;
+    
+    // Configuração das perguntas dinâmicas por campo
+    const questionsConfig = {
+      'respTempoContribuicao': [
+        { id: 'addInfoMilitar', label: 'Prestou serviço militar?', type: 'textarea' }
+      ],
+      'respSolicitouBeneficio': [
+        { id: 'addInfoMotivoNegativa', label: 'Se tentou e foi negado, qual foi o motivo da negativa?', type: 'textarea' },
+        { id: 'addInfoNovoPedido', label: 'Foi feito um novo pedido ou protocolado algum processo?', type: 'textarea' }
+      ],
+      'respJaContribuiu': [
+        { id: 'addInfoTempoParou', label: 'Há quanto tempo parou de contribuir?', type: 'textarea' },
+        { id: 'addInfoQualidadeSegurado', label: 'Você sabe se ainda tem qualidade de segurado?', type: 'textarea' },
+        { id: 'addInfo120Contribuicoes', label: 'Sabe se fez mais de 120 contribuições sem interrupção?', type: 'textarea' },
+        { id: 'addInfo12MesesSem', label: 'Sabe se ficou um período maior que 12 meses sem contribuir?', type: 'textarea' }
+      ],
+      'respExerceuAtividadeEspecial': [
+        { id: 'addInfoAtivEspecial1', label: 'Por quanto tempo, e qual era a atividade?', type: 'textarea' },
+        { id: 'addInfoAtivEspecial2', label: 'As empresas ainda existem, caso precise fazer alguma correção ou pedir documentos?', type: 'textarea' },
+        { id: 'addInfoAtivEspecial3', label: 'Sabe a classificação de exposição aos agentes nocivos?', type: 'textarea' },
+        { id: 'addInfoAtivEspecial4', label: 'Sabe se o uso de EPIs neutraliza a exposição a ponto de anular o direito?', type: 'textarea' }
+      ]
+    };
+
+    let fields = questionsConfig[fieldId];
+
+    if (fieldId === 'respTipoTrabalho') {
+      const selectEl = document.getElementById(fieldId);
+      const val = selectEl ? selectEl.value : '';
+      if (val === 'Emprego de carteira assinada (CLT)') {
+        fields = [
+          { id: 'addInfoCLT1', label: 'Como CLT, com o que você trabalhava?', type: 'textarea' },
+          { id: 'addInfoCLT2', label: 'Alguém já analisou o seu CNIS pra ver se todo o período em que trabalhou como CLT está registrado corretamente?', type: 'textarea' },
+          { id: 'addInfoCLT3', label: 'Você sabe se tem alguma contribuição que foi registrada com valor errado ou abaixo de um salário mínimo?', type: 'textarea' },
+          { id: 'addInfoCLT4', label: 'Você sabe se tem alguma data de entrada, saída ou de intervalo que precisa ser corrigida ?', type: 'textarea' }
+        ];
+      } else if (val === 'Empresário / Autônomo / MEI') {
+        fields = [
+          { id: 'addInfoMEI1', label: 'Como autônomo, com o que você trabalhava, e suas contribuições eram no carnê, ou como MEI?', type: 'textarea' },
+          { id: 'addInfoMEI2', label: 'Alguém já analisou como essas contribuições aparecem no seu CNIS, se existe alguma lacuna ou se algo não foi contabilizado?', type: 'textarea' },
+          { id: 'addInfoMEI3', label: 'Você sabe se tem alguma contribuição duplicada?', type: 'textarea' },
+          { id: 'addInfoMEI4', label: 'Você sabe se todas as contribuições foram feitas no código correto?', type: 'textarea' }
+        ];
+      } else if (val === 'Trabalhador rural') {
+        fields = [
+          { id: 'addInfoRural1', label: 'Na roça, para quem você trabalhava?', type: 'textarea' },
+          { id: 'addInfoRural2', label: 'As terras eram da sua família, e se sim, sabe quantos hectares ?', type: 'textarea' },
+          { id: 'addInfoRural3', label: 'Você tem algum registro documental desse tempo de trabalho e que você produzia na terra?', type: 'textarea' },
+          { id: 'addInfoRural4', label: 'Ainda existem testemunhas vivas do seu trabalho rural?', type: 'textarea' },
+          { id: 'addInfoRural5', label: 'Você tem algum registro documental da sua relação com a terra?', type: 'textarea' }
+        ];
+      } else if (val === 'Servidor público') {
+        return; // Modal is blocked
+      } else {
+        // "Outro" or any other unmapped value
+        fields = [
+          { id: 'addInfoGeneric', label: originalLabel || 'Pergunta selecionada', type: 'textarea' }
+        ];
+      }
+    }
+
+    if (!fields || fields.length === 0) {
+      // Fallback para uma pergunta genérica se não estiver mapeado
+      fields = [
+        { id: 'addInfoGeneric', label: originalLabel || 'Pergunta selecionada', type: 'textarea' }
+      ];
+    }
+
+    // Gerar o HTML dos campos dinâmicos
+    if (addInfoDynamicFields) {
+      let html = '';
+
+      if (fieldId === 'respJaContribuiu') {
+        html += `
+          <div style="position: sticky; top: 0; z-index: 10; background-color: #fffbeb; color: #b45309; padding: 0.75rem; border-radius: 6px; border: 1px solid #fde68a; font-size: 0.9rem; font-weight: 500; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Se o cliente não tiver qualidade de segurado, não terá o direito de pedir a aposentadoria, mesmo que tenha a idade e o tempo de contribuição necessários.</span>
+          </div>
+        `;
+      } else if (fieldId === 'respTipoTrabalho') {
+        const selectEl = document.getElementById(fieldId);
+        const val = selectEl ? selectEl.value : '';
+        let noteText = '';
+        if (val === 'Emprego de carteira assinada (CLT)' || val === 'Empresário / Autônomo / MEI') {
+          noteText = 'Se o INSS exigir correção de alguma dessas informações do CNIS, o tempo poderá se alongar por mais 6 meses até uma nova tentativa.';
+        } else if (val === 'Trabalhador rural') {
+          noteText = 'Sem a documentação correta, é quase impossível, no administrativo, o INSS aprovar a aposentadoria rural, e no judicial, levará, em média, de 3 a 4 anos.';
+        }
+        
+        if (noteText) {
+          html += `
+            <div style="position: sticky; top: 0; z-index: 10; background-color: #fffbeb; color: #b45309; padding: 0.75rem; border-radius: 6px; border: 1px solid #fde68a; font-size: 0.9rem; font-weight: 500; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>${noteText}</span>
+            </div>
+          `;
+        }
+      } else if (fieldId === 'respExerceuAtividadeEspecial') {
+        html += `
+          <div style="position: sticky; top: 0; z-index: 10; background-color: #fffbeb; color: #b45309; padding: 0.75rem; border-radius: 6px; border: 1px solid #fde68a; font-size: 0.9rem; font-weight: 500; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Sem a documentação correta, é quase impossível, no administrativo, o INSS transformar o tempo especial em tempo regular adicionando os 40%, e no judicial, levará, em média, de 3 a 4 anos.</span>
+          </div>
+        `;
+      }
+
+      html += fields.map(field => {
+        return `
+          <div class="sheet-field-group" style="margin-bottom: 1rem;">
+            <label for="${field.id}" style="display: block; font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text-dark);">${escapeHtml(field.label)}</label>
+            <textarea id="${field.id}" class="sheet-input" placeholder="Digite sua resposta aqui..." rows="4" style="width: 100%; resize: vertical; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-light); font-size: 0.95rem; font-family: inherit; background-color: #f8fafc; transition: all 0.2s;"></textarea>
+          </div>
+        `;
+      }).join('');
+      
+      addInfoDynamicFields.innerHTML = html;
+    }
+
+    modalAddInfo.classList.remove('hidden');
+    // Focar no primeiro campo gerado
+    const firstInput = addInfoDynamicFields.querySelector('textarea, input');
+    if (firstInput) firstInput.focus();
+  }
+
+  function closeAddInfoModalHandler() {
+    if (!modalAddInfo) return;
+    modalAddInfo.classList.add('hidden');
+  }
+
+  btnAddInfoList.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const flexContainer = btn.parentElement;
+      const label = flexContainer ? flexContainer.querySelector('label') : null;
+      const fieldId = label ? label.getAttribute('for') : null;
+      const questionText = label ? label.textContent.trim() : 'Pergunta selecionada';
+      
+      if (fieldId === 'respTipoTrabalho') {
+        const selectEl = document.getElementById(fieldId);
+        if (selectEl && selectEl.value === 'Servidor público') {
+          showToast('Adição de informações extras bloqueada para Servidor público.');
+          return;
+        }
+      }
+
+      openAddInfoModal(fieldId, questionText);
+    });
+  });
+
+  if (closeAddInfoModal) {
+    closeAddInfoModal.addEventListener('click', closeAddInfoModalHandler);
+  }
+  if (confirmAddInfoBtn) {
+    confirmAddInfoBtn.addEventListener('click', () => {
+      if (!addInfoDynamicFields) return;
+      
+      const respDetalhes = document.getElementById('respDetalhes');
+      if (!respDetalhes) return;
+
+      let newInfoText = '';
+      let hasEmptyFields = false;
+
+      // Coleta todos os inputs do modal
+      const inputs = addInfoDynamicFields.querySelectorAll('textarea, input');
+      
+      inputs.forEach(input => {
+        const val = input.value.trim();
+        if (!val) {
+          hasEmptyFields = true;
+          return;
+        }
+        
+        const label = addInfoDynamicFields.querySelector(`label[for="${input.id}"]`);
+        const questionText = label ? label.textContent.trim() : 'Informação Adicional';
+
+        if (newInfoText) newInfoText += '\n\n';
+        newInfoText += `${questionText}\nR: ${val}`;
+      });
+
+      if (!newInfoText && hasEmptyFields) {
+        showToast('Por favor, preencha o campo antes de adicionar.');
+        return;
+      }
+
+      if (newInfoText) {
+        let currentDetalhes = respDetalhes.value.trim();
+        if (currentDetalhes) {
+          respDetalhes.value = currentDetalhes + '\n\n' + newInfoText;
+        } else {
+          respDetalhes.value = newInfoText;
+        }
+        
+        showToast('Informação transferida para os detalhes!');
+        closeAddInfoModalHandler();
+      }
+    });
+  }
+
+  window.addEventListener('click', (e) => {
+    if (e.target === modalAddInfo) closeAddInfoModalHandler();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalAddInfo && !modalAddInfo.classList.contains('hidden')) {
+      closeAddInfoModalHandler();
+    }
+  });
+
+  // ==================== LÓGICA DO MODAL: EXPANDIR DETALHES ====================
+  const btnExpandDetalhes = document.getElementById('btnExpandDetalhes');
+  const modalExpandDetalhes = document.getElementById('modalExpandDetalhes');
+  const closeExpandDetalhesModal = document.getElementById('closeExpandDetalhesModal');
+  const expandedDetalhesTextarea = document.getElementById('expandedDetalhesTextarea');
+  const respDetalhesInput = document.getElementById('respDetalhes');
+
+  function openExpandDetalhesModal() {
+    if (!modalExpandDetalhes || !expandedDetalhesTextarea || !respDetalhesInput) return;
+    expandedDetalhesTextarea.value = respDetalhesInput.value;
+    modalExpandDetalhes.classList.remove('hidden');
+    expandedDetalhesTextarea.focus();
+  }
+
+  function closeExpandDetalhesModalHandler() {
+    if (!modalExpandDetalhes) return;
+    modalExpandDetalhes.classList.add('hidden');
+    // Ensure we save when closing
+    if (respDetalhesInput) {
+      respDetalhesInput.dispatchEvent(new Event('change'));
+    }
+  }
+
+  if (btnExpandDetalhes) {
+    btnExpandDetalhes.addEventListener('click', openExpandDetalhesModal);
+  }
+
+  if (closeExpandDetalhesModal) {
+    closeExpandDetalhesModal.addEventListener('click', closeExpandDetalhesModalHandler);
+  }
+
+  if (expandedDetalhesTextarea && respDetalhesInput) {
+    expandedDetalhesTextarea.addEventListener('input', () => {
+      respDetalhesInput.value = expandedDetalhesTextarea.value;
+    });
+  }
+
+  window.addEventListener('click', (e) => {
+    if (e.target === modalExpandDetalhes) closeExpandDetalhesModalHandler();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalExpandDetalhes && !modalExpandDetalhes.classList.contains('hidden')) {
+      closeExpandDetalhesModalHandler();
+    }
+  });
+
 });
