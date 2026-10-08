@@ -3091,6 +3091,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const statIdade = document.getElementById('statIdade');
       if (statIdade) statIdade.textContent = v ? calculateAge(v) : '-';
+
+      const statAniversario = document.getElementById('statAniversario');
+      if (statAniversario) {
+        if (v && v.length >= 10) {
+          const parts = v.split('-');
+          if (parts.length === 3) statAniversario.value = `${parts[2]}/${parts[1]}`;
+          else statAniversario.value = '';
+        } else {
+          statAniversario.value = '';
+        }
+      }
+    });
+  }
+
+  const statAniversario = document.getElementById('statAniversario');
+  if (statAniversario) {
+    statAniversario.addEventListener('change', (e) => {
+      const val = e.target.value.trim();
+      if (!val) return;
+      const parts = val.split('/');
+      if (parts.length === 2 && sheetDataNascimento) {
+        let year = new Date().getFullYear();
+        if (sheetDataNascimento.value && sheetDataNascimento.value.length >= 10) {
+           year = sheetDataNascimento.value.split('-')[0];
+        }
+        let day = parts[0].padStart(2, '0');
+        let month = parts[1].padStart(2, '0');
+        const newVal = `${year}-${month}-${day}`;
+        sheetDataNascimento.value = newVal;
+        sheetDataNascimento.dispatchEvent(new Event('input'));
+        saveClientData(true);
+      }
     });
   }
 
@@ -3232,7 +3264,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (statIdade) statIdade.textContent = isoDateNascimento ? calculateAge(isoDateNascimento) : '-';
       
       const statAniversario = document.getElementById('statAniversario');
-      if (statAniversario) statAniversario.value = card.aniversario || '';
+      if (statAniversario) {
+        if (isoDateNascimento && isoDateNascimento.length >= 10) {
+          const parts = isoDateNascimento.split('-'); // YYYY-MM-DD
+          if (parts.length === 3) statAniversario.value = `${parts[2]}/${parts[1]}`;
+          else statAniversario.value = '';
+        } else {
+          statAniversario.value = '';
+        }
+      }
 
       updateServicoMilitarUI(card.servico_militar || 'Não');
 
@@ -3582,7 +3622,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const respDetalhes = document.getElementById('respDetalhes');
 
     const updatedAnswers = {
-      aniversario: document.getElementById('statAniversario') ? document.getElementById('statAniversario').value : '',
       servico_militar: document.getElementById('respServicoMilitar') ? document.getElementById('respServicoMilitar').value : 'Não',
         ja_contribuiu: respJaContribuiu ? respJaContribuiu.value : '',
       tempo_contribuicao: respTempoContribuicao && respTempoContribuicao.value !== '' ? parseInt(respTempoContribuicao.value, 10) : null,
