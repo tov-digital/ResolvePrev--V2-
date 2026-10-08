@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Inicialização do Supabase Client
   const SUPABASE_URL = 'https://jqyxtrzcwgropuqchwiz.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxeXh0cnpjd2dyb3B1cWNod2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjIzMDgsImV4cCI6MjEwMjAzODMwOH0.m9ZpiTanwhl5SzzAfJoTs1x9KekWuFqB0C3d__0mIbA';
@@ -3091,20 +3091,6 @@
 
       const statIdade = document.getElementById('statIdade');
       if (statIdade) statIdade.textContent = v ? calculateAge(v) : '-';
-      
-      const statAniversario = document.getElementById('statAniversario');
-      if (statAniversario) {
-        if (v && v.length >= 10) {
-          const parts = v.split('-');
-          if (parts.length === 3) {
-            statAniversario.textContent = `${parts[2]}/${parts[1]}`;
-          } else {
-            statAniversario.textContent = '-';
-          }
-        } else {
-          statAniversario.textContent = '-';
-        }
-      }
     });
   }
 
@@ -3246,18 +3232,7 @@
       if (statIdade) statIdade.textContent = isoDateNascimento ? calculateAge(isoDateNascimento) : '-';
       
       const statAniversario = document.getElementById('statAniversario');
-      if (statAniversario) {
-        if (isoDateNascimento && isoDateNascimento.length >= 10) {
-          const parts = isoDateNascimento.split('-'); // YYYY-MM-DD
-          if (parts.length === 3) {
-            statAniversario.textContent = `${parts[2]}/${parts[1]}`;
-          } else {
-            statAniversario.textContent = '-';
-          }
-        } else {
-          statAniversario.textContent = '-';
-        }
-      }
+      if (statAniversario) statAniversario.value = card.aniversario || '';
 
       updateServicoMilitarUI(card.servico_militar || 'Não');
 
@@ -3607,6 +3582,7 @@
     const respDetalhes = document.getElementById('respDetalhes');
 
     const updatedAnswers = {
+      aniversario: document.getElementById('statAniversario') ? document.getElementById('statAniversario').value : '',
       servico_militar: document.getElementById('respServicoMilitar') ? document.getElementById('respServicoMilitar').value : 'Não',
         ja_contribuiu: respJaContribuiu ? respJaContribuiu.value : '',
       tempo_contribuicao: respTempoContribuicao && respTempoContribuicao.value !== '' ? parseInt(respTempoContribuicao.value, 10) : null,
