@@ -3711,6 +3711,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (sheetStatusDot) {
       sheetStatusDot.className = 'status-tag-dot ' + (stageDotClasses[stage] || 'dot-novo');
     }
+    
+    // Atualizar próxima etapa
+    const nextStepLabel = document.getElementById('nextStepLabel');
+    if (nextStepLabel) {
+      let stages = [];
+      if (window.currentTab === 'comercial') {
+        stages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
+      } else if (window.currentTab === 'operacao') {
+        stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
+      } else if (window.currentTab === 'judicial') {
+        stages = ['negado'];
+      }
+      
+      const currentIndex = stages.indexOf(stage);
+      if (currentIndex !== -1 && currentIndex < stages.length - 1) {
+        const nextStage = stages[currentIndex + 1];
+        nextStepLabel.textContent = 'Próxima etapa: ' + (stageLabels[nextStage] || nextStage);
+      } else if (currentIndex === stages.length - 1) {
+        nextStepLabel.textContent = 'Última etapa';
+      } else {
+        nextStepLabel.textContent = 'Próxima etapa: Indisponível';
+      }
+    }
   }
 
   function closeClientSheet() {
