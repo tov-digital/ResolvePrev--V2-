@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Inicialização do Supabase Client
   const SUPABASE_URL = 'https://jqyxtrzcwgropuqchwiz.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxeXh0cnpjd2dyb3B1cWNod2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjIzMDgsImV4cCI6MjEwMjAzODMwOH0.m9ZpiTanwhl5SzzAfJoTs1x9KekWuFqB0C3d__0mIbA';
@@ -3340,6 +3340,7 @@
       // Resetar para a aba 'Documentos' se estiver em Operação, caso contrário 'Respostas'
       switchTab(window.currentTab === 'operacao' ? 'documentos' : 'respostas');
 
+      document.querySelectorAll('#clientAnswersForm select').forEach(sel => sel.dispatchEvent(new Event('change')));
       const btnObr = document.getElementById('toggleObrigatoriosBtn');
       const listObr = document.getElementById('listObrigatoriosContent');
       if (btnObr && listObr) {
@@ -4453,7 +4454,7 @@
       }
       const digits = currentActiveCard.telefone.replace(/\D/g, '');
       if (digits) {
-        window.open(https://web.whatsapp.com/send/?phone=55 + digits, '_blank');
+        window.open(`https://web.whatsapp.com/send/?phone=55${digits}`, '_blank');
       } else {
         showToast('Telefone invlido.');
       }
@@ -4504,5 +4505,114 @@
       closeModal(modalClientSheet);
     });
   }
+
+
+  // --- Custom Select para Formulrio de Qualificao ---
+  function initCustomSelects() {
+    const selects = document.querySelectorAll('#clientAnswersForm select');
+    if (selects.length === 0) return;
+
+    if (!document.getElementById('custom-select-styles')) {
+      const style = document.createElement('style');
+      style.id = 'custom-select-styles';
+      style.innerHTML = `
+        .custom-select-container { position: relative; width: 100%; cursor: pointer; }
+        .custom-select-trigger {
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 4px 0; font-size: 14px; color: var(--text-primary);
+          background: transparent; border: none;
+        }
+        .custom-select-trigger:hover { opacity: 0.8; }
+        .custom-select-menu {
+          position: absolute; top: 100%; left: 0; width: 100%; min-width: 200px;
+          background-color: #FFFFFF; border: 1px solid var(--border-light);
+          border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+          padding: 0.4rem; z-index: 120; max-height: 250px; overflow-y: auto;
+          display: none; flex-direction: column; gap: 2px; margin-top: 4px;
+          animation: fadeIn 0.15s ease-out;
+        }
+        .custom-select-menu.show { display: flex; }
+        .custom-select-option {
+          padding: 0.55rem 0.75rem; font-size: 13.6px; font-weight: 500;
+          color: var(--color-neutral); border-radius: 8px; cursor: pointer;
+          transition: background-color 0.15s;
+        }
+        .custom-select-option:hover, .custom-select-option.selected {
+          background-color: var(--color-primary-light); color: var(--color-primary); font-weight: 600;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    selects.forEach(select => {
+      if (select.dataset.customized) return;
+      select.dataset.customized = 'true';
+      select.style.display = 'none';
+
+      const container = document.createElement('div');
+      container.className = 'custom-select-container';
+
+      const trigger = document.createElement('div');
+      trigger.className = 'custom-select-trigger';
+      
+      const textSpan = document.createElement('span');
+      textSpan.textContent = select.options[select.selectedIndex]?.text || 'Selecione...';
+      
+      const icon = document.createElement('i');
+      icon.className = 'ti ti-chevron-down';
+      icon.style.color = 'var(--text-secondary)';
+      icon.style.fontSize = '14px';
+
+      trigger.appendChild(textSpan);
+      trigger.appendChild(icon);
+
+      const menu = document.createElement('div');
+      menu.className = 'custom-select-menu';
+
+      Array.from(select.options).forEach((opt, idx) => {
+        const optionEl = document.createElement('div');
+        optionEl.className = 'custom-select-option';
+        optionEl.textContent = opt.text;
+        if (select.selectedIndex === idx) optionEl.classList.add('selected');
+
+        optionEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          select.value = opt.value;
+          textSpan.textContent = opt.text;
+          
+          Array.from(menu.children).forEach(c => c.classList.remove('selected'));
+          optionEl.classList.add('selected');
+          
+          menu.classList.remove('show');
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        menu.appendChild(optionEl);
+      });
+
+      container.appendChild(trigger);
+      container.appendChild(menu);
+      select.parentNode.insertBefore(container, select.nextSibling);
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isShowing = menu.classList.contains('show');
+        document.querySelectorAll('.custom-select-menu').forEach(m => m.classList.remove('show'));
+        if (!isShowing) menu.classList.add('show');
+      });
+
+      select.addEventListener('change', () => {
+        textSpan.textContent = select.options[select.selectedIndex]?.text || 'Selecione...';
+        Array.from(menu.children).forEach((c, idx) => {
+          c.classList.toggle('selected', idx === select.selectedIndex);
+        });
+      });
+    });
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.custom-select-menu').forEach(m => m.classList.remove('show'));
+    });
+  }
+
+  initCustomSelects();
 
 });
