@@ -1,9 +1,8 @@
-﻿  <!-- ==================== MODAL: FICHA DO CLIENTE (FOLHA A4 COM 
+  <!-- ==================== MODAL: FICHA DO CLIENTE (FOLHA A4 COM 
 GUIAS) ==================== -->
   <div id="modalClientSheet" class="modal-backdrop hidden" role="dialog" 
 aria-modal="true">
-    <div class="modal-card modal-large" style="max-width: 900px; width: 90%; max-height: 
-90vh; display: flex; flex-direction: column; background: var(--surface-2); border-radius: 12px; border: 0.5px solid 
+    <div class="modal-card modal-large" style="max-width: 900px; width: 90%; height: 92vh; min-height: 650px; display: flex; flex-direction: column; background: var(--surface-2); border-radius: 12px; border: 0.5px solid 
 var(--border); overflow: hidden; padding: 0;">
 
       <!-- Tabs Header -->
@@ -36,14 +35,14 @@ aria-hidden="true"></i>Documentos
         <div style="flex:1"></div>
         
      
-   <div style="display:flex; gap:14px; height:40px; align-items:center; color:var(--text-secondary); 
+   <div style="display:flex; gap:4px; height:40px; align-items:center; color:var(--text-secondary); 
 font-size:18px;">
-          <i class="ti ti-user-check" id="sheetReassignBtn" aria-label="Responsável" 
-style="cursor: pointer;" title="Atribuir a outro usuário"></i>
-          <i class="ti ti-trash danger-action" 
+          <i class="ti ti-user-check header-action-icon" id="sheetReassignBtn" aria-label="Respons�vel" 
+style="cursor: pointer;" title="Atribuir a outro usu�rio"></i>
+          <i class="ti ti-trash danger-action header-action-icon" 
 id="sheetDeleteBtn" aria-label="Excluir" style="cursor: pointer;" title="Excluir Oportunidade"></i>
           
-<i class="ti ti-x" id="closeClientSheetModal" aria-label="Fechar" style="cursor: pointer;" title="Fechar 
+<i class="ti ti-x header-action-icon" id="closeClientSheetModal" aria-label="Fechar" style="cursor: pointer;" title="Fechar 
 Ficha"></i>
         </div>
       </div>
@@ -59,7 +58,7 @@ border-radius:50%; background:var(--bg-accent); color:var(--text-accent); displa
 justify-content:center; font-weight:500; font-size:14px;">AR</div>
           <div style="flex:1; 
 min-width:180px;">
-            <input type="text" id="sheetClientNameInput" value="Antônio José Real" 
+            <input type="text" id="sheetClientNameInput" value="Ant�nio Jos� Real" 
 style="margin:0; font-size:20px; font-weight:500; color:var(--text-accent); line-height:1.2; width: 100%; border: 
 none; background: transparent; outline: none; padding: 0;" placeholder="Nome completo do cliente">
           
@@ -67,16 +66,10 @@ none; background: transparent; outline: none; padding: 0;" placeholder="Nome com
           
           <div class="status-dropdown-wrapper" style="position: relative;">
             
-<button id="sheetStatusDropdownBtn" style="display:flex; align-items:center; gap:6px; background:var(--bg-warning); 
-color:var(--text-warning); padding:6px 12px; border-radius:var(--radius); font-size:13px; font-weight:500; border: 
-none; cursor: pointer;">
-              <i class="ti ti-calendar-event" style="font-size:16px" 
-aria-hidden="true"></i>
+<button id="sheetStatusDropdownBtn" style="display:flex; align-items:center; gap:6px; background:var(--surface-1); color:var(--color-primary); height:36px; padding:6px 12px; border-radius:var(--radius); font-size:13px; font-weight:500; border: 1px solid var(--border); cursor: pointer;">
+              <span class="status-tag-dot" id="sheetStatusDot" style="display:inline-block; margin-right:2px; "></span>
               <span id="sheetStatusText">Reunião</span>
-              <span 
-class="status-tag-dot" id="sheetStatusDot" style="display:none;"></span>
-              <i class="ti 
-ti-chevron-down" style="font-size:14px" aria-hidden="true"></i>
+              <i class="ti ti-chevron-down" style="font-size:14px" aria-hidden="true"></i>
             </button>
             <div 
 id="statusDropdownMenu" class="status-dropdown-menu hidden" style="position: absolute; right: 0; top: 100%; 
@@ -88,7 +81,7 @@ data-tab="comercial">
 </div>
               <div class="status-option" data-status="qualificacao" data-tab="comercial">
               
-  <span class="column-status-dot dot-qualificacao"></span> Qualificação
+  <span class="column-status-dot dot-qualificacao"></span> Qualifica��o
               </div>
               <div 
 class="status-option" data-status="acompanhamento" data-tab="comercial">
@@ -98,7 +91,7 @@ class="column-status-dot dot-acompanhamento"></span> Acompanhamento
               <div 
 class="status-option" data-status="reuniao" data-tab="comercial">
                 <span 
-class="column-status-dot dot-reuniao"></span> Reunião
+class="column-status-dot dot-reuniao"></span> Reuni�o
               </div>
               <div 
 class="status-option" data-status="proposta" data-tab="comercial">
@@ -108,7 +101,7 @@ class="column-status-dot dot-proposta"></span> Proposta
               <div 
 class="status-option hidden" data-status="documentacao" data-tab="operacao">
                 <span 
-class="column-status-dot dot-documentacao"></span> Documentação
+class="column-status-dot dot-documentacao"></span> Documenta��o
               </div>
               <div 
 class="status-option hidden" data-status="na_fila" data-tab="operacao">
@@ -123,7 +116,7 @@ class="column-status-dot dot-requerido"></span> Requerido
               <div 
 class="status-option hidden" data-status="exigencia" data-tab="operacao">
                 <span 
-class="column-status-dot dot-exigencia"></span> Exigência
+class="column-status-dot dot-exigencia"></span> Exig�ncia
               </div>
               <div 
 class="status-option hidden" data-status="concedido" data-tab="operacao">
@@ -139,13 +132,9 @@ class="column-status-dot dot-negado"></span> Negado
           </div>
 
   
-        <button id="sheetNotesBtn" style="display:flex; align-items:center; gap:6px; border:0.5px solid 
-var(--border-strong); padding:6px 12px; border-radius:var(--radius); font-size:13px; background: transparent; cursor: 
-pointer; color: var(--text-primary);">
-            <i class="ti ti-message" style="font-size:16px" 
-aria-hidden="true"></i>
-            <span id="sheetNotesCountBadge" style="display: none;">0</span> 
-comentários
+        <button id="sheetNotesBtn" style="position:relative; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid var(--border); border-radius:8px; font-size:18px; background: var(--surface-1); cursor: pointer; color: var(--color-primary);">
+            <i class="ti ti-message" aria-hidden="true"></i>
+            <span id="sheetNotesCountBadge" class="hidden" style="position:absolute; top:-6px; right:-6px; background:#ef4444; color:white; font-size:10px; font-weight:bold; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:2px solid white;">0</span>
           </button>
         </div>
 
@@ -165,7 +154,7 @@ style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12
 style="margin:0; font-size:11px; color:var(--text-secondary); display:flex; align-items:center; 
 justify-content:space-between; gap:4px;">
               <label for="respTempoContribuicao" style="margin:0; 
-font-weight:normal; cursor:text;">Contribuição total</label>
+font-weight:normal; cursor:text;">Contribui��o total</label>
               <button type="button" 
 title="Adicionar" class="btn-add-info" style="background:none; border:none; padding:0; display:flex; 
 align-items:center; color:var(--text-muted); cursor:pointer;">
@@ -182,14 +171,14 @@ width:100%; color:var(--text-primary);">
           <div style="background:var(--surface-1); 
 border-radius:var(--radius); padding:10px 12px;">
             <p style="margin:0; font-size:11px; 
-color:var(--text-secondary);">Aniversário</p>
+color:var(--text-secondary);">Anivers�rio</p>
             <p id="statAniversario" style="margin:2px 0 0; 
 font-size:18px; font-weight:500;">-</p>
           </div>
           <div style="background:var(--bg-success); 
 border-radius:var(--radius); padding:10px 12px;">
             <p style="margin:0; font-size:11px; 
-color:var(--text-success);">Serviço Militar</p>
+color:var(--text-success);">Servi�o Militar</p>
             <p id="statServicoMilitar" style="margin:2px 0 0; 
 font-size:18px; font-weight:500; color:var(--text-success);">-</p>
           </div>
@@ -211,8 +200,8 @@ flex-grow: 1;">
      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
             
       <p style="margin:0; font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px;"><i class="ti 
-ti-clipboard-text" style="font-size:18px; color:var(--text-accent)" aria-hidden="true"></i>Formulário de 
-qualificação</p>
+ti-clipboard-text" style="font-size:18px; color:var(--text-accent)" aria-hidden="true"></i>Formul�rio de 
+qualifica��o</p>
                 </div>
 
                 <form id="clientAnswersForm" style="display: flex; 
@@ -220,13 +209,13 @@ flex-direction: column;">
                   <input type="hidden" id="respIdade">
                   
            
-       <!-- Já solicitou -->
+       <!-- J� solicitou -->
                   <div style="padding:10px 0; border-bottom:0.5px solid 
 var(--border);" class="sheet-field-group">
                     <div style="margin:0; font-size:12px; 
 color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; gap:5px;">
             
-          <label for="respSolicitouBeneficio" style="margin:0; font-weight:normal; cursor:pointer;">Já 
+          <label for="respSolicitouBeneficio" style="margin:0; font-weight:normal; cursor:pointer;">J� 
 solicitou?</label>
                       <button type="button" title="Adicionar" class="btn-add-info" 
 style="background:none; border:none; padding:0; display:flex; align-items:center; color:var(--text-muted); 
@@ -240,23 +229,23 @@ style="width: 100%; border: none; background: transparent; padding: 4px 0 0 0; f
 outline: none; box-shadow: none; cursor: pointer; appearance: none; color:var(--text-primary);">
                     
   <option value="">Selecione...</option>
-                      <option value="Não - nunca tentei aposentar.">Não 
+                      <option value="N�o - nunca tentei aposentar.">N�o 
 - nunca tentei aposentar.</option>
-                      <option value="Sim - já tentei e está em andamento.">Sim - 
-já tentei e está em andamento.</option>
+                      <option value="Sim - j� tentei e est� em andamento.">Sim - 
+j� tentei e est� em andamento.</option>
                       <option value="Sim - mas foi negada pelo INSS.">Sim - 
 mas foi negada pelo INSS.</option>
                     </select>
                   </div>
 
                   <!-- 
-Já contribuiu -->
+J� contribuiu -->
                   <div style="padding:10px 0; border-bottom:0.5px solid var(--border);" 
 class="sheet-field-group">
                     <div style="margin:0; font-size:12px; color:var(--text-secondary); 
 display:flex; align-items:center; justify-content:space-between; gap:5px;">
                       <label 
-for="respJaContribuiu" style="margin:0; font-weight:normal; cursor:pointer;">Já contribuiu?</label>
+for="respJaContribuiu" style="margin:0; font-weight:normal; cursor:pointer;">J� contribuiu?</label>
               
         <button type="button" title="Adicionar" class="btn-add-info" style="background:none; border:none; 
 padding:0; display:flex; align-items:center; color:var(--text-muted); cursor:pointer;">
@@ -272,11 +261,11 @@ appearance: none; color:var(--text-primary);">
       
                 <option value="Sim - e continuo contribuindo.">Sim - e continuo contribuindo.</option>
              
-         <option value="Sim - mas parei há algum tempo.">Sim - mas parei há algum tempo.</option>
+         <option value="Sim - mas parei h� algum tempo.">Sim - mas parei h� algum tempo.</option>
                   
-    <option value="Nunca fiz contribuição ao INSS.">Nunca fiz contribuição ao INSS.</option>
+    <option value="Nunca fiz contribui��o ao INSS.">Nunca fiz contribui��o ao INSS.</option>
                       
-<option value="Não sei responder.">Não sei responder.</option>
+<option value="N�o sei responder.">N�o sei responder.</option>
                     </select>
                   
 </div>
@@ -304,9 +293,9 @@ color:var(--text-primary);">
                       
 <option value="Emprego de carteira assinada (CLT)">Emprego de carteira assinada (CLT)</option>
                      
- <option value="Empresário / Autônomo / MEI">Empresário / Autônomo / MEI</option>
+ <option value="Empres�rio / Aut�nomo / MEI">Empres�rio / Aut�nomo / MEI</option>
                       <option 
-value="Servidor público">Servidor público</option>
+value="Servidor p�blico">Servidor p�blico</option>
                       <option value="Trabalhador 
 rural">Trabalhador rural</option>
                       <option value="Outro">Outro</option>
@@ -335,11 +324,11 @@ style="font-size:14px;"></i>
 color:var(--text-primary);">
                       <option value="">Selecione...</option>
                       
-<option value="Sim - já trabalhei nessas atividades.">Sim - já trabalhei nessas atividades.</option>
+<option value="Sim - j� trabalhei nessas atividades.">Sim - j� trabalhei nessas atividades.</option>
                
-       <option value="Não - nunca trabalhei com isso.">Não - nunca trabalhei com isso.</option>
+       <option value="N�o - nunca trabalhei com isso.">N�o - nunca trabalhei com isso.</option>
                     
-  <option value="Não sei responder">Não sei responder</option>
+  <option value="N�o sei responder">N�o sei responder</option>
                     </select>
                   
 </div>
@@ -355,7 +344,7 @@ style="font-size:18px; color:var(--text-accent)" aria-hidden="true"></i>Detalhes
 style="background:var(--surface-2); border:0.5px solid var(--border); border-radius:var(--radius); padding:12px 14px; 
 font-size:13px; line-height:1.6; flex-grow: 1; position: relative;">
                   <textarea id="respDetalhes" 
-placeholder="Digite os detalhes adicionais sobre o histórico ou caso do cliente..." style="width: 100%; height: 
+placeholder="Digite os detalhes adicionais sobre o hist�rico ou caso do cliente..." style="width: 100%; height: 
 100%; border: none; background: transparent; resize: none; outline: none; box-sizing: border-box; font-family: 
 inherit; font-size: inherit; color:var(--text-primary);"></textarea>
                   <button type="button" 
@@ -384,7 +373,7 @@ y2="14"></line>
             <div style="border-top:0.5px solid var(--border); padding:12px 
 20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--surface-2);">
               <span 
-style="font-size:12px; color:var(--text-secondary); margin-right:auto;">Próxima etapa: Proposta</span>
+style="font-size:12px; color:var(--text-secondary); margin-right:auto;">Pr�xima etapa: Proposta</span>
              
  <button style="border:0.5px solid var(--border-strong); background:transparent; border-radius:var(--radius); 
 padding:7px 12px; font-size:13px; display:flex; align-items:center; gap:6px; cursor:pointer; 
@@ -393,7 +382,7 @@ aria-hidden="true"></i>Enviar mensagem</button>
               <button style="border:0.5px solid 
 var(--border-strong); background:transparent; border-radius:var(--radius); padding:7px 12px; font-size:13px; 
 display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--text-primary);"><i class="ti 
-ti-calendar-plus" style="font-size:16px" aria-hidden="true"></i>Agendar reunião</button>
+ti-calendar-plus" style="font-size:16px" aria-hidden="true"></i>Agendar reuni�o</button>
               <button 
 style="background:var(--fill-accent); color:var(--on-accent); border:none; border-radius:var(--radius); padding:7px 
 14px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; cursor:pointer;">Mover etapa<i 
@@ -402,13 +391,13 @@ class="ti ti-arrow-right" style="font-size:16px" aria-hidden="true"></i></button
           
 </div>
 
-          <!-- Conteúdo da Guia: FICHA (Campos do Cliente) -->
+          <!-- Conte�do da Guia: FICHA (Campos do Cliente) -->
           <div id="tabContentFicha" 
 class="tab-pane hidden" style="padding: 1.5rem; overflow-y: auto;">
             <form id="clientSheetForm" 
 class="sheet-form-container">
               
-              <!-- Seção: Dados Pessoais -->
+              <!-- Se��o: Dados Pessoais -->
               <div 
 class="sheet-form-section">
                 <h4 class="sheet-section-title">
@@ -453,12 +442,12 @@ stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="r
                   </div>
 
      
-             <!-- Profissão -->
+             <!-- Profiss�o -->
                   <div class="sheet-field-group">
                     <label 
-for="sheetProfissao">Profissão</label>
+for="sheetProfissao">Profiss�o</label>
                     <input type="text" id="sheetProfissao" 
-placeholder="Ex: Advogado, Autônomo">
+placeholder="Ex: Advogado, Aut�nomo">
                   </div>
 
                   <!-- Estado Civil -->
@@ -474,7 +463,7 @@ placeholder="Ex: Advogado, Autônomo">
 value="Casado(a)">Casado(a)</option>
                       <option value="Divorciado(a)">Divorciado(a)</option>
  
-                     <option value="Viúvo(a)">Viúvo(a)</option>
+                     <option value="Vi�vo(a)">Vi�vo(a)</option>
                     </select>
                   
 </div>
@@ -484,7 +473,7 @@ value="Casado(a)">Casado(a)</option>
                     
 <label for="sheetRg">RG</label>
                     <input type="text" id="sheetRg" placeholder="Apenas 
-números">
+n�meros">
                   </div>
 
                   <!-- CPF -->
@@ -504,18 +493,18 @@ for="sheetNascimento">Data de Nascimento</label>
  
                  </div>
 
-                  <!-- Nome da Mãe -->
+                  <!-- Nome da M�e -->
                   <div class="sheet-field-group 
 span-2">
-                    <label for="sheetNomeMae">Nome da Mãe</label>
+                    <label for="sheetNomeMae">Nome da M�e</label>
                     <input 
-type="text" id="sheetNomeMae" placeholder="Nome completo da mãe">
+type="text" id="sheetNomeMae" placeholder="Nome completo da m�e">
                   </div>
                 
 </div>
               </div>
 
-              <!-- Seção: Endereço -->
+              <!-- Se��o: Endere�o -->
               <div 
 class="sheet-form-section">
                 <h4 class="sheet-section-title">
@@ -523,7 +512,7 @@ class="sheet-form-section">
 xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" 
 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 
 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  Endereço
+                  Endere�o
          
        </h4>
                 
@@ -537,12 +526,12 @@ stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="r
                   </div>
 
    
-               <!-- Endereço (Logradouro + Número) -->
+               <!-- Endere�o (Logradouro + N�mero) -->
                   <div class="sheet-field-group">
           
-          <label for="sheetEndereco">Endereço</label>
+          <label for="sheetEndereco">Endere�o</label>
                     <input type="text" id="sheetEndereco" 
-placeholder="Rua, Avenida, Número...">
+placeholder="Rua, Avenida, N�mero...">
                   </div>
 
                   <!-- Complemento -->
@@ -605,7 +594,7 @@ value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</optio
           
 </div>
 
-          <!-- Conteúdo da Guia: DOCUMENTOS -->
+          <!-- Conte�do da Guia: DOCUMENTOS -->
           <div id="tabContentDocumentos" class="tab-pane 
 hidden" style="padding: 1.5rem; overflow-y: auto;">
             <div class="docs-tab-header">
@@ -654,3 +643,4 @@ ainda.</p>
     </div>
   
 </div>
+

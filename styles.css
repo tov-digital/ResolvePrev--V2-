@@ -1220,21 +1220,21 @@ html, body {
   border-radius: 50%;
 }
 
-.dot-novo { background-color: #94A3B8; }         /* 1. Cinza */
-.dot-qualificacao { background-color: #F97316; } /* 2. Laranja */
-.dot-acompanhamento { background-color: #FACC15; }/* 3. Amarelo */
-.dot-reuniao { background-color: #3B82F6; }      /* 4. Azul */
-.dot-proposta { background-color: #22C55E; }     /* 5. Verde */
+.dot-novo { background-color: #94A3B8 !important; }         /* 1. Cinza */
+.dot-qualificacao { background-color: #F97316 !important; } /* 2. Laranja */
+.dot-acompanhamento { background-color: #FACC15 !important; }/* 3. Amarelo */
+.dot-reuniao { background-color: #3B82F6 !important; }      /* 4. Azul */
+.dot-proposta { background-color: #22C55E !important; }     /* 5. Verde */
 
 /* Dots - Operação */
-.dot-documentacao { background-color: #94A3B8; } /* 1. Cinza */
-.dot-na_fila { background-color: #F97316; }      /* 2. Laranja */
-.dot-requerido { background-color: #FACC15; }    /* 3. Amarelo */
-.dot-exigencia { background-color: #3B82F6; }    /* 4. Azul */
-.dot-concedido { background-color: #22C55E; }    /* 5. Verde */
+.dot-documentacao { background-color: #94A3B8 !important; } /* 1. Cinza */
+.dot-na_fila { background-color: #F97316 !important; }      /* 2. Laranja */
+.dot-requerido { background-color: #FACC15 !important; }    /* 3. Amarelo */
+.dot-exigencia { background-color: #3B82F6 !important; }    /* 4. Azul */
+.dot-concedido { background-color: #22C55E !important; }    /* 5. Verde */
 
 /* Dots - Judicial */
-.dot-negado { background-color: #F87171; }       /* Red */
+.dot-negado { background-color: #F87171 !important; }       /* Red */
 
 .column-title {
   font-size: 0.92rem;
@@ -4255,4 +4255,88 @@ select {
   justify-content: center;
 }
 
+/* Efeitos globais de hover para botões, links e ícones clicáveis */
+button, 
+a, 
+.btn, 
+.icon-btn, 
+[role="button"], 
+.clickable,
+.action-icon,
+.nav-item,
+.sidebar-toggle-btn,
+.clickable-profile,
+i[style*="cursor: pointer"] {
+  transition: filter 0.2s ease, opacity 0.2s ease, background-color 0.2s ease !important;
+}
 
+button:hover, 
+.btn:hover, 
+.icon-btn:hover, 
+[role="button"]:hover, 
+.clickable:hover,
+.action-icon:hover,
+i[style*="cursor: pointer"]:hover,
+a:hover,
+.clickable-profile:hover,
+.nav-item:hover,
+.sidebar-toggle-btn:hover {
+  filter: brightness(0.85);
+}
+
+/* Remover efeito global de hover para as categorias de documentos (Obrigatórios/Eventuais) */
+.docs-category-toggle {
+  transition: none !important;
+  will-change: auto;
+}
+
+.docs-category-toggle:hover {
+  transform: none !important;
+  filter: none !important;
+}
+
+/* Efeito de hover vibrante/brilhante para os badges de status de documentos */
+.doc-status-badge {
+  transition: filter 0.2s ease, background-color 0.2s ease !important;
+}
+
+.doc-status-badge:hover {
+  filter: brightness(1.1) contrast(1.05) !important;
+}
+
+
+/* Ícones de ação no cabeçalho */
+.header-action-icon {
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease, filter 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.header-action-icon:hover {
+  background-color: var(--surface-hover, rgba(0,0,0,0.08));
+  filter: none !important;
+}
+
+/* Hover Customizado WhatsApp */
+.btn-whatsapp {
+  transition: all 0.2s ease !important;
+}
+.btn-whatsapp:hover {
+  background-color: #25D366 !important;
+  color: #ffffff !important;
+  border-color: #25D366 !important;
+  filter: none !important;
+}
+
+/* Hover Customizado Gmail */
+.btn-gmail {
+  transition: all 0.2s ease !important;
+}
+.btn-gmail:hover {
+  background-color: #EA4335 !important;
+  color: #ffffff !important;
+  border-color: #EA4335 !important;
+  filter: none !important;
+}

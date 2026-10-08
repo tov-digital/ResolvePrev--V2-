@@ -612,7 +612,7 @@
 GUIAS) ==================== -->
   <div id="modalClientSheet" class="modal-backdrop hidden" role="dialog" 
 aria-modal="true">
-    <div class="modal-card modal-large" style="max-width: 900px; width: 90%; height: 85vh; min-height: 600px; display: flex; flex-direction: column; background: var(--surface-2); border-radius: 12px; border: 0.5px solid 
+    <div class="modal-card modal-large" style="max-width: 900px; width: 90%; height: 92vh; min-height: 650px; display: flex; flex-direction: column; background: var(--surface-2); border-radius: 12px; border: 0.5px solid 
 var(--border); overflow: hidden; padding: 0;">
 
       <!-- Tabs Header -->
@@ -634,14 +634,14 @@ var(--border); flex-shrink: 0;">
         <div style="flex:1"></div>
         
      
-   <div style="display:flex; gap:14px; height:40px; align-items:center; color:var(--text-secondary); 
+   <div style="display:flex; gap:4px; height:40px; align-items:center; color:var(--text-secondary); 
 font-size:18px;">
-          <i class="ti ti-user-check" id="sheetReassignBtn" aria-label="Responsável" 
+          <i class="ti ti-user-check header-action-icon" id="sheetReassignBtn" aria-label="Responsável" 
 style="cursor: pointer;" title="Atribuir a outro usuário"></i>
-          <i class="ti ti-trash danger-action" 
+          <i class="ti ti-trash danger-action header-action-icon" 
 id="sheetDeleteBtn" aria-label="Excluir" style="cursor: pointer;" title="Excluir Oportunidade"></i>
           
-<i class="ti ti-x" id="closeClientSheetModal" aria-label="Fechar" style="cursor: pointer;" title="Fechar 
+<i class="ti ti-x header-action-icon" id="closeClientSheetModal" aria-label="Fechar" style="cursor: pointer;" title="Fechar 
 Ficha"></i>
         </div>
       </div>
@@ -665,16 +665,10 @@ none; background: transparent; outline: none; padding: 0;" placeholder="Nome com
           
           <div class="status-dropdown-wrapper" style="position: relative;">
             
-<button id="sheetStatusDropdownBtn" style="display:flex; align-items:center; gap:6px; background:var(--bg-warning); 
-color:var(--text-warning); padding:6px 12px; border-radius:var(--radius); font-size:13px; font-weight:500; border: 
-none; cursor: pointer;">
-              <i class="ti ti-calendar-event" style="font-size:16px" 
-aria-hidden="true"></i>
+<button id="sheetStatusDropdownBtn" style="display:flex; align-items:center; gap:6px; background:var(--surface-1); color:var(--color-primary); height:36px; padding:6px 12px; border-radius:var(--radius); font-size:13px; font-weight:500; border: 1px solid var(--border); cursor: pointer;">
+              <span class="status-tag-dot" id="sheetStatusDot" style="display:inline-block; margin-right:2px;"></span>
               <span id="sheetStatusText">Reunião</span>
-              <span 
-class="status-tag-dot" id="sheetStatusDot" style="display:none;"></span>
-              <i class="ti 
-ti-chevron-down" style="font-size:14px" aria-hidden="true"></i>
+              <i class="ti ti-chevron-down" style="font-size:14px" aria-hidden="true"></i>
             </button>
             <div 
 id="statusDropdownMenu" class="status-dropdown-menu hidden" style="position: absolute; right: 0; top: 100%; 
@@ -737,13 +731,9 @@ class="column-status-dot dot-negado"></span> Negado
           </div>
 
   
-        <button id="sheetNotesBtn" style="display:flex; align-items:center; gap:6px; border:0.5px solid 
-var(--border-strong); padding:6px 12px; border-radius:var(--radius); font-size:13px; background: transparent; cursor: 
-pointer; color: var(--text-primary);">
-            <i class="ti ti-message" style="font-size:16px" 
-aria-hidden="true"></i>
-            <span id="sheetNotesCountBadge" style="display: none;">0</span> 
-comentários
+        <button id="sheetNotesBtn" style="position:relative; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid var(--border); border-radius:8px; font-size:18px; background: var(--surface-1); cursor: pointer; color: var(--color-primary);">
+            <i class="ti ti-message" aria-hidden="true"></i>
+            <span id="sheetNotesCountBadge" class="hidden" style="position:absolute; top:-6px; right:-6px; background:#ef4444; color:white; font-size:10px; font-weight:bold; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:2px solid white;">0</span>
           </button>
         </div>
 
