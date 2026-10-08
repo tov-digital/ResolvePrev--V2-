@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', async () => {
+﻿document.addEventListener('DOMContentLoaded', async () => {
   // Inicialização do Supabase Client
   const SUPABASE_URL = 'https://jqyxtrzcwgropuqchwiz.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxeXh0cnpjd2dyb3B1cWNod2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjIzMDgsImV4cCI6MjEwMjAzODMwOH0.m9ZpiTanwhl5SzzAfJoTs1x9KekWuFqB0C3d__0mIbA';
@@ -3259,6 +3259,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      const elServicoMilitar = document.getElementById('respServicoMilitar');
+      if (elServicoMilitar) elServicoMilitar.value = card.servico_militar || 'Não';
+
       const elJaContribuiu = document.getElementById('respJaContribuiu');
       if (elJaContribuiu) elJaContribuiu.value = card.ja_contribuiu || '';
 
@@ -3605,7 +3608,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const respDetalhes = document.getElementById('respDetalhes');
 
     const updatedAnswers = {
-      ja_contribuiu: respJaContribuiu ? respJaContribuiu.value : '',
+      servico_militar: document.getElementById('respServicoMilitar') ? document.getElementById('respServicoMilitar').value : 'Não',
+        ja_contribuiu: respJaContribuiu ? respJaContribuiu.value : '',
       tempo_contribuicao: respTempoContribuicao && respTempoContribuicao.value !== '' ? parseInt(respTempoContribuicao.value, 10) : null,
       tipo_trabalho: respTipoTrabalho ? respTipoTrabalho.value : '',
       solicitou_beneficio: respSolicitouBeneficio ? respSolicitouBeneficio.value : '',
