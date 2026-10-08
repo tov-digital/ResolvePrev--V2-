@@ -1007,7 +1007,7 @@ stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="r
           
       </h4>
                 
-                <div class="sheet-form-grid">
+                <div class="sheet-form-grid" style="grid-template-columns: repeat(4, 1fr);">
                   <!-- Telefone -->
   
                 <div class="sheet-field-group">
@@ -1083,108 +1083,55 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
                   </div>
 
            
-       <!-- Data de Nascimento -->
-                  <div class="sheet-field-group">
-                    <label 
-for="sheetDataNascimento">Data de Nascimento</label>
-                    <input type="date" id="sheetDataNascimento">
- 
-                 </div>
+       <!-- Hidden Inputs Removed from Grid -->
+<input type="hidden" id="sheetDataNascimento">
+<input type="hidden" id="sheetNomeMae">
 
-                  <!-- Nome da Mãe -->
-                  <div class="sheet-field-group 
-span-2">
-                    <label for="sheetNomeMae">Nome da Mãe</label>
-                    <input 
-type="text" id="sheetNomeMae" placeholder="Nome completo da mãe">
-                  </div>
-                
-</div>
-              </div>
-
-              <!-- Seção: Endereço -->
-              <div 
-class="sheet-form-section">
-                <h4 class="sheet-section-title">
-                  <svg 
-xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" 
-stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 
-13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  Endereço
-         
-       </h4>
-                
-                <div class="sheet-form-grid">
                   <!-- CEP -->
-      
-            <div class="sheet-field-group">
+                  <div class="sheet-field-group">
                     <label for="sheetCep">CEP</label>
-               
-     <input type="text" id="sheetCep" placeholder="99.999-999" maxlength="10">
+                    <input type="text" id="sheetCep" placeholder="99.999-999" maxlength="10">
                   </div>
 
-   
-               <!-- Endereço (Logradouro + Número) -->
+                  <!-- Endereço (Logradouro + Número) -->
                   <div class="sheet-field-group">
-          
-          <label for="sheetEndereco">Endereço</label>
-                    <input type="text" id="sheetEndereco" 
-placeholder="Rua, Avenida, Número...">
+                    <label for="sheetEndereco">Endereço</label>
+                    <input type="text" id="sheetEndereco" placeholder="Rua, Avenida, Número...">
                   </div>
 
                   <!-- Complemento -->
-         
-         <div class="sheet-field-group">
+                  <div class="sheet-field-group">
                     <label for="sheetComplemento">Complemento</label>
-  
-                  <input type="text" id="sheetComplemento" placeholder="Apto, Bloco, Casa...">
-                 
- </div>
+                    <input type="text" id="sheetComplemento" placeholder="Apto, Bloco, Casa...">
+                  </div>
 
                   <!-- Bairro -->
-                  <div class="sheet-field-group span-2">
-             
-       <label for="sheetBairro">Bairro</label>
-                    <input type="text" id="sheetBairro" 
-placeholder="Nome do Bairro">
+                  <div class="sheet-field-group">
+                    <label for="sheetBairro">Bairro</label>
+                    <input type="text" id="sheetBairro" placeholder="Nome do Bairro">
                   </div>
 
                   <!-- Cidade -->
-                  <div 
-class="sheet-field-group span-2">
+                  <div class="sheet-field-group">
                     <label for="sheetCidade">Cidade</label>
-                   
- <input type="text" id="sheetCidade" placeholder="Nome da Cidade">
+                    <input type="text" id="sheetCidade" placeholder="Nome da Cidade">
                   </div>
 
-                 
- <!-- UF -->
-                  <div class="sheet-field-group span-2">
-                    <label 
-for="sheetUf">UF</label>
+                  <!-- UF -->
+                  <div class="sheet-field-group">
+                    <label for="sheetUf">UF</label>
                     <select id="sheetUf">
-                      <option 
-value="">UF</option>
-                      <option value="AC">AC</option><option value="AL">AL</option><option 
-value="AP">AP</option>
-                      <option value="AM">AM</option><option 
-value="BA">BA</option><option value="CE">CE</option>
-                      <option 
-value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
-                      
-<option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
-                     
- <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
-                    
-  <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
-                   
-   <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
-                  
-    <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
-                 
-     <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
-                
-    </select>
+                      <option value="">UF</option>
+                      <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                      <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                      <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                      <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                      <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                      <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                      <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                      <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                      <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                    </select>
                   </div>
                 </div>
               </div>
