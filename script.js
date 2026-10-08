@@ -3090,7 +3090,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       const statIdade = document.getElementById('statIdade');
-      if (statIdade) statIdade.textContent = v ? calculateAge(v) + ' anos' : '-';
+      if (statIdade) statIdade.textContent = v ? calculateAge(v) : '-';
       
       const statAniversario = document.getElementById('statAniversario');
       if (statAniversario) {
@@ -3198,9 +3198,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (elCpf) elCpf.value = card.cpf || '';
 
       const elDataNascimento = document.getElementById('sheetDataNascimento');
+      let isoDateNascimento = '';
+      if (card.data_nascimento) {
+        let rawDate = card.data_nascimento.split('T')[0];
+        if (rawDate.includes('/')) {
+            const p = rawDate.split('/');
+            if (p.length === 3) {
+                if (p[2].length === 4) isoDateNascimento = `${p[2]}-${p[1]}-${p[0]}`;
+                else if (p[0].length === 4) isoDateNascimento = `${p[0]}-${p[1]}-${p[2]}`;
+            }
+        } else if (rawDate.includes('-')) {
+            const p = rawDate.split('-');
+            if (p.length === 3) {
+                if (p[2].length === 4) isoDateNascimento = `${p[2]}-${p[1]}-${p[0]}`;
+                else if (p[0].length === 4) isoDateNascimento = `${p[0]}-${p[1]}-${p[2]}`;
+            }
+        }
+      }
       if (elDataNascimento) {
-        let rawDate = card.data_nascimento ? card.data_nascimento.split('T')[0] : '';
-        elDataNascimento.value = rawDate;
+        elDataNascimento.value = isoDateNascimento;
       }
 
       const elCep = document.getElementById('sheetCep');
@@ -3223,16 +3239,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Preencher campos da guia Respostas
       const elIdade = document.getElementById('respIdade');
-      if (elIdade) elIdade.value = calculateAge(card.data_nascimento);
+      if (elIdade) elIdade.value = calculateAge(isoDateNascimento);
 
       // Atualizar stats do topo
       const statIdade = document.getElementById('statIdade');
-      if (statIdade) statIdade.textContent = card.data_nascimento ? calculateAge(card.data_nascimento) + ' anos' : '-';
+      if (statIdade) statIdade.textContent = isoDateNascimento ? calculateAge(isoDateNascimento) : '-';
       
       const statAniversario = document.getElementById('statAniversario');
       if (statAniversario) {
-        if (card.data_nascimento && card.data_nascimento.length >= 10) {
-          const parts = card.data_nascimento.split('T')[0].split('-');
+        if (isoDateNascimento && isoDateNascimento.length >= 10) {
+          const parts = isoDateNascimento.split('-'); // YYYY-MM-DD
           if (parts.length === 3) {
             statAniversario.textContent = `${parts[2]}/${parts[1]}`;
           } else {
