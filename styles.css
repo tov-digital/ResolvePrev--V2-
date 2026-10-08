@@ -41,6 +41,22 @@
   /* Transitions */
   --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-medium: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Extra tokens para Ficha do Cliente */
+  --surface-1: #F8FAFC;
+  --surface-2: #FFFFFF;
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --bg-accent: #EBF3fa;
+  --text-accent: #1E5080;
+  --text-primary: #17202A;
+  --bg-warning: #FEF3C7;
+  --text-warning: #D97706;
+  --bg-success: #DCFCE7;
+  --text-success: #15803d; /* dark green to contrast */
+  --fill-accent: #1E5080;
+  --on-accent: #FFFFFF;
+  --radius: 8px;
 }
 
 /* Reset & Base */
