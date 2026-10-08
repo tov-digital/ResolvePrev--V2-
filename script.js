@@ -4251,13 +4251,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (addInfoDynamicFields) {
       let html = '';
 
-      if (fieldId === 'respJaContribuiu') {
-        html += `
+      const generateExpandableNoteHTML = (text) => {
+        return `
           <div style="position: sticky; top: 0; z-index: 10; background-color: #fffbeb; color: #b45309; padding: 0.75rem; border-radius: 6px; border: 1px solid #fde68a; font-size: 0.9rem; font-weight: 500; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>Se o cliente não tiver qualidade de segurado, não terá o direito de pedir a aposentadoria, mesmo que tenha a idade e o tempo de contribuição necessários.</span>
+            <div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start;">
+              <span class="note-content" style="display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; transition: all 0.3s;">
+                ${text}
+              </span>
+              <button type="button" onclick="event.preventDefault(); const c = this.previousElementSibling; if(c.style.webkitLineClamp === '1') { c.style.webkitLineClamp = 'unset'; this.textContent = 'ver menos'; } else { c.style.webkitLineClamp = '1'; this.textContent = 'ver mais...'; }" style="background: none; border: none; color: #b45309; font-size: 0.8rem; font-weight: bold; cursor: pointer; padding: 0; margin-top: 4px; text-decoration: underline;">ver mais...</button>
+            </div>
           </div>
         `;
+      };
+
+      if (fieldId === 'respJaContribuiu') {
+        html += generateExpandableNoteHTML('Se o cliente não tiver qualidade de segurado, não terá o direito de pedir a aposentadoria, mesmo que tenha a idade e o tempo de contribuição necessários.');
       } else if (fieldId === 'respTipoTrabalho') {
         const selectEl = document.getElementById(fieldId);
         const val = selectEl ? selectEl.value : '';
@@ -4269,20 +4278,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         if (noteText) {
-          html += `
-            <div style="position: sticky; top: 0; z-index: 10; background-color: #fffbeb; color: #b45309; padding: 0.75rem; border-radius: 6px; border: 1px solid #fde68a; font-size: 0.9rem; font-weight: 500; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <span>${noteText}</span>
-            </div>
-          `;
+          html += generateExpandableNoteHTML(noteText);
         }
       } else if (fieldId === 'respExerceuAtividadeEspecial') {
-        html += `
-          <div style="position: sticky; top: 0; z-index: 10; background-color: #fffbeb; color: #b45309; padding: 0.75rem; border-radius: 6px; border: 1px solid #fde68a; font-size: 0.9rem; font-weight: 500; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>Sem a documentação correta, é quase impossível, no administrativo, o INSS transformar o tempo especial em tempo regular adicionando os 40%, e no judicial, levará, em média, de 3 a 4 anos.</span>
-          </div>
-        `;
+        html += generateExpandableNoteHTML('Sem a documentação correta, é quase impossível, no administrativo, o INSS transformar o tempo especial em tempo regular adicionando os 40%, e no judicial, levará, em média, de 3 a 4 anos.');
       }
 
       html += fields.map(field => {
