@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', async () => {
+﻿document.addEventListener('DOMContentLoaded', async () => {
   // Inicialização do Supabase Client
   const SUPABASE_URL = 'https://jqyxtrzcwgropuqchwiz.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxeXh0cnpjd2dyb3B1cWNod2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjIzMDgsImV4cCI6MjEwMjAzODMwOH0.m9ZpiTanwhl5SzzAfJoTs1x9KekWuFqB0C3d__0mIbA';
@@ -4438,6 +4438,70 @@ document.addEventListener('DOMContentLoaded', async () => {
       const newVal = input && input.value === 'Sim' ? 'Não' : 'Sim';
       updateServicoMilitarUI(newVal);
       saveClientData(true);
+    });
+  }
+
+
+
+  // --- Aes dos botes no rodap do modal ---
+  const modalBtnEnviarMensagem = document.getElementById('modalBtnEnviarMensagem');
+  if (modalBtnEnviarMensagem) {
+    modalBtnEnviarMensagem.addEventListener('click', () => {
+      if (!currentActiveCard || !currentActiveCard.telefone) {
+        showToast('Telefone no informado.');
+        return;
+      }
+      const digits = currentActiveCard.telefone.replace(/\D/g, '');
+      if (digits) {
+        window.open(https://web.whatsapp.com/send/?phone=55 + digits, '_blank');
+      } else {
+        showToast('Telefone invlido.');
+      }
+    });
+  }
+
+  const modalBtnAgendarReuniao = document.getElementById('modalBtnAgendarReuniao');
+  if (modalBtnAgendarReuniao) {
+    modalBtnAgendarReuniao.addEventListener('click', () => {
+      window.open('https://calendar.app.google/etUZShcszLkFJ8wB6', '_blank');
+    });
+  }
+
+  const modalBtnMoverEtapa = document.getElementById('modalBtnMoverEtapa');
+  if (modalBtnMoverEtapa) {
+    modalBtnMoverEtapa.addEventListener('click', async () => {
+      if (!currentActiveCard) return;
+      
+      let stages = [];
+      if (window.currentTab === 'comercial') {
+        stages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
+      } else if (window.currentTab === 'operacao') {
+        stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
+      } else if (window.currentTab === 'judicial') {
+        stages = ['negado'];
+      }
+      
+      const currentIndex = stages.indexOf(currentActiveCard.status);
+      if (currentIndex === -1 || currentIndex === stages.length - 1) {
+        showToast('O card j est na ltima etapa.');
+        return;
+      }
+      
+      const targetStage = stages[currentIndex + 1];
+      
+      if (targetStage === 'proposta') {
+        openProposalModal(currentActiveCard, targetStage);
+        closeModal(modalClientSheet);
+        return;
+      }
+      if (targetStage === 'concedido' && window.currentTab === 'operacao') {
+        openConcedidoModal(currentActiveCard, targetStage);
+        closeModal(modalClientSheet);
+        return;
+      }
+      
+      await changeCardStatus(currentActiveCard, targetStage);
+      closeModal(modalClientSheet);
     });
   }
 
