@@ -3107,21 +3107,56 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const statAniversario = document.getElementById('statAniversario');
   if (statAniversario) {
-    statAniversario.addEventListener('change', (e) => {
+    statAniversario.addEventListener('focus', (e) => {
+      if (sheetDataNascimento && sheetDataNascimento.value && sheetDataNascimento.value.length >= 10) {
+        const parts = sheetDataNascimento.value.split('-');
+        if (parts.length === 3) {
+          e.target.value = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+      }
+    });
+
+    statAniversario.addEventListener('blur', (e) => {
       const val = e.target.value.trim();
       if (!val) return;
       const parts = val.split('/');
-      if (parts.length === 2 && sheetDataNascimento) {
+      if (sheetDataNascimento) {
         let year = new Date().getFullYear();
-        if (sheetDataNascimento.value && sheetDataNascimento.value.length >= 10) {
-           year = sheetDataNascimento.value.split('-')[0];
+        let day = '';
+        let month = '';
+        
+        if (parts.length >= 2) {
+          day = parts[0].padStart(2, '0');
+          month = parts[1].padStart(2, '0');
         }
-        let day = parts[0].padStart(2, '0');
-        let month = parts[1].padStart(2, '0');
+        
+        if (parts.length === 3) {
+          if (parts[2].length === 2) year = (parseInt(parts[2]) > 50 ? '19' : '20') + parts[2];
+          else year = parts[2];
+        } else if (parts.length === 2 && sheetDataNascimento.value && sheetDataNascimento.value.length >= 10) {
+          year = sheetDataNascimento.value.split('-')[0];
+        } else if (parts.length < 2) {
+          if (sheetDataNascimento.value && sheetDataNascimento.value.length >= 10) {
+            const p = sheetDataNascimento.value.split('-');
+            e.target.value = `${p[2]}/${p[1]}`;
+          }
+          return;
+        }
+
         const newVal = `${year}-${month}-${day}`;
-        sheetDataNascimento.value = newVal;
-        sheetDataNascimento.dispatchEvent(new Event('input'));
-        saveClientData(true);
+        if (sheetDataNascimento.value !== newVal) {
+          sheetDataNascimento.value = newVal;
+          sheetDataNascimento.dispatchEvent(new Event('input'));
+          saveClientData(true);
+        }
+        
+        e.target.value = `${day}/${month}`;
+      }
+    });
+
+    statAniversario.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.target.blur();
       }
     });
   }
