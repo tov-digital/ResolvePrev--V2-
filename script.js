@@ -3082,18 +3082,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (sheetDataNascimento) {
     sheetDataNascimento.addEventListener('input', (e) => {
-      let v = e.target.value.replace(/\D/g, '');
-      if (v.length > 8) v = v.slice(0, 8);
-      if (v.length > 4) {
-        v = v.replace(/^(\d{2})(\d{2})(\d{1,4})$/, '$1/$2/$3');
-      } else if (v.length > 2) {
-        v = v.replace(/^(\d{2})(\d{1,2})$/, '$1/$2');
-      }
-      e.target.value = v;
+      const v = e.target.value; // YYYY-MM-DD from type="date"
 
       const elIdade = document.getElementById('respIdade');
       if (elIdade) {
         elIdade.value = calculateAge(v);
+      }
+
+      const statIdade = document.getElementById('statIdade');
+      if (statIdade) statIdade.textContent = v ? calculateAge(v) + ' anos' : '-';
+      
+      const statAniversario = document.getElementById('statAniversario');
+      if (statAniversario) {
+        if (v && v.length >= 10) {
+          const parts = v.split('-');
+          if (parts.length === 3) {
+            statAniversario.textContent = `${parts[2]}/${parts[1]}`;
+          } else {
+            statAniversario.textContent = '-';
+          }
+        } else {
+          statAniversario.textContent = '-';
+        }
       }
     });
   }
@@ -3190,12 +3200,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const elDataNascimento = document.getElementById('sheetDataNascimento');
       if (elDataNascimento) {
         let rawDate = card.data_nascimento ? card.data_nascimento.split('T')[0] : '';
-        if (rawDate.includes('-')) {
-          const parts = rawDate.split('-');
-          if (parts.length === 3 && parts[0].length === 4) {
-            rawDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-          }
-        }
         elDataNascimento.value = rawDate;
       }
 
@@ -3220,6 +3224,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Preencher campos da guia Respostas
       const elIdade = document.getElementById('respIdade');
       if (elIdade) elIdade.value = calculateAge(card.data_nascimento);
+
+      // Atualizar stats do topo
+      const statIdade = document.getElementById('statIdade');
+      if (statIdade) statIdade.textContent = card.data_nascimento ? calculateAge(card.data_nascimento) + ' anos' : '-';
+      
+      const statAniversario = document.getElementById('statAniversario');
+      if (statAniversario) {
+        if (card.data_nascimento && card.data_nascimento.length >= 10) {
+          const parts = card.data_nascimento.split('T')[0].split('-');
+          if (parts.length === 3) {
+            statAniversario.textContent = `${parts[2]}/${parts[1]}`;
+          } else {
+            statAniversario.textContent = '-';
+          }
+        } else {
+          statAniversario.textContent = '-';
+        }
+      }
 
       const elJaContribuiu = document.getElementById('respJaContribuiu');
       if (elJaContribuiu) elJaContribuiu.value = card.ja_contribuiu || '';
@@ -3537,13 +3559,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (rawDataNascimento && rawDataNascimento.length === 10) {
       let oldRaw = currentActiveCard.data_nascimento ? currentActiveCard.data_nascimento.split('T')[0] : '';
-      let oldFormatted = oldRaw;
-      if (oldRaw.includes('-') && oldRaw.split('-')[0].length === 4) {
-        const parts = oldRaw.split('-');
-        oldFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
-      }
-
-      if (rawDataNascimento !== oldFormatted) {
+      
+      if (rawDataNascimento !== oldRaw) {
         const genero = currentActiveCard.genero || currentActiveCard.sexo || '';
         const generoUpper = typeof genero === 'string' ? genero.toUpperCase() : '';
 
@@ -3555,10 +3572,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (anosParaAdd > 0) {
-          const parts = rawDataNascimento.split('/');
+          const parts = rawDataNascimento.split('-');
           if (parts.length === 3) {
-            const reqYear = parseInt(parts[2], 10) + anosParaAdd;
-            updatedData.data_requerimento = `${reqYear}-${parts[1]}-${parts[0]}`;
+            const reqYear = parseInt(parts[0], 10) + anosParaAdd;
+            updatedData.data_requerimento = `${reqYear}-${parts[1]}-${parts[2]}`;
           }
         }
       }
