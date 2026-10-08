@@ -1,0 +1,287 @@
+﻿
+{"step_index":378,"source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"2026-10-07T23:29:06Z","think
+ing":"**Prioritizing Tool Usage**\n\nI'm now focusing on prioritizing tool usage, especially considering the range of 
+options available. Specifically, I'm analyzing how best to leverage tools like 'view_file' or a terminal command for 
+optimal efficiency and effectiveness. My current focus centers on determining the ideal approach for different 
+tasks.\n\n\n**Refining Tool Selection**\n\nI'm now refining my approach to tool selection, remembering to prioritize 
+the most specific tool available for each task. The guidelines about avoiding `cat` inside bash commands and 
+preferring `grep_search` are now front-of-mind. I see a potential for using `replace_file_content` instead of more 
+complex methods for the current update, making sure to avoid missing parameters like `Overwrite: 
+true`.\n\n\n","tool_calls":[{"name":"write_to_file","args":{"ArtifactMetadata":{"RequestFeedback":false,"Summary":"New 
+modal HTML","UserFacing":false},"CodeContent":"  <!-- ==================== MODAL: FICHA DO CLIENTE (FOLHA A4 COM 
+GUIAS) ==================== -->\n  <div id=\"modalClientSheet\" class=\"modal-backdrop hidden\" role=\"dialog\" 
+aria-modal=\"true\">\n    <div class=\"modal-card modal-large\" style=\"max-width: 900px; width: 90%; max-height: 
+90vh; display: flex; flex-direction: column; background: var(--surface-2); border-radius: 12px; border: 0.5px solid 
+var(--border); overflow: hidden; padding: 0;\">\n\n      <!-- Tabs Header -->\n      <div style=\"display:flex; 
+align-items:flex-end; gap:4px; padding:10px 14px 0; background: var(--surface-1); border-bottom:0.5px solid 
+var(--border); flex-shrink: 0;\">\n        <button class=\"browser-tab active\" data-tab=\"respostas\" 
+style=\"width:130px; height:40px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; 
+gap:6px; font-size:13px; font-weight:500; color:var(--text-accent); border-bottom:2px solid var(--text-accent); 
+background:transparent; border-top:none; border-left:none; border-right:none; cursor:pointer;\">\n          <i 
+class=\"ti ti-message-2\" style=\"font-size:16px\" aria-hidden=\"true\"></i>Respostas\n        </button>\n        
+<button class=\"browser-tab\" data-tab=\"ficha\" style=\"width:130px; height:40px; box-sizing:border-box; 
+display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; color:var(--text-secondary); 
+border-bottom:2px solid transparent; background:transparent; border-top:none; border-left:none; border-right:none; 
+cursor:pointer;\">\n          <i class=\"ti ti-file-text\" style=\"font-size:16px\" aria-hidden=\"true\"></i>Ficha\n   
+     </button>\n        <button class=\"browser-tab\" data-tab=\"documentos\" style=\"width:130px; height:40px; 
+box-sizing:border-box; display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; 
+color:var(--text-secondary); border-bottom:2px solid transparent; background:transparent; border-top:none; 
+border-left:none; border-right:none; cursor:pointer;\">\n          <i class=\"ti ti-folder\" style=\"font-size:16px\" 
+aria-hidden=\"true\"></i>Documentos\n        </button>\n        \n        <div style=\"flex:1\"></div>\n        \n     
+   <div style=\"display:flex; gap:14px; height:40px; align-items:center; color:var(--text-secondary); 
+font-size:18px;\">\n          <i class=\"ti ti-user-check\" id=\"sheetReassignBtn\" aria-label=\"Responsável\" 
+style=\"cursor: pointer;\" title=\"Atribuir a outro usuário\"></i>\n          <i class=\"ti ti-trash danger-action\" 
+id=\"sheetDeleteBtn\" aria-label=\"Excluir\" style=\"cursor: pointer;\" title=\"Excluir Oportunidade\"></i>\n          
+<i class=\"ti ti-x\" id=\"closeClientSheetModal\" aria-label=\"Fechar\" style=\"cursor: pointer;\" title=\"Fechar 
+Ficha\"></i>\n        </div>\n      </div>\n\n      <div style=\"overflow-y: auto; flex-grow: 1; display: flex; 
+flex-direction: column;\">\n        \n        <!-- Header info -->\n        <div style=\"padding:16px 20px 12px; 
+display:flex; align-items:center; gap:12px; flex-wrap:wrap;\">\n          <div style=\"width:40px; height:40px; 
+border-radius:50%; background:var(--bg-accent); color:var(--text-accent); display:flex; align-items:center; 
+justify-content:center; font-weight:500; font-size:14px;\">AR</div>\n          <div style=\"flex:1; 
+min-width:180px;\">\n            <input type=\"text\" id=\"sheetClientNameInput\" value=\"Antônio José Real\" 
+style=\"margin:0; font-size:20px; font-weight:500; color:var(--text-accent); line-height:1.2; width: 100%; border: 
+none; background: transparent; outline: none; padding: 0;\" placeholder=\"Nome completo do cliente\">\n          
+</div>\n          \n          <div class=\"status-dropdown-wrapper\" style=\"position: relative;\">\n            
+<button id=\"sheetStatusDropdownBtn\" style=\"display:flex; align-items:center; gap:6px; background:var(--bg-warning); 
+color:var(--text-warning); padding:6px 12px; border-radius:var(--radius); font-size:13px; font-weight:500; border: 
+none; cursor: pointer;\">\n              <i class=\"ti ti-calendar-event\" style=\"font-size:16px\" 
+aria-hidden=\"true\"></i>\n              <span id=\"sheetStatusText\">Reunião</span>\n              <span 
+class=\"status-tag-dot\" id=\"sheetStatusDot\" style=\"display:none;\"></span>\n              <i class=\"ti 
+ti-chevron-down\" style=\"font-size:14px\" aria-hidden=\"true\"></i>\n            </button>\n            <div 
+id=\"statusDropdownMenu\" class=\"status-dropdown-menu hidden\" style=\"position: absolute; right: 0; top: 100%; 
+margin-top: 4px; z-index: 100;\">\n              <div class=\"status-option\" data-status=\"novo\" 
+data-tab=\"comercial\">\n                <span class=\"column-status-dot dot-novo\"></span> Novo\n              
+</div>\n              <div class=\"status-option\" data-status=\"qualificacao\" data-tab=\"comercial\">\n              
+  <span class=\"column-status-dot dot-qualificacao\"></span> Qualificação\n              </div>\n              <div 
+class=\"status-option\" data-status=\"acompanhamento\" data-tab=\"comercial\">\n                <span 
+class=\"column-status-dot dot-acompanhamento\"></span> Acompanhamento\n              </div>\n              <div 
+class=\"status-option\" data-status=\"reuniao\" data-tab=\"comercial\">\n                <span 
+class=\"column-status-dot dot-reuniao\"></span> Reunião\n              </div>\n              <div 
+class=\"status-option\" data-status=\"proposta\" data-tab=\"comercial\">\n                <span 
+class=\"column-status-dot dot-proposta\"></span> Proposta\n              </div>\n              <div 
+class=\"status-option hidden\" data-status=\"documentacao\" data-tab=\"operacao\">\n                <span 
+class=\"column-status-dot dot-documentacao\"></span> Documentação\n              </div>\n              <div 
+class=\"status-option hidden\" data-status=\"na_fila\" data-tab=\"operacao\">\n                <span 
+class=\"column-status-dot dot-na_fila\"></span> Na Fila\n              </div>\n              <div 
+class=\"status-option hidden\" data-status=\"requerido\" data-tab=\"operacao\">\n                <span 
+class=\"column-status-dot dot-requerido\"></span> Requerido\n              </div>\n              <div 
+class=\"status-option hidden\" data-status=\"exigencia\" data-tab=\"operacao\">\n                <span 
+class=\"column-status-dot dot-exigencia\"></span> Exigência\n              </div>\n              <div 
+class=\"status-option hidden\" data-status=\"concedido\" data-tab=\"operacao\">\n                <span 
+class=\"column-status-dot dot-concedido\"></span> Concedido\n              </div>\n              <div 
+class=\"status-option hidden\" data-status=\"negado\" data-tab=\"judicial\">\n                <span 
+class=\"column-status-dot dot-negado\"></span> Negado\n              </div>\n            </div>\n          </div>\n\n  
+        <button id=\"sheetNotesBtn\" style=\"display:flex; align-items:center; gap:6px; border:0.5px solid 
+var(--border-strong); padding:6px 12px; border-radius:var(--radius); font-size:13px; background: transparent; cursor: 
+pointer; color: var(--text-primary);\">\n            <i class=\"ti ti-message\" style=\"font-size:16px\" 
+aria-hidden=\"true\"></i>\n            <span id=\"sheetNotesCountBadge\" style=\"display: none;\">0</span> 
+comentários\n          </button>\n        </div>\n\n        <!-- Metrics -->\n        <div style=\"padding:0 20px 
+16px; display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px;\">\n          <div 
+style=\"background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;\">\n            <p 
+style=\"margin:0; font-size:11px; color:var(--text-secondary);\">Idade</p>\n            <p id=\"statIdade\" 
+style=\"margin:2px 0 0; font-size:18px; font-weight:500;\">-</p>\n          </div>\n          <div 
+style=\"background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;\">\n            <div 
+style=\"margin:0; font-size:11px; color:var(--text-secondary); display:flex; align-items:center; 
+justify-content:space-between; gap:4px;\">\n              <label for=\"respTempoContribuicao\" style=\"margin:0; 
+font-weight:normal; cursor:text;\">Contribuição total</label>\n              <button type=\"button\" 
+title=\"Adicionar\" class=\"btn-add-info\" style=\"background:none; border:none; padding:0; display:flex; 
+align-items:center; color:var(--text-muted); cursor:pointer;\">\n                <i class=\"ti ti-circle-plus\" 
+style=\"font-size:14px;\"></i>\n              </button>\n            </div>\n            <!-- Keep input but style it 
+like text -->\n            <input type=\"number\" id=\"respTempoContribuicao\" placeholder=\"0\" min=\"0\" step=\"1\" 
+style=\"margin:2px 0 0; font-size:18px; font-weight:500; background:transparent; border:none; outline:none; padding:0; 
+width:100%; color:var(--text-primary);\">\n          </div>\n          <div style=\"background:var(--surface-1); 
+border-radius:var(--radius); padding:10px 12px;\">\n            <p style=\"margin:0; font-size:11px; 
+color:var(--text-secondary);\">Aniversário</p>\n            <p id=\"statAniversario\" style=\"margin:2px 0 0; 
+font-size:18px; font-weight:500;\">-</p>\n          </div>\n          <div style=\"background:var(--bg-success); 
+border-radius:var(--radius); padding:10px 12px;\">\n            <p style=\"margin:0; font-size:11px; 
+color:var(--text-success);\">Serviço Militar</p>\n            <p id=\"statServicoMilitar\" style=\"margin:2px 0 0; 
+font-size:18px; font-weight:500; color:var(--text-success);\">-</p>\n          </div>\n        </div>\n\n        <!-- 
+Tabs Content Container -->\n        <div class=\"tab-content-container\" style=\"flex-grow: 1; display: flex; 
+flex-direction: column;\">\n          \n          <!-- Respostas -->\n          <div id=\"tabContentRespostas\" 
+class=\"tab-pane active\" style=\"flex-grow: 1; display: flex; flex-direction: column;\">\n            <div 
+style=\"border-top:0.5px solid var(--border); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); 
+flex-grow: 1;\">\n              <div style=\"padding:16px 20px; border-right:0.5px solid var(--border);\">\n           
+     <div style=\"display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;\">\n            
+      <p style=\"margin:0; font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px;\"><i class=\"ti 
+ti-clipboard-text\" style=\"font-size:18px; color:var(--text-accent)\" aria-hidden=\"true\"></i>Formulário de 
+qualificação</p>\n                </div>\n\n                <form id=\"clientAnswersForm\" style=\"display: flex; 
+flex-direction: column;\">\n                  <input type=\"hidden\" id=\"respIdade\">\n                  \n           
+       <!-- Já solicitou -->\n                  <div style=\"padding:10px 0; border-bottom:0.5px solid 
+var(--border);\" class=\"sheet-field-group\">\n                    <div style=\"margin:0; font-size:12px; 
+color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; gap:5px;\">\n            
+          <label for=\"respSolicitouBeneficio\" style=\"margin:0; font-weight:normal; cursor:pointer;\">Já 
+solicitou?</label>\n                      <button type=\"button\" title=\"Adicionar\" class=\"btn-add-info\" 
+style=\"background:none; border:none; padding:0; display:flex; align-items:center; color:var(--text-muted); 
+cursor:pointer;\">\n                        <i class=\"ti ti-circle-plus\" style=\"font-size:14px;\"></i>\n            
+          </button>\n                    </div>\n                    <select id=\"respSolicitouBeneficio\" 
+style=\"width: 100%; border: none; background: transparent; padding: 4px 0 0 0; font-size: 14px; font-weight: 500; 
+outline: none; box-shadow: none; cursor: pointer; appearance: none; color:var(--text-primary);\">\n                    
+  <option value=\"\">Selecione...</option>\n                      <option value=\"Não - nunca tentei aposentar.\">Não 
+- nunca tentei aposentar.</option>\n                      <option value=\"Sim - já tentei e está em andamento.\">Sim - 
+já tentei e está em andamento.</option>\n                      <option value=\"Sim - mas foi negada pelo INSS.\">Sim - 
+mas foi negada pelo INSS.</option>\n                    </select>\n                  </div>\n\n                  <!-- 
+Já contribuiu -->\n                  <div style=\"padding:10px 0; border-bottom:0.5px solid var(--border);\" 
+class=\"sheet-field-group\">\n                    <div style=\"margin:0; font-size:12px; color:var(--text-secondary); 
+display:flex; align-items:center; justify-content:space-between; gap:5px;\">\n                      <label 
+for=\"respJaContribuiu\" style=\"margin:0; font-weight:normal; cursor:pointer;\">Já contribuiu?</label>\n              
+        <button type=\"button\" title=\"Adicionar\" class=\"btn-add-info\" style=\"background:none; border:none; 
+padding:0; display:flex; align-items:center; color:var(--text-muted); cursor:pointer;\">\n                        <i 
+class=\"ti ti-circle-plus\" style=\"font-size:14px;\"></i>\n                      </button>\n                    
+</div>\n                    <select id=\"respJaContribuiu\" style=\"width: 100%; border: none; background: 
+transparent; padding: 4px 0 0 0; font-size: 14px; font-weight: 500; outline: none; box-shadow: none; cursor: pointer; 
+appearance: none; color:var(--text-primary);\">\n                      <option value=\"\">Selecione...</option>\n      
+                <option value=\"Sim - e continuo contribuindo.\">Sim - e continuo contribuindo.</option>\n             
+         <option value=\"Sim - mas parei há algum tempo.\">Sim - mas parei há algum tempo.</option>\n                  
+    <option value=\"Nunca fiz contribuição ao INSS.\">Nunca fiz contribuição ao INSS.</option>\n                      
+<option value=\"Não sei responder.\">Não sei responder.</option>\n                    </select>\n                  
+</div>\n\n                  <!-- Tipo de trabalho -->\n                  <div style=\"padding:10px 0; 
+border-bottom:0.5px solid var(--border);\" class=\"sheet-field-group\">\n                    <div style=\"margin:0; 
+font-size:12px; color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; 
+gap:5px;\">\n                      <label for=\"respTipoTrabalho\" style=\"margin:0; font-weight:normal; 
+cursor:pointer;\">Tipo de trabalho</label>\n                      <button type=\"button\" title=\"Adicionar\" 
+class=\"btn-add-info\" style=\"background:none; border:none; padding:0; display:flex; align-items:center; 
+color:var(--text-muted); cursor:pointer;\">\n                        <i class=\"ti ti-circle-plus\" 
+style=\"font-size:14px;\"></i>\n                      </button>\n                    </div>\n                    
+<select id=\"respTipoTrabalho\" style=\"width: 100%; border: none; background: transparent; padding: 4px 0 0 0; 
+font-size: 14px; font-weight: 500; outline: none; box-shadow: none; cursor: pointer; appearance: none; 
+color:var(--text-primary);\">\n                      <option value=\"\">Selecione...</option>\n                      
+<option value=\"Emprego de carteira assinada (CLT)\">Emprego de carteira assinada (CLT)</option>\n                     
+ <option value=\"Empresário / Autônomo / MEI\">Empresário / Autônomo / MEI</option>\n                      <option 
+value=\"Servidor público\">Servidor público</option>\n                      <option value=\"Trabalhador 
+rural\">Trabalhador rural</option>\n                      <option value=\"Outro\">Outro</option>\n                    
+</select>\n                  </div>\n\n                  <!-- Atividade especial -->\n                  <div 
+style=\"padding:10px 0 0;\" class=\"sheet-field-group\">\n                    <div style=\"margin:0; font-size:12px; 
+color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; gap:5px;\">\n            
+          <label for=\"respExerceuAtividadeEspecial\" style=\"margin:0; font-weight:normal; 
+cursor:pointer;\">Atividade especial?</label>\n                      <button type=\"button\" title=\"Adicionar\" 
+class=\"btn-add-info\" style=\"background:none; border:none; padding:0; display:flex; align-items:center; 
+color:var(--text-muted); cursor:pointer;\">\n                        <i class=\"ti ti-circle-plus\" 
+style=\"font-size:14px;\"></i>\n                      </button>\n                    </div>\n                    
+<select id=\"respExerceuAtividadeEspecial\" style=\"width: 100%; border: none; background: transparent; padding: 4px 0 
+0 0; font-size: 14px; font-weight: 500; outline: none; box-shadow: none; cursor: pointer; appearance: none; 
+color:var(--text-primary);\">\n                      <option value=\"\">Selecione...</option>\n                      
+<option value=\"Sim - já trabalhei nessas atividades.\">Sim - já trabalhei nessas atividades.</option>\n               
+       <option value=\"Não - nunca trabalhei com isso.\">Não - nunca trabalhei com isso.</option>\n                    
+  <option value=\"Não sei responder\">Não sei responder</option>\n                    </select>\n                  
+</div>\n                </form>\n              </div>\n\n              <div style=\"padding:16px 20px; 
+background:var(--surface-1); display: flex; flex-direction: column;\">\n                <p style=\"margin:0 0 10px; 
+font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px;\"><i class=\"ti ti-notes\" 
+style=\"font-size:18px; color:var(--text-accent)\" aria-hidden=\"true\"></i>Detalhes do caso</p>\n                <div 
+style=\"background:var(--surface-2); border:0.5px solid var(--border); border-radius:var(--radius); padding:12px 14px; 
+font-size:13px; line-height:1.6; flex-grow: 1; position: relative;\">\n                  <textarea id=\"respDetalhes\" 
+placeholder=\"Digite os detalhes adicionais sobre o histórico ou caso do cliente...\" style=\"width: 100%; height: 
+100%; border: none; background: transparent; resize: none; outline: none; box-sizing: border-box; font-family: 
+inherit; font-size: inherit; color:var(--text-primary);\"></textarea>\n                  <button type=\"button\" 
+id=\"btnExpandDetalhes\" title=\"Expandir Detalhes\" style=\"position: absolute; bottom: 8px; right: 8px; background: 
+none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; 
+justify-content: center; transition: all 0.2s; border-radius: 4px;\" onmouseover=\"this.style.color='#0f172a'; 
+this.style.backgroundColor='#f1f5f9';\" onmouseout=\"this.style.color='#94a3b8'; 
+this.style.backgroundColor='transparent';\">\n                    <svg xmlns=\"http://www.w3.org/2000/svg\" 
+width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" 
+stroke-linecap=\"round\" stroke-linejoin=\"round\">\n                      <polyline points=\"15 3 21 3 21 
+9\"></polyline>\n                      <polyline points=\"9 21 3 21 3 15\"></polyline>\n                      <line 
+x1=\"21\" y1=\"3\" x2=\"14\" y2=\"10\"></line>\n                      <line x1=\"3\" y1=\"21\" x2=\"10\" 
+y2=\"14\"></line>\n                    </svg>\n                  </button>\n                </div>\n              
+</div>\n            </div>\n            \n            <div style=\"border-top:0.5px solid var(--border); padding:12px 
+20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--surface-2);\">\n              <span 
+style=\"font-size:12px; color:var(--text-secondary); margin-right:auto;\">Próxima etapa: Proposta</span>\n             
+ <button style=\"border:0.5px solid var(--border-strong); background:transparent; border-radius:var(--radius); 
+padding:7px 12px; font-size:13px; display:flex; align-items:center; gap:6px; cursor:pointer; 
+color:var(--text-primary);\"><i class=\"ti ti-brand-whatsapp\" style=\"font-size:16px\" 
+aria-hidden=\"true\"></i>Enviar mensagem</button>\n              <button style=\"border:0.5px solid 
+var(--border-strong); background:transparent; border-radius:var(--radius); padding:7px 12px; font-size:13px; 
+display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--text-primary);\"><i class=\"ti 
+ti-calendar-plus\" style=\"font-size:16px\" aria-hidden=\"true\"></i>Agendar reunião</button>\n              <button 
+style=\"background:var(--fill-accent); color:var(--on-accent); border:none; border-radius:var(--radius); padding:7px 
+14px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; cursor:pointer;\">Mover etapa<i 
+class=\"ti ti-arrow-right\" style=\"font-size:16px\" aria-hidden=\"true\"></i></button>\n            </div>\n          
+</div>\n\n          <!-- Conteúdo da Guia: FICHA (Campos do Cliente) -->\n          <div id=\"tabContentFicha\" 
+class=\"tab-pane hidden\" style=\"padding: 1.5rem; overflow-y: auto;\">\n            <form id=\"clientSheetForm\" 
+class=\"sheet-form-container\">\n              \n              <!-- Seção: Dados Pessoais -->\n              <div 
+class=\"sheet-form-section\">\n                <h4 class=\"sheet-section-title\">\n                  <svg 
+xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" 
+stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 21v-2a4 4 
+0 0 0-4-4H8a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/></svg>\n                  Dados Pessoais\n          
+      </h4>\n                \n                <div class=\"sheet-form-grid\">\n                  <!-- Telefone -->\n  
+                <div class=\"sheet-field-group\">\n                    <label for=\"sheetPhone\">Telefone *</label>\n  
+                  <div class=\"input-with-action\">\n                      <input type=\"text\" id=\"sheetPhone\" 
+placeholder=\"(99) 99999-9999\" maxlength=\"15\">\n                      <a id=\"sheetPhoneWaBtn\" href=\"#\" 
+target=\"_blank\" class=\"input-action-btn wa-action-btn\" title=\"Abrir conversa no WhatsApp\">\n                     
+   <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" 
+stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n                       
+   <path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 
+1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 
+6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"/>\n                        </svg>\n      
+                </a>\n                    </div>\n                  </div>\n\n                  <!-- E-mail -->\n      
+            <div class=\"sheet-field-group\">\n                    <label for=\"sheetEmail\">E-mail</label>\n          
+          <input type=\"email\" id=\"sheetEmail\" placeholder=\"exemplo@email.com\">\n                  </div>\n\n     
+             <!-- Profissão -->\n                  <div class=\"sheet-field-group\">\n                    <label 
+for=\"sheetProfissao\">Profissão</label>\n                    <input type=\"text\" id=\"sheetProfissao\" 
+placeholder=\"Ex: Advogado, Autônomo\">\n                  </div>\n\n                  <!-- Estado Civil -->\n         
+         <div class=\"sheet-field-group\">\n                    <label for=\"sheetEstadoCivil\">Estado Civil</label>\n 
+                   <select id=\"sheetEstadoCivil\">\n                      <option value=\"\">Selecione...</option>\n  
+                    <option value=\"Solteiro(a)\">Solteiro(a)</option>\n                      <option 
+value=\"Casado(a)\">Casado(a)</option>\n                      <option value=\"Divorciado(a)\">Divorciado(a)</option>\n 
+                     <option value=\"Viúvo(a)\">Viúvo(a)</option>\n                    </select>\n                  
+</div>\n\n                  <!-- RG -->\n                  <div class=\"sheet-field-group\">\n                    
+<label for=\"sheetRg\">RG</label>\n                    <input type=\"text\" id=\"sheetRg\" placeholder=\"Apenas 
+números\">\n                  </div>\n\n                  <!-- CPF -->\n                  <div 
+class=\"sheet-field-group\">\n                    <label for=\"sheetCpf\">CPF</label>\n                    <input 
+type=\"text\" id=\"sheetCpf\" placeholder=\"999.999.999-99\" maxlength=\"14\">\n                  </div>\n\n           
+       <!-- Data de Nascimento -->\n                  <div class=\"sheet-field-group\">\n                    <label 
+for=\"sheetNascimento\">Data de Nascimento</label>\n                    <input type=\"date\" id=\"sheetNascimento\">\n 
+                 </div>\n\n                  <!-- Nome da Mãe -->\n                  <div class=\"sheet-field-group 
+span-2\">\n                    <label for=\"sheetNomeMae\">Nome da Mãe</label>\n                    <input 
+type=\"text\" id=\"sheetNomeMae\" placeholder=\"Nome completo da mãe\">\n                  </div>\n                
+</div>\n              </div>\n\n              <!-- Seção: Endereço -->\n              <div 
+class=\"sheet-form-section\">\n                <h4 class=\"sheet-section-title\">\n                  <svg 
+xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" 
+stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 10c0 7-9 
+13-9 13s-9-6-9-13a9 9 0 0 1 18 0z\"/><circle cx=\"12\" cy=\"10\" r=\"3\"/></svg>\n                  Endereço\n         
+       </h4>\n                \n                <div class=\"sheet-form-grid\">\n                  <!-- CEP -->\n      
+            <div class=\"sheet-field-group\">\n                    <label for=\"sheetCep\">CEP</label>\n               
+     <input type=\"text\" id=\"sheetCep\" placeholder=\"99.999-999\" maxlength=\"10\">\n                  </div>\n\n   
+               <!-- Endereço (Logradouro + Número) -->\n                  <div class=\"sheet-field-group\">\n          
+          <label for=\"sheetEndereco\">Endereço</label>\n                    <input type=\"text\" id=\"sheetEndereco\" 
+placeholder=\"Rua, Avenida, Número...\">\n                  </div>\n\n                  <!-- Complemento -->\n         
+         <div class=\"sheet-field-group\">\n                    <label for=\"sheetComplemento\">Complemento</label>\n  
+                  <input type=\"text\" id=\"sheetComplemento\" placeholder=\"Apto, Bloco, Casa...\">\n                 
+ </div>\n\n                  <!-- Bairro -->\n                  <div class=\"sheet-field-group span-2\">\n             
+       <label for=\"sheetBairro\">Bairro</label>\n                    <input type=\"text\" id=\"sheetBairro\" 
+placeholder=\"Nome do Bairro\">\n                  </div>\n\n                  <!-- Cidade -->\n                  <div 
+class=\"sheet-field-group span-2\">\n                    <label for=\"sheetCidade\">Cidade</label>\n                   
+ <input type=\"text\" id=\"sheetCidade\" placeholder=\"Nome da Cidade\">\n                  </div>\n\n                 
+ <!-- UF -->\n                  <div class=\"sheet-field-group span-2\">\n                    <label 
+for=\"sheetUf\">UF</label>\n                    <select id=\"sheetUf\">\n                      <option 
+value=\"\">UF</option>\n                      <option value=\"AC\">AC</option><option value=\"AL\">AL</option><option 
+value=\"AP\">AP</option>\n                      <option value=\"AM\">AM</option><option 
+value=\"BA\">BA</option><option value=\"CE\">CE</option>\n                      <option 
+value=\"DF\">DF</option><option value=\"ES\">ES</option><option value=\"GO\">GO</option>\n                      
+<option value=\"MA\">MA</option><option value=\"MT\">MT</option><option value=\"MS\">MS</option>\n                     
+ <option value=\"MG\">MG</option><option value=\"PA\">PA</option><option value=\"PB\">PB</option>\n                    
+  <option value=\"PR\">PR</option><option value=\"PE\">PE</option><option value=\"PI\">PI</option>\n                   
+   <option value=\"RJ\">RJ</option><option value=\"RN\">RN</option><option value=\"RS\">RS</option>\n                  
+    <option value=\"RO\">RO</option><option value=\"RR\">RR</option><option value=\"SC\">SC</option>\n                 
+     <option value=\"SP\">SP</option><option value=\"SE\">SE</option><option value=\"TO\">TO</option>\n                
+    </select>\n                  </div>\n                </div>\n              </div>\n            </form>\n          
+</div>\n\n          <!-- Conteúdo da Guia: DOCUMENTOS -->\n          <div id=\"tabContentDocumentos\" class=\"tab-pane 
+hidden\" style=\"padding: 1.5rem; overflow-y: auto;\">\n            <div class=\"docs-tab-header\">\n              
+<div class=\"docs-tab-title\">\n                <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" 
+viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" 
+stroke-linejoin=\"round\">\n                  <path d=\"M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 
+2 0 0 1 2 2z\"/>\n                </svg>\n                Documentos do Cliente\n              </div>\n              
+<button id=\"addDocBtn\" class=\"btn-primary\" style=\"padding: 6px 12px; font-size: 13px;\">\n                <svg 
+xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" 
+stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n                  
+<line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"></line>\n                  <line x1=\"5\" y1=\"12\" x2=\"19\" 
+y2=\"12\"></line>\n                </svg>\n                Anexar\n              </button>\n            </div>\n       
+     \n            <div class=\"docs-list\" id=\"docsList\">\n              <div class=\"docs-empty-state\">\n         
+       <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"32\" height=\"32\" viewBox=\"0 0 24 24\" fill=\"none\" 
+stroke=\"currentColor\" stroke-width=\"1\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n                  
+<path d=\"M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z\"></path>\n                  <polyline 
+points=\"13 2 13 9 20 9\"></polyline>\n                </svg>\n                <p>Nenhum documento anexado 
+ainda.</p>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  
+</div>","Overwrite":true,"TargetFile":"c:\\Users\\User\\OneDrive\\Documentos\\Trabalho\\Projetos\\ResolvePrev 
+(CRM)\\new_modal.html","toolAction":"Writing new modal layout","toolSummary":"Write new modal html"}}]}
+
+

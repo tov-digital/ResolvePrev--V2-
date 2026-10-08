@@ -14,18 +14,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
   <link rel="stylesheet" href="styles.css?v=61">
-    <style>
-      .browser-tab {
-        color: var(--text-secondary) !important;
-        border-bottom-color: transparent !important;
-      }
-      .browser-tab.active {
-        color: var(--text-accent) !important;
-        border-bottom-color: var(--text-accent) !important;
-      }
-    </style>
 </head>
 <body>
 
@@ -608,530 +597,396 @@
 
 
 
-    <!-- ==================== MODAL: FICHA DO CLIENTE (FOLHA A4 COM 
-GUIAS) ==================== -->
-  <div id="modalClientSheet" class="modal-backdrop hidden" role="dialog" 
-aria-modal="true">
-    <div class="modal-card modal-large" style="max-width: 900px; width: 90%; height: 85vh; min-height: 600px; display: flex; flex-direction: column; background: var(--surface-2); border-radius: 12px; border: 0.5px solid 
-var(--border); overflow: hidden; padding: 0;">
-
-      <!-- Tabs Header -->
-      <div style="display:flex; 
-align-items:flex-end; gap:4px; padding:10px 14px 0; background: var(--surface-1); border-bottom:0.5px solid 
-var(--border); flex-shrink: 0;">
-        <button class="browser-tab active" data-tab="respostas" style="width:130px; height:40px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; font-weight:500; background:transparent; border-top:none; border-left:none; border-right:none; border-bottom:2px solid transparent; cursor:pointer;">
-          <i class="ti ti-message-2" style="font-size:16px" aria-hidden="true"></i>Respostas
-        </button>
-        
-        <button class="browser-tab" data-tab="ficha" style="width:130px; height:40px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; font-weight:500; background:transparent; border-top:none; border-left:none; border-right:none; border-bottom:2px solid transparent; cursor:pointer;">
-          <i class="ti ti-file-text" style="font-size:16px" aria-hidden="true"></i>Ficha
-        </button>
-        
-        <button class="browser-tab" data-tab="documentos" style="width:130px; height:40px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; font-weight:500; background:transparent; border-top:none; border-left:none; border-right:none; border-bottom:2px solid transparent; cursor:pointer;">
-          <i class="ti ti-folder" style="font-size:16px" aria-hidden="true"></i>Documentos
-        </button>
-        
-        <div style="flex:1"></div>
-        
-     
-   <div style="display:flex; gap:14px; height:40px; align-items:center; color:var(--text-secondary); 
-font-size:18px;">
-          <i class="ti ti-user-check" id="sheetReassignBtn" aria-label="Responsável" 
-style="cursor: pointer;" title="Atribuir a outro usuário"></i>
-          <i class="ti ti-trash danger-action" 
-id="sheetDeleteBtn" aria-label="Excluir" style="cursor: pointer;" title="Excluir Oportunidade"></i>
-          
-<i class="ti ti-x" id="closeClientSheetModal" aria-label="Fechar" style="cursor: pointer;" title="Fechar 
-Ficha"></i>
+  <!-- ==================== MODAL: FICHA DO CLIENTE (FOLHA A4 COM GUIAS) ==================== -->
+  <div id="modalClientSheet" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="a4-sheet-container">
+      
+      <!-- Barra Superior Estilo Navegador (Guias / Tabs) -->
+      <header class="browser-tabs-header">
+        <div class="tabs-group">
+          <button class="browser-tab active" data-tab="respostas">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>Respostas</span>
+          </button>
+          <button class="browser-tab" data-tab="ficha">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <span>Ficha</span>
+          </button>
+          <button class="browser-tab" data-tab="documentos">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>Documentos</span>
+          </button>
         </div>
-      </div>
-
-      <div style="overflow-y: auto; flex-grow: 1; display: flex; 
-flex-direction: column;">
         
-        <!-- Header info -->
-        <div style="padding:16px 20px 12px; 
-display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-          <div style="width:40px; height:40px; 
-border-radius:50%; background:var(--bg-accent); color:var(--text-accent); display:flex; align-items:center; 
-justify-content:center; font-weight:500; font-size:14px;">AR</div>
-          <div style="flex:1; 
-min-width:180px;">
-            <input type="text" id="sheetClientNameInput" value="Antônio José Real" 
-style="margin:0; font-size:20px; font-weight:500; color:var(--text-accent); line-height:1.2; width: 100%; border: 
-none; background: transparent; outline: none; padding: 0;" placeholder="Nome completo do cliente">
-          
-</div>
-          
-          <div class="status-dropdown-wrapper" style="position: relative;">
-            
-<button id="sheetStatusDropdownBtn" style="display:flex; align-items:center; gap:6px; background:var(--bg-warning); 
-color:var(--text-warning); padding:6px 12px; border-radius:var(--radius); font-size:13px; font-weight:500; border: 
-none; cursor: pointer;">
-              <i class="ti ti-calendar-event" style="font-size:16px" 
-aria-hidden="true"></i>
-              <span id="sheetStatusText">Reunião</span>
-              <span 
-class="status-tag-dot" id="sheetStatusDot" style="display:none;"></span>
-              <i class="ti 
-ti-chevron-down" style="font-size:14px" aria-hidden="true"></i>
+        <!-- Barra de Ações Superior: Atribuição + Lixeira + Fechar (X) -->
+        <div class="sheet-actions-group">
+          <button class="sheet-action-btn" id="sheetReassignBtn" title="Atribuir a outro usuário" aria-label="Atribuir a outro usuário">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <polyline points="16 11 18 13 22 9"/>
+            </svg>
+          </button>
+
+          <button class="sheet-action-btn danger-action" id="sheetDeleteBtn" title="Excluir Oportunidade" aria-label="Excluir Oportunidade">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+
+          <button class="sheet-close-btn" id="closeClientSheetModal" aria-label="Fechar Ficha">&times;</button>
+        </div>
+      </header>
+
+      <!-- Corpo Interno da Folha A4 -->
+      <div class="a4-sheet-body">
+        
+        <!-- Barra de Ferramentas Superior Interna (Parte Branca) -->
+        <div class="sheet-internal-header">
+          <div class="sheet-title-wrapper">
+            <input type="text" id="sheetClientNameInput" class="sheet-title-input" value="Novo Cliente" placeholder="Nome completo do cliente">
+          </div>
+
+          <div class="sheet-right-tools">
+            <!-- Dropdown Etiqueta (Status da Coluna) -->
+            <div class="status-dropdown-wrapper">
+              <button id="sheetStatusDropdownBtn" class="sheet-tag-btn" title="Alterar Estágio / Coluna">
+                <span class="status-tag-dot" id="sheetStatusDot"></span>
+                <span id="sheetStatusText">Novo</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+
+              <!-- Menu Dropdown de Seleção de Coluna -->
+              <div id="statusDropdownMenu" class="status-dropdown-menu hidden">
+                <div class="status-option" data-status="novo" data-tab="comercial">
+                  <span class="column-status-dot dot-novo"></span> Novo
+                </div>
+                <div class="status-option" data-status="qualificacao" data-tab="comercial">
+                  <span class="column-status-dot dot-qualificacao"></span> Qualificação
+                </div>
+                <div class="status-option" data-status="acompanhamento" data-tab="comercial">
+                  <span class="column-status-dot dot-acompanhamento"></span> Acompanhamento
+                </div>
+                <div class="status-option" data-status="reuniao" data-tab="comercial">
+                  <span class="column-status-dot dot-reuniao"></span> Reunião
+                </div>
+                <div class="status-option" data-status="proposta" data-tab="comercial">
+                  <span class="column-status-dot dot-proposta"></span> Proposta
+                </div>
+
+                <div class="status-option hidden" data-status="documentacao" data-tab="operacao">
+                  <span class="column-status-dot dot-documentacao"></span> Documentação
+                </div>
+                <div class="status-option hidden" data-status="na_fila" data-tab="operacao">
+                  <span class="column-status-dot dot-na_fila"></span> Na Fila
+                </div>
+                <div class="status-option hidden" data-status="requerido" data-tab="operacao">
+                  <span class="column-status-dot dot-requerido"></span> Requerido
+                </div>
+                <div class="status-option hidden" data-status="exigencia" data-tab="operacao">
+                  <span class="column-status-dot dot-exigencia"></span> Exigência
+                </div>
+                <div class="status-option hidden" data-status="concedido" data-tab="operacao">
+                  <span class="column-status-dot dot-concedido"></span> Concedido
+                </div>
+
+                <div class="status-option hidden" data-status="negado" data-tab="judicial">
+                  <span class="column-status-dot dot-negado"></span> Negado
+                </div>
+              </div>
+            </div>
+
+            <!-- Botão Balão de Mensagem: Observações Internas (Slide Sidebar) -->
+            <button class="sheet-icon-tool-btn" id="sheetNotesBtn" title="Observações Internas" aria-label="Observações Internas">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              <span id="sheetNotesCountBadge" class="notes-count-badge hidden">0</span>
             </button>
-            <div 
-id="statusDropdownMenu" class="status-dropdown-menu hidden" style="position: absolute; right: 0; top: 100%; 
-margin-top: 4px; z-index: 100;">
-              <div class="status-option" data-status="novo" 
-data-tab="comercial">
-                <span class="column-status-dot dot-novo"></span> Novo
-              
-</div>
-              <div class="status-option" data-status="qualificacao" data-tab="comercial">
-              
-  <span class="column-status-dot dot-qualificacao"></span> Qualificação
-              </div>
-              <div 
-class="status-option" data-status="acompanhamento" data-tab="comercial">
-                <span 
-class="column-status-dot dot-acompanhamento"></span> Acompanhamento
-              </div>
-              <div 
-class="status-option" data-status="reuniao" data-tab="comercial">
-                <span 
-class="column-status-dot dot-reuniao"></span> Reunião
-              </div>
-              <div 
-class="status-option" data-status="proposta" data-tab="comercial">
-                <span 
-class="column-status-dot dot-proposta"></span> Proposta
-              </div>
-              <div 
-class="status-option hidden" data-status="documentacao" data-tab="operacao">
-                <span 
-class="column-status-dot dot-documentacao"></span> Documentação
-              </div>
-              <div 
-class="status-option hidden" data-status="na_fila" data-tab="operacao">
-                <span 
-class="column-status-dot dot-na_fila"></span> Na Fila
-              </div>
-              <div 
-class="status-option hidden" data-status="requerido" data-tab="operacao">
-                <span 
-class="column-status-dot dot-requerido"></span> Requerido
-              </div>
-              <div 
-class="status-option hidden" data-status="exigencia" data-tab="operacao">
-                <span 
-class="column-status-dot dot-exigencia"></span> Exigência
-              </div>
-              <div 
-class="status-option hidden" data-status="concedido" data-tab="operacao">
-                <span 
-class="column-status-dot dot-concedido"></span> Concedido
-              </div>
-              <div 
-class="status-option hidden" data-status="negado" data-tab="judicial">
-                <span 
-class="column-status-dot dot-negado"></span> Negado
-              </div>
-            </div>
-          </div>
-
-  
-        <button id="sheetNotesBtn" style="display:flex; align-items:center; gap:6px; border:0.5px solid 
-var(--border-strong); padding:6px 12px; border-radius:var(--radius); font-size:13px; background: transparent; cursor: 
-pointer; color: var(--text-primary);">
-            <i class="ti ti-message" style="font-size:16px" 
-aria-hidden="true"></i>
-            <span id="sheetNotesCountBadge" style="display: none;">0</span> 
-comentários
-          </button>
-        </div>
-
-        <!-- Metrics -->
-        <div style="padding:0 20px 
-16px; display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px;">
-          <div 
-style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
-            <p 
-style="margin:0; font-size:11px; color:var(--text-secondary);">Idade</p>
-            <p id="statIdade" 
-style="margin:2px 0 0; font-size:18px; font-weight:500;">-</p>
-          </div>
-          <div 
-style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
-            <div 
-style="margin:0; font-size:11px; color:var(--text-secondary); display:flex; align-items:center; 
-justify-content:space-between; gap:4px;">
-              <label for="respTempoContribuicao" style="margin:0; font-weight:normal; cursor:text;">Contribuição total</label></div>
-            <!-- Keep input but style it 
-like text -->
-            <input type="number" id="respTempoContribuicao" placeholder="0" min="0" step="1" 
-style="margin:2px 0 0; font-size:18px; font-weight:500; background:transparent; border:none; outline:none; padding:0; 
-width:100%; color:var(--text-primary);">
-          </div>
-          <div style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
-            <label for="statAniversario" style="margin:0; font-size:11px; color:var(--text-secondary); display:block; cursor:text;">Aniversário</label>
-            <input type="text" id="statAniversario" class="sheet-input" placeholder="DD/MM" style="margin:2px 0 0; font-size:18px; font-weight:500; background:transparent; border:none; outline:none; padding:0; width:100%; color:var(--text-primary);">
-          </div>
-          <div id="btnServicoMilitar" style="background:#FEE2E2; border-radius:var(--radius); padding:10px 12px; cursor:pointer; user-select:none; transition: all 0.2s;">
-            <p id="labelServicoMilitar" style="margin:0; font-size:11px; color:#B91C1C;">Serviço Militar</p>
-            <p id="textServicoMilitar" style="margin:2px 0 0; font-size:18px; font-weight:500; color:#B91C1C;">Não</p>
-            <input type="hidden" id="respServicoMilitar" value="Não">
           </div>
         </div>
 
-        <!-- 
-Tabs Content Container -->
-        <div class="tab-content-container" style="border-top: 0.5px solid var(--border); flex-grow: 1; display: flex; 
-flex-direction: column;">
-          
-          <!-- Respostas -->
-          <div id="tabContentRespostas" 
-class="tab-pane active" style="flex-grow: 1; display: flex; flex-direction: column;">
-            <div 
-style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); 
-flex-grow: 1;">
-              <div style="padding:16px 20px; border-right:0.5px solid var(--border);">
-           
-     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <!-- Conteúdo da Guia: FICHA (Campos do Cliente) -->
+        <div id="tabContentFicha" class="tab-pane hidden">
+          <form id="clientSheetForm" class="sheet-form-container">
             
-      <p style="margin:0; font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px;"><i class="ti 
-ti-clipboard-text" style="font-size:18px; color:var(--text-accent)" aria-hidden="true"></i>Formulário de 
-qualificação</p>
-                </div>
-
-                <form id="clientAnswersForm" style="display: flex; 
-flex-direction: column;">
-                  <input type="hidden" id="respIdade">
-                  
-           
-       <!-- Já solicitou -->
-                  <div style="padding:10px 0; border-bottom:0.5px solid 
-var(--border);" class="sheet-field-group">
-                    <div style="margin:0; font-size:12px; 
-color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; gap:5px;">
-            
-          <label for="respSolicitouBeneficio" style="margin:0; font-weight:normal; cursor:pointer;">Já 
-solicitou?</label>
-                      <button type="button" title="Adicionar" class="btn-add-info" 
-style="background:none; border:none; padding:0; display:flex; align-items:center; color:var(--text-muted); 
-cursor:pointer;">
-                        <i class="ti ti-circle-plus" style="font-size:14px;"></i>
-            
-          </button>
-                    </div>
-                    <select id="respSolicitouBeneficio" 
-style="width: 100%; border: none; background: transparent; padding: 4px 0 0 0; font-size: 14px; font-weight: 500; 
-outline: none; box-shadow: none; cursor: pointer; appearance: none; color:var(--text-primary);">
-                    
-  <option value="">Selecione...</option>
-                      <option value="Não - nunca tentei aposentar.">Não 
-- nunca tentei aposentar.</option>
-                      <option value="Sim - já tentei e está em andamento.">Sim - 
-já tentei e está em andamento.</option>
-                      <option value="Sim - mas foi negada pelo INSS.">Sim - 
-mas foi negada pelo INSS.</option>
-                    </select>
-                  </div>
-
-                  <!-- 
-Já contribuiu -->
-                  <div style="padding:10px 0; border-bottom:0.5px solid var(--border);" 
-class="sheet-field-group">
-                    <div style="margin:0; font-size:12px; color:var(--text-secondary); 
-display:flex; align-items:center; justify-content:space-between; gap:5px;">
-                      <label 
-for="respJaContribuiu" style="margin:0; font-weight:normal; cursor:pointer;">Já contribuiu?</label>
+            <!-- Seção: Dados Pessoais -->
+            <div class="sheet-form-section">
+              <h4 class="sheet-section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Dados Pessoais
+              </h4>
               
-        <button type="button" title="Adicionar" class="btn-add-info" style="background:none; border:none; 
-padding:0; display:flex; align-items:center; color:var(--text-muted); cursor:pointer;">
-                        <i 
-class="ti ti-circle-plus" style="font-size:14px;"></i>
-                      </button>
-                    
-</div>
-                    <select id="respJaContribuiu" style="width: 100%; border: none; background: 
-transparent; padding: 4px 0 0 0; font-size: 14px; font-weight: 500; outline: none; box-shadow: none; cursor: pointer; 
-appearance: none; color:var(--text-primary);">
-                      <option value="">Selecione...</option>
-      
-                <option value="Sim - e continuo contribuindo.">Sim - e continuo contribuindo.</option>
-             
-         <option value="Sim - mas parei há algum tempo.">Sim - mas parei há algum tempo.</option>
-                  
-    <option value="Nunca fiz contribuição ao INSS.">Nunca fiz contribuição ao INSS.</option>
-                      
-<option value="Não sei responder.">Não sei responder.</option>
-                    </select>
-                  
-</div>
-
-                  <!-- Tipo de trabalho -->
-                  <div style="padding:10px 0; 
-border-bottom:0.5px solid var(--border);" class="sheet-field-group">
-                    <div style="margin:0; 
-font-size:12px; color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; 
-gap:5px;">
-                      <label for="respTipoTrabalho" style="margin:0; font-weight:normal; 
-cursor:pointer;">Tipo de trabalho</label>
-                      <button type="button" title="Adicionar" 
-class="btn-add-info" style="background:none; border:none; padding:0; display:flex; align-items:center; 
-color:var(--text-muted); cursor:pointer;">
-                        <i class="ti ti-circle-plus" 
-style="font-size:14px;"></i>
-                      </button>
-                    </div>
-                    
-<select id="respTipoTrabalho" style="width: 100%; border: none; background: transparent; padding: 4px 0 0 0; 
-font-size: 14px; font-weight: 500; outline: none; box-shadow: none; cursor: pointer; appearance: none; 
-color:var(--text-primary);">
-                      <option value="">Selecione...</option>
-                      
-<option value="Emprego de carteira assinada (CLT)">Emprego de carteira assinada (CLT)</option>
-                     
- <option value="Empresário / Autônomo / MEI">Empresário / Autônomo / MEI</option>
-                      <option 
-value="Servidor público">Servidor público</option>
-                      <option value="Trabalhador 
-rural">Trabalhador rural</option>
-                      <option value="Outro">Outro</option>
-                    
-</select>
-                  </div>
-
-                  <!-- Atividade especial -->
-                  <div 
-style="padding:10px 0 0;" class="sheet-field-group">
-                    <div style="margin:0; font-size:12px; 
-color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; gap:5px;">
-            
-          <label for="respExerceuAtividadeEspecial" style="margin:0; font-weight:normal; 
-cursor:pointer;">Atividade especial?</label>
-                      <button type="button" title="Adicionar" 
-class="btn-add-info" style="background:none; border:none; padding:0; display:flex; align-items:center; 
-color:var(--text-muted); cursor:pointer;">
-                        <i class="ti ti-circle-plus" 
-style="font-size:14px;"></i>
-                      </button>
-                    </div>
-                    
-<select id="respExerceuAtividadeEspecial" style="width: 100%; border: none; background: transparent; padding: 4px 0 
-0 0; font-size: 14px; font-weight: 500; outline: none; box-shadow: none; cursor: pointer; appearance: none; 
-color:var(--text-primary);">
-                      <option value="">Selecione...</option>
-                      
-<option value="Sim - já trabalhei nessas atividades.">Sim - já trabalhei nessas atividades.</option>
-               
-       <option value="Não - nunca trabalhei com isso.">Não - nunca trabalhei com isso.</option>
-                    
-  <option value="Não sei responder">Não sei responder</option>
-                    </select>
-                  
-</div>
-                </form>
-              </div>
-
-              <div style="padding:16px 20px; 
-background:var(--surface-1); display: flex; flex-direction: column;">
-                <p style="margin:0 0 10px; 
-font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px;"><i class="ti ti-notes" 
-style="font-size:18px; color:var(--text-accent)" aria-hidden="true"></i>Detalhes do caso</p>
-                <div 
-style="background:var(--surface-2); border:0.5px solid var(--border); border-radius:var(--radius); padding:12px 14px; 
-font-size:13px; line-height:1.6; flex-grow: 1; position: relative;">
-                  <textarea id="respDetalhes" 
-placeholder="Digite os detalhes adicionais sobre o histórico ou caso do cliente..." style="width: 100%; height: 
-100%; border: none; background: transparent; resize: none; outline: none; box-sizing: border-box; font-family: 
-inherit; font-size: inherit; color:var(--text-primary);"></textarea>
-                  <button type="button" 
-id="btnExpandDetalhes" title="Expandir Detalhes" style="position: absolute; bottom: 8px; right: 8px; background: 
-none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; 
-justify-content: center; transition: all 0.2s; border-radius: 4px;" onmouseover="this.style.color='#0f172a'; 
-this.style.backgroundColor='#f1f5f9';" onmouseout="this.style.color='#94a3b8'; 
-this.style.backgroundColor='transparent';">
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
-stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="15 3 21 3 21 
-9"></polyline>
-                      <polyline points="9 21 3 21 3 15"></polyline>
-                      <line 
-x1="21" y1="3" x2="14" y2="10"></line>
-                      <line x1="3" y1="21" x2="10" 
-y2="14"></line>
-                    </svg>
-                  </button>
-                </div>
-              
-</div>
-            </div>
-            
-            <div style="border-top:0.5px solid var(--border); padding:12px 
-20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--surface-2);">
-              <span 
-style="font-size:12px; color:var(--text-secondary); margin-right:auto;">Próxima etapa: Proposta</span>
-             
- <button id="modalBtnEnviarMensagem" style="border:0.5px solid var(--border-strong); background:transparent; border-radius:var(--radius); 
-padding:7px 12px; font-size:13px; display:flex; align-items:center; gap:6px; cursor:pointer; 
-color:var(--text-primary);"><i class="ti ti-brand-whatsapp" style="font-size:16px" 
-aria-hidden="true"></i>Enviar mensagem</button>
-              <button id="modalBtnAgendarReuniao" style="border:0.5px solid 
-var(--border-strong); background:transparent; border-radius:var(--radius); padding:7px 12px; font-size:13px; 
-display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--text-primary);"><i class="ti 
-ti-calendar-plus" style="font-size:16px" aria-hidden="true"></i>Agendar reunião</button>
-              <button id="modalBtnMoverEtapa" style="background:var(--fill-accent); color:var(--on-accent); border:none; border-radius:var(--radius); padding:7px 14px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; cursor:pointer;">Mover etapa<i class="ti ti-arrow-right" style="font-size:16px" aria-hidden="true"></i></button>
-            </div>
-          
-</div>
-
-          <!-- Conteúdo da Guia: FICHA (Campos do Cliente) -->
-          <div id="tabContentFicha" 
-class="tab-pane hidden" style="padding: 1.5rem; overflow-y: auto;">
-            <form id="clientSheetForm" 
-class="sheet-form-container">
-              
-              <!-- Seção: Dados Pessoais -->
-              <div 
-class="sheet-form-section">
-                
-                                <h4 class="sheet-section-title">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  Dados Pessoais
-                </h4>
-                <div class="sheet-form-grid" style="grid-template-columns: repeat(3, 1fr);">
-                  <!-- Telefone -->
-  
-                <div class="sheet-field-group" style="grid-column: span 1;">
-                    <label for="sheetPhone">Telefone *</label>
-  
+              <div class="sheet-form-grid">
+                <!-- Telefone -->
+                <div class="sheet-field-group">
+                  <label for="sheetPhone">Telefone *</label>
                   <div class="input-with-action">
-                      <input type="text" id="sheetPhone" 
-placeholder="(99) 99999-9999" maxlength="15">
-                      <a id="sheetPhoneWaBtn" href="#" 
-target="_blank" class="input-action-btn wa-action-btn" title="Abrir conversa no WhatsApp">
-                     
-   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" 
-stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                       
-   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 
-1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 
-6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                        </svg>
-      
-                </a>
-                    </div>
+                    <input type="text" id="sheetPhone" placeholder="(99) 99999-9999" maxlength="15">
+                    <a id="sheetPhoneWaBtn" href="#" target="_blank" class="input-action-btn wa-action-btn" title="Abrir conversa no WhatsApp">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                      </svg>
+                    </a>
                   </div>
+                </div>
 
-                  <!-- E-mail -->
-      
-            <div class="sheet-field-group" style="grid-column: span 1;">
-                    <label for="sheetEmail">E-mail</label>
-          
-          <input type="email" id="sheetEmail" placeholder="exemplo@email.com">
-                  </div>
+                <!-- E-mail -->
+                <div class="sheet-field-group">
+                  <label for="sheetEmail">E-mail</label>
+                  <input type="email" id="sheetEmail" placeholder="exemplo@email.com">
+                </div>
 
-     
-             <!-- Profissão -->
-                  <div class="sheet-field-group" style="grid-column: span 1;">
-                    <label 
-for="sheetProfissao">Profissão</label>
-                    <input type="text" id="sheetProfissao" 
-placeholder="Ex: Advogado, Autônomo">
-                  </div>
+                <!-- Profissão -->
+                <div class="sheet-field-group">
+                  <label for="sheetProfissao">Profissão</label>
+                  <input type="text" id="sheetProfissao" placeholder="Ex: Advogado, Autônomo">
+                </div>
 
-                  <!-- Estado Civil -->
-         
-         <div class="sheet-field-group" style="grid-column: span 1;">
-                    <label for="sheetEstadoCivil">Estado Civil</label>
- 
-                   <select id="sheetEstadoCivil">
-                      <option value="">Selecione...</option>
-  
+                <!-- Estado Civil -->
+                <div class="sheet-field-group">
+                  <label for="sheetEstadoCivil">Estado Civil</label>
+                  <select id="sheetEstadoCivil">
+                    <option value="">Selecione...</option>
                     <option value="Solteiro(a)">Solteiro(a)</option>
-                      <option 
-value="Casado(a)">Casado(a)</option>
-                      <option value="Divorciado(a)">Divorciado(a)</option>
- 
-                     <option value="Viúvo(a)">Viúvo(a)</option>
-                    </select>
-                  
-</div>
+                    <option value="Casado(a)">Casado(a)</option>
+                    <option value="Divorciado(a)">Divorciado(a)</option>
+                    <option value="Viúvo(a)">Viúvo(a)</option>
+                  </select>
+                </div>
 
-                  <!-- RG -->
-                  <div class="sheet-field-group" style="grid-column: span 1;">
-                    
-<label for="sheetRg">RG</label>
-                    <input type="text" id="sheetRg" placeholder="Apenas 
-números">
+                <!-- RG -->
+                <div class="sheet-field-group">
+                  <label for="sheetRg">RG</label>
+                  <input type="text" id="sheetRg" placeholder="Apenas números">
+                </div>
+
+                <!-- CPF -->
+                <div class="sheet-field-group">
+                  <label for="sheetCpf">CPF</label>
+                  <input type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
+                </div>
+
+                <!-- Nascimento -->
+                <div class="sheet-field-group">
+                  <label for="sheetDataNascimento">Nascimento</label>
+                  <input type="text" id="sheetDataNascimento" placeholder="dd/mm/aaaa" maxlength="10">
+                </div>
+
+                <!-- CEP -->
+                <div class="sheet-field-group">
+                  <label for="sheetCep">CEP</label>
+                  <input type="text" id="sheetCep" placeholder="99.999-999" maxlength="10">
+                </div>
+
+                <!-- Endereço (Logradouro + Número) -->
+                <div class="sheet-field-group">
+                  <label for="sheetEndereco">Endereço</label>
+                  <input type="text" id="sheetEndereco" placeholder="Rua, Avenida, Número...">
+                </div>
+
+                <!-- Complemento -->
+                <div class="sheet-field-group">
+                  <label for="sheetComplemento">Complemento</label>
+                  <input type="text" id="sheetComplemento" placeholder="Apto, Bloco, Casa...">
+                </div>
+
+                <!-- Bairro -->
+                <div class="sheet-field-group span-2">
+                  <label for="sheetBairro">Bairro</label>
+                  <input type="text" id="sheetBairro" placeholder="Nome do Bairro">
+                </div>
+
+                <!-- Cidade -->
+                <div class="sheet-field-group span-2">
+                  <label for="sheetCidade">Cidade</label>
+                  <input type="text" id="sheetCidade" placeholder="Nome da Cidade">
+                </div>
+
+                <!-- UF -->
+                <div class="sheet-field-group span-2">
+                  <label for="sheetUf">UF</label>
+                  <select id="sheetUf">
+                    <option value="">UF</option>
+                    <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                    <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                    <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                    <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                    <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                    <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                    <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                    <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                    <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+
+          </form>
+        </div>
+
+        <!-- Conteúdo da Guia: RESPOSTAS -->
+        <div id="tabContentRespostas" class="tab-pane active">
+          <form id="clientAnswersForm" class="sheet-form-container">
+            
+            <div class="sheet-form-section">
+              <h4 class="sheet-section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                Formulário de Qualificação
+              </h4>
+
+              <div class="sheet-form-grid">
+                <!-- 0. Idade (Calculado dinamicamente a partir da Data de Nascimento) -->
+                <div class="sheet-field-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <label for="respIdade" style="margin-bottom: 0;">Idade</label>
+                    <button type="button" title="Adicionar" class="btn-add-info" style="display: none; background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                      </svg>
+                    </button>
                   </div>
+                  <input type="text" id="respIdade" placeholder="—" readonly class="input-readonly">
+                </div>
 
-                  <!-- CPF -->
-                  <div 
-class="sheet-field-group" style="grid-column: span 1;">
-                    <label for="sheetCpf">CPF</label>
-                    <input 
-type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
+                <!-- 3. Por quanto tempo contribuiu? -->
+                <div class="sheet-field-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <label for="respTempoContribuicao" style="margin-bottom: 0;">Por quanto tempo contribuiu? (Anos)</label>
+                    <button type="button" title="Adicionar" class="btn-add-info" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                      </svg>
+                    </button>
                   </div>
+                  <input type="number" id="respTempoContribuicao" placeholder="Ex: 15" min="0" step="1">
+                </div>
 
-           
-       <!-- Hidden Inputs Removed from Grid -->
-<input type="hidden" id="sheetDataNascimento">
-<input type="hidden" id="sheetNomeMae">
-
-                  <!-- CEP -->
-                  <div class="sheet-field-group" style="grid-column: span 1;">
-                    <label for="sheetCep">CEP</label>
-                    <input type="text" id="sheetCep" placeholder="99.999-999" maxlength="10">
+                <!-- 4. Alguma vez solicitou o benefício? -->
+                <div class="sheet-field-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <label for="respSolicitouBeneficio" style="margin-bottom: 0;">Alguma vez solicitou o benefício?</label>
+                    <button type="button" title="Adicionar" class="btn-add-info" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                      </svg>
+                    </button>
                   </div>
+                  <select id="respSolicitouBeneficio">
+                    <option value="">Selecione...</option>
+                    <option value="Não - nunca tentei aposentar.">Não - nunca tentei aposentar.</option>
+                    <option value="Sim - já tentei e está em andamento.">Sim - já tentei e está em andamento.</option>
+                    <option value="Sim - mas foi negada pelo INSS.">Sim - mas foi negada pelo INSS.</option>
+                  </select>
+                </div>
 
-                  <!-- Endereço (Logradouro + Número) -->
-                  <div class="sheet-field-group" style="grid-column: span 1;">
-                    <label for="sheetEndereco">Endereço</label>
-                    <input type="text" id="sheetEndereco" placeholder="Rua, Avenida, Número...">
+                <!-- 1. Já contribuiu? -->
+                <div class="sheet-field-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <label for="respJaContribuiu" style="margin-bottom: 0;">Já contribuiu?</label>
+                    <button type="button" title="Adicionar" class="btn-add-info" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                      </svg>
+                    </button>
                   </div>
+                  <select id="respJaContribuiu">
+                    <option value="">Selecione...</option>
+                    <option value="Sim - e continuo contribuindo.">Sim - e continuo contribuindo.</option>
+                    <option value="Sim - mas parei há algum tempo.">Sim - mas parei há algum tempo.</option>
+                    <option value="Nunca fiz contribuição ao INSS.">Nunca fiz contribuição ao INSS.</option>
+                    <option value="Não sei responder.">Não sei responder.</option>
+                  </select>
+                </div>
 
-                  <!-- Complemento -->
-                  <div class="sheet-field-group" style="grid-column: span 1;">
-                    <label for="sheetComplemento">Complemento</label>
-                    <input type="text" id="sheetComplemento" placeholder="Apto, Bloco, Casa...">
+                <!-- 2. Que tipo de trabalho exerceu? -->
+                <div class="sheet-field-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <label for="respTipoTrabalho" style="margin-bottom: 0;">Que tipo de trabalho exerceu?</label>
+                    <button type="button" title="Adicionar" class="btn-add-info" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                      </svg>
+                    </button>
                   </div>
+                  <select id="respTipoTrabalho">
+                    <option value="">Selecione...</option>
+                    <option value="Emprego de carteira assinada (CLT)">Emprego de carteira assinada (CLT)</option>
+                    <option value="Empresário / Autônomo / MEI">Empresário / Autônomo / MEI</option>
+                    <option value="Servidor público">Servidor público</option>
+                    <option value="Trabalhador rural">Trabalhador rural</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
 
-                  <!-- Bairro -->
-                  <div class="sheet-field-group" style="grid-column: span 1;">
-                    <label for="sheetBairro">Bairro</label>
-                    <input type="text" id="sheetBairro" placeholder="Nome do Bairro">
+                <!-- 5. Exerceu atividade especial? -->
+                <div class="sheet-field-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <label for="respExerceuAtividadeEspecial" style="margin-bottom: 0;">Exerceu atividade especial?</label>
+                    <button type="button" title="Adicionar" class="btn-add-info" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                      </svg>
+                    </button>
                   </div>
+                  <select id="respExerceuAtividadeEspecial">
+                    <option value="">Selecione...</option>
+                    <option value="Sim - já trabalhei nessas atividades.">Sim - já trabalhei nessas atividades.</option>
+                    <option value="Não - nunca trabalhei com isso.">Não - nunca trabalhei com isso.</option>
+                    <option value="Não sei responder">Não sei responder</option>
+                  </select>
+                </div>
 
-                  <!-- Cidade -->
-                  <div class="sheet-field-group" style="grid-column: span 1;">
-                    <label for="sheetCidade">Cidade</label>
-                    <input type="text" id="sheetCidade" placeholder="Nome da Cidade">
-                  </div>
-
-                  <!-- UF -->
-                  <div class="sheet-field-group" style="grid-column: span 1;">
-                    <label for="sheetUf">UF</label>
-                    <select id="sheetUf">
-                      <option value="">UF</option>
-                      <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
-                      <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
-                      <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
-                      <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
-                      <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
-                      <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
-                      <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
-                      <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
-                      <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
-                    </select>
+                <!-- 6. Detalhes (Textarea extenso) -->
+                <div class="sheet-field-group span-6">
+                  <label for="respDetalhes">Detalhes</label>
+                  <div style="position: relative;">
+                    <textarea id="respDetalhes" class="sheet-textarea-input" placeholder="Digite os detalhes adicionais sobre o histórico ou caso do cliente..." rows="4" style="resize: none; width: 100%; box-sizing: border-box;"></textarea>
+                    <button type="button" id="btnExpandDetalhes" title="Expandir Detalhes" style="position: absolute; bottom: 8px; right: 8px; background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; border-radius: 4px;" onmouseover="this.style.color='#0f172a'; this.style.backgroundColor='#f1f5f9';" onmouseout="this.style.color='#94a3b8'; this.style.backgroundColor='transparent';">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <polyline points="9 21 3 21 3 15"></polyline>
+                        <line x1="21" y1="3" x2="14" y2="10"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </div>
-            </form>
-          
-</div>
+            </div>
 
-          <!-- Conteúdo da Guia: DOCUMENTOS -->
-          <div id="tabContentDocumentos" class="tab-pane hidden" style="padding: 1.5rem; overflow-y: auto;">
+
+          </form>
+        </div>
+
+        <!-- Conteúdo da Guia: DOCUMENTOS -->
+        <div id="tabContentDocumentos" class="tab-pane hidden">
           <div class="docs-tab-header">
             <div class="docs-tag-row">
               <a id="docsCardCodeBtn" class="gray-code-tag" target="_blank" rel="noopener noreferrer" title="Abrir Google Drive">
@@ -1225,34 +1080,42 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
             </div>
           </div>
         </div>
-        </div>
-          <!-- SLIDE SIDEBAR: OBSERVAES INTERNAS -->
-    <div id="notesSidebarOverlay" class="notes-sidebar-overlay hidden" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.1); z-index: 400; border-radius: 12px;"></div>
-    <div id="notesSidebarDrawer" class="notes-sidebar-drawer hidden" style="z-index: 401; border-radius: 0 12px 12px 0;">
-      <div class="notes-sidebar-header">
-        <div class="notes-sidebar-title">
-          <i class="ti ti-mail" style="font-size: 16px;"></i> OBSERVAÇÕES INTERNAS
-        </div>
-        <button id="closeNotesSidebarBtn" class="notes-sidebar-close">
-          <i class="ti ti-x"></i>
-        </button>
+
       </div>
-      <div id="notesSidebarBody" class="notes-sidebar-body">
-        <!-- Javascript renders notes here -->
-      </div>
-      <div class="notes-sidebar-footer">
-        <div id="addNoteForm" style="display: flex; position: relative; width: 100%;">
-          <input type="text" id="newNoteInput" placeholder="Nova observação..." style="width: 100%; padding: 10px 45px 10px 15px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; color: var(--text-primary);">
-          <button type="button" id="sendNoteBtn" style="position: absolute; right: 4px; top: 4px; bottom: 4px; background: var(--color-primary); color: white; border: none; border-radius: 6px; width: 32px; display: flex; justify-content: center; align-items: center; cursor: pointer;">
-            <i class="ti ti-send" style="font-size: 14px;"></i>
-          </button>
+
+      <!-- Slide Sidebar Drawer: Observações Internas -->
+      <div id="notesSidebarOverlay" class="notes-sidebar-overlay hidden"></div>
+      <div id="notesSidebarDrawer" class="notes-sidebar-drawer hidden">
+        <div class="notes-sidebar-header">
+          <div class="notes-sidebar-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <span>OBSERVAÇÕES INTERNAS</span>
+          </div>
+          <button class="notes-sidebar-close" id="closeNotesSidebarBtn" aria-label="Fechar gaveta">&times;</button>
+        </div>
+
+        <div class="notes-sidebar-body" id="notesSidebarBody">
+          <!-- As notas serão inseridas dinamicamente via JS -->
+        </div>
+
+        <div class="notes-sidebar-footer">
+          <div class="add-note-form-wrapper">
+            <input type="text" id="newNoteInput" placeholder="Nova observação..." class="note-input" autocomplete="off">
+            <button type="button" id="sendNoteBtn" class="btn-send-note" title="Enviar observação">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
+
     </div>
   </div>
-</div>
-
-</div>
 
   <!-- ==================== MODAL: CONFIRMAR CONCESSÃO ==================== -->
   <div id="modalConcedido" class="modal-backdrop hidden" role="dialog" aria-modal="true">
@@ -2085,32 +1948,6 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
       </div>
 
       <textarea id="expandedDetalhesTextarea" placeholder="Digite os detalhes adicionais sobre o histórico ou caso do cliente..." style="flex-grow: 1; resize: none; padding: 1rem; border-radius: 6px; border: 1px solid var(--border-light); font-size: 1rem; font-family: inherit; background-color: #f8fafc; width: 100%; box-sizing: border-box; outline: none;"></textarea>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL: EXPANDIR DETALHES ==================== -->
-  <div id="modalExpandDetalhes" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal-card modal-large" style="max-width: 800px; width: 90%; height: 80vh; display: flex; flex-direction: column;">
-      <div class="modal-header">
-        <div class="modal-icon-badge">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <polyline points="9 21 3 21 3 15"></polyline>
-            <line x1="21" y1="3" x2="14" y2="10"></line>
-            <line x1="3" y1="21" x2="10" y2="14"></line>
-          </svg>
-        </div>
-        <div>
-          <h2 class="modal-title">Detalhes do caso</h2>
-          <p class="modal-subtitle">Visualização expandida</p>
-        </div>
-      </div>
-      <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; padding: 0;">
-        <textarea id="respDetalhesExpandido" style="flex: 1; width: 100%; border: none; resize: none; padding: 24px; font-family: inherit; font-size: 14px; line-height: 1.6; outline: none; box-sizing: border-box;" placeholder="Digite os detalhes adicionais sobre o histórico ou caso do cliente..."></textarea>
-      </div>
-      <div class="modal-footer" style="justify-content: flex-end;">
-        <button type="button" class="btn-primary" id="closeExpandDetalhesModal">Fechar</button>
-      </div>
     </div>
   </div>
 
