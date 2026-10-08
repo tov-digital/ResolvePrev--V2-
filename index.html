@@ -786,12 +786,10 @@ color:var(--text-secondary);">Aniversário</p>
             <p id="statAniversario" style="margin:2px 0 0; 
 font-size:18px; font-weight:500;">-</p>
           </div>
-          <div style="background:var(--bg-success); border-radius:var(--radius); padding:10px 12px;">
-            <label for="respServicoMilitar" style="margin:0; font-size:11px; color:var(--text-success); display:block; cursor:pointer;">Serviço Militar</label>
-            <select id="respServicoMilitar" style="margin:2px 0 0; font-size:18px; font-weight:500; background:transparent; border:none; outline:none; padding:0; width:100%; color:var(--text-success); cursor:pointer; appearance:none;">
-              <option value="Não">Não</option>
-              <option value="Sim">Sim</option>
-            </select>
+          <div id="btnServicoMilitar" style="background:#FEE2E2; border-radius:var(--radius); padding:10px 12px; cursor:pointer; user-select:none; transition: all 0.2s;">
+            <p id="labelServicoMilitar" style="margin:0; font-size:11px; color:#B91C1C;">Serviço Militar</p>
+            <p id="textServicoMilitar" style="margin:2px 0 0; font-size:18px; font-weight:500; color:#B91C1C;">Não</p>
+            <input type="hidden" id="respServicoMilitar" value="Não">
           </div>
         </div>
 

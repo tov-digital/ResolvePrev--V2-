@@ -3259,8 +3259,7 @@
         }
       }
 
-      const elServicoMilitar = document.getElementById('respServicoMilitar');
-      if (elServicoMilitar) elServicoMilitar.value = card.servico_militar || 'Não';
+      updateServicoMilitarUI(card.servico_militar || 'Não');
 
       const elJaContribuiu = document.getElementById('respJaContribuiu');
       if (elJaContribuiu) elJaContribuiu.value = card.ja_contribuiu || '';
@@ -4358,5 +4357,38 @@
   //     closeExpandDetalhesModalHandler();
   //   }
   // });
+
+  function updateServicoMilitarUI(val) {
+    const btn = document.getElementById('btnServicoMilitar');
+    const label = document.getElementById('labelServicoMilitar');
+    const text = document.getElementById('textServicoMilitar');
+    const input = document.getElementById('respServicoMilitar');
+    
+    if (!btn || !label || !text || !input) return;
+
+    if (val === 'Sim') {
+      btn.style.background = 'var(--bg-success)';
+      label.style.color = 'var(--text-success)';
+      text.style.color = 'var(--text-success)';
+      text.textContent = 'Sim';
+      input.value = 'Sim';
+    } else {
+      btn.style.background = '#FEE2E2';
+      label.style.color = '#B91C1C';
+      text.style.color = '#B91C1C';
+      text.textContent = 'Não';
+      input.value = 'Não';
+    }
+  }
+
+  const btnServicoMilitar = document.getElementById('btnServicoMilitar');
+  if (btnServicoMilitar) {
+    btnServicoMilitar.addEventListener('click', () => {
+      const input = document.getElementById('respServicoMilitar');
+      const newVal = input && input.value === 'Sim' ? 'Não' : 'Sim';
+      updateServicoMilitarUI(newVal);
+      saveClientData(true);
+    });
+  }
 
 });
