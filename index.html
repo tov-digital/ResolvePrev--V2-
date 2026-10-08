@@ -1127,18 +1127,10 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
           </div>
 
           <div class="docs-container">
-            <!-- Categoria: Obrigatórios (Toggle / Collapsible) -->
-            <div class="docs-category-card">
-              <button type="button" class="docs-category-toggle" id="toggleObrigatoriosBtn" aria-expanded="false">
-                <div class="docs-category-title-inner">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                  <span>Obrigatórios</span>
-                  <span id="countObrigatorios" class="docs-count-badge">0/5</span>
-                </div>
-                <svg class="toggle-chevron-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-
-              <div id="listObrigatoriosContent" class="docs-list collapsed">
+            <!-- Lista Consolidada de Documentos -->
+            <div class="docs-category-card" style="border: none; background: transparent; padding: 0;">
+              
+              <div id="listObrigatoriosContent" class="docs-list" style="margin-bottom: 20px;">
                 <!-- Documento 1 -->
                 <div class="doc-item">
                   <span class="doc-name">Procurações, Termo e Contrato</span>
@@ -1179,34 +1171,23 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
                   </button>
                 </div>
               </div>
-            </div>
 
-            <!-- Categoria: Eventuais (Toggle / Dinâmico) -->
-            <div class="docs-category-card">
-              <button type="button" class="docs-category-toggle" id="toggleEventuaisBtn" aria-expanded="false">
-                <div class="docs-category-title-inner">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-                  <span>Eventuais</span>
-                  <span id="countEventuais" class="docs-count-badge">0/0</span>
+              <div id="listEventuaisContent" class="docs-list">
+                <!-- Lista Dinâmica de Documentos Eventuais -->
+                <div id="eventualDocsDynamicList" class="eventual-docs-list">
+                  <!-- Itens injetados via JavaScript -->
                 </div>
-                <svg class="toggle-chevron-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-
-              <div id="listEventuaisContent" class="docs-list collapsed">
+                
                 <!-- Formulário para Adicionar Novo Documento Eventual -->
-                <div class="add-eventual-doc-row">
+                <div class="add-eventual-doc-row" style="margin-top: 15px;">
                   <input type="text" id="newEventualDocName" placeholder="Nome do documento eventual..." class="add-doc-input">
                   <button type="button" id="addEventualDocBtn" class="btn-add-eventual-doc">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     Adicionar
                   </button>
                 </div>
-
-                <!-- Lista Dinâmica de Documentos Eventuais -->
-                <div id="eventualDocsDynamicList" class="eventual-docs-list">
-                  <!-- Itens injetados via JavaScript -->
-                </div>
               </div>
+
             </div>
           </div>
         </div>
