@@ -5146,7 +5146,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnProx = document.getElementById('btnProximoStep');
     const btnVolt = document.getElementById('btnVoltarStep');
     const btnFin = document.getElementById('btnFinalizarStep');
+    const btnReload = document.getElementById('btnReloadForm');
     
+    if (btnReload) {
+        btnReload.addEventListener('click', () => {
+            currentStep = 1;
+            calculateSteps();
+            renderSteps();
+        });
+    }
+
     ['respSolicitouBeneficio', 'respJaContribuiu', 'respTipoTrabalho', 'respExerceuAtividadeEspecial'].forEach(id => {
         const el = document.getElementById(id);
         if(el) {
@@ -5197,9 +5206,31 @@ document.addEventListener('DOMContentLoaded', () => {
             dynamicStepsData.forEach(step => {
                 let icon = 'ti-file-description';
                 let color = 'var(--text-accent)';
-                if (step.title === 'Qualidade de segurado') { icon = 'ti-shield-check'; color = '#10b981'; }
-                else if (step.title === 'Tipo de Trabalho') { icon = 'ti-briefcase'; color = '#f59e0b'; }
-                else if (step.title === 'Atividade Especial') { icon = 'ti-star'; color = '#8b5cf6'; }
+                let implicacaoText = "[ Placeholder da implicação ]";
+                let solucaoText = "[ Placeholder da solução ]";
+                
+                if (step.title === 'Qualidade de segurado') {
+                    icon = 'ti-shield-check'; color = '#10b981';
+                    implicacaoText = "Se a sua qualidade de segurado já tiver sido perdida, o que acontece com o seu direito de se aposentar ou de receber benefícios como auxílio-doença e pensão para a sua família, e quanto isso pesaria no seu orçamento hoje?";
+                    solucaoText = "Se fosse possível verificar agora se a sua qualidade de segurado está mantida, e o que fazer para recuperá-la caso tenha sido perdida, o quanto isso traria de tranquilidade para você e para a sua família em relação ao futuro?";
+                } else if (step.title === 'Tipo de Trabalho') {
+                    icon = 'ti-briefcase'; color = '#f59e0b';
+                    const tipoTrabalho = document.getElementById('respTipoTrabalho')?.value || '';
+                    if (tipoTrabalho === 'Emprego de carteira assinada (CLT)') {
+                        implicacaoText = "Se houver vínculos faltando ou contribuições com valor ou data errados no seu CNIS, quanto você estaria perdendo por mês no valor da aposentadoria e quanto tempo a mais teria de trabalhar para compensar essa diferença?";
+                        solucaoText = "Se um advogado pudesse corrigir os vínculos e contribuições do seu CNIS antes do pedido, e isso aumentasse o valor da sua aposentadoria todo mês, que diferença isso faria no seu orçamento?";
+                    } else if (tipoTrabalho === 'Empresário / Autônomo / MEI') {
+                        implicacaoText = "Se existirem lacunas, contribuições duplicadas ou recolhimentos no código errado, que tempo seu pode ser desconsiderado pelo INSS, e o que isso significaria em anos a mais de trabalho ou em um benefício menor?";
+                        solucaoText = "Se alguém pudesse revisar as suas contribuições, regularizar lacunas, duplicidades e códigos errados, e garantir que todo o seu tempo fosse contado, qual seria o valor disso para você?";
+                    } else if (tipoTrabalho === 'Trabalhador rural') {
+                        implicacaoText = "Se você não conseguir comprovar com documentos e testemunhas o tempo na terra, o que acontece com o seu pedido de aposentadoria rural e como a sua família ficaria sem essa renda?";
+                        solucaoText = "Se você tivesse ajuda para reunir os documentos e testemunhas certos e comprovar o seu tempo na terra, o quanto isso aumentaria a sua segurança de ter o benefício aprovado e a renda garantida para a sua família?";
+                    }
+                } else if (step.title === 'Atividade Especial') {
+                    icon = 'ti-star'; color = '#8b5cf6';
+                    implicacaoText = "Se o tempo de atividade especial não for comprovado por falta de PPP ou LTCAT, ou porque a empresa fechou, quantos anos de contribuição a mais você teria de cumprir e qual seria o impacto disso na sua saúde e na sua renda até conseguir se aposentar?";
+                    solucaoText = "Se fosse possível analisar o seu PPP e LTCAT e comprovar o tempo especial, mesmo com a empresa fechada, o quanto isso ajudaria você a se aposentar mais cedo e com um benefício maior?";
+                }
                 
                 const card = document.createElement('div');
                 card.style.cssText = `
@@ -5260,11 +5291,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 cardDetail.innerHTML = `
                     <div style="margin-top: 0px; padding-top: 16px; border-top: 1px solid var(--border);">
                         <h5 style="margin:0 0 6px 0; color:var(--text-accent); font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Implicação</h5>
-                        <p style="margin:0; font-size:16px; font-weight:500; color:var(--text-primary);">[ Placeholder da implicação ]</p>
+                        <p style="margin:0; font-size:16px; font-weight:500; color:var(--text-primary);">${implicacaoText}</p>
                     </div>
                     <div>
                         <h5 style="margin:0 0 6px 0; color:var(--text-accent); font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Solução</h5>
-                        <p style="margin:0; font-size:16px; font-weight:500; color:var(--text-primary);">[ Placeholder da solução ]</p>
+                        <p style="margin:0; font-size:16px; font-weight:500; color:var(--text-primary);">${solucaoText}</p>
                     </div>
                 `;
 
