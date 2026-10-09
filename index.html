@@ -790,8 +790,13 @@ ti-clipboard-text" style="font-size:18px; color:var(--text-accent)" aria-hidden=
 qualificação</p>
                 </div>
 
-                <form id="clientAnswersForm" style="display: flex; 
-flex-direction: column;">
+                <style>#clientAnswersForm .btn-add-info { display: none !important; }</style>
+                <div id="multiStepFormContainer" style="display: flex; flex-direction: column; flex-grow: 1; position: relative;">
+                  <div id="formTrackingBar" style="display: flex; gap: 4px; margin-bottom: 16px;">
+                      <div class="step-indicator active" style="flex: 1; height: 4px; background: var(--fill-accent); border-radius: 2px;"></div>
+                  </div>
+                  <form id="clientAnswersForm" style="display: flex; flex-direction: column; flex-grow: 1; overflow-y: auto;">
+                    <div id="step-1" class="form-step">
                   <input type="hidden" id="respIdade">
                   
            
@@ -918,7 +923,14 @@ color:var(--text-primary);">
                     </select>
                   
 </div>
+                    </div>
                 </form>
+                <div style="display: flex; justify-content: space-between; margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--border);">
+                   <button id="btnVoltarStep" type="button" style="display: none; padding: 8px 16px; border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; cursor: pointer; color: var(--text-primary); font-weight: 500;">Voltar</button>
+                   <button id="btnProximoStep" type="button" style="padding: 8px 16px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500;">Próximo</button>
+                   <button id="btnFinalizarStep" type="button" style="display: none; padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500;">Finalizar</button>
+                </div>
+              </div>
               </div>
 
               <!-- Nova View: Lista de Perguntas (oculta por padrão) -->
