@@ -5013,7 +5013,20 @@ function calculateSteps() {
 
 function renderSteps() {
     const formEl = document.getElementById('clientAnswersForm');
+    const barEl = document.getElementById('formTrackingBar');
+    const btnsEl = document.getElementById('stepButtonsContainer');
+    const cardsContainer = document.getElementById('summaryCardsContainer');
+
     if(!formEl) return;
+    
+    // Restaurar formulário se estava em cards
+    formEl.style.display = 'block';
+    if(barEl) barEl.style.display = 'flex';
+    if(btnsEl) btnsEl.style.display = 'flex';
+    if(cardsContainer) {
+        cardsContainer.style.display = 'none';
+        cardsContainer.innerHTML = '';
+    }
     
     // Remover todos os steps dinâmicos anteriores
     formEl.querySelectorAll('.dynamic-step').forEach(el => el.remove());
@@ -5026,13 +5039,15 @@ function renderSteps() {
         stepDiv.id = 'step-' + stepNum;
         stepDiv.className = 'form-step dynamic-step';
         stepDiv.style.display = 'none';
+        stepDiv.style.width = '100%';
+        stepDiv.style.boxSizing = 'border-box';
         let html = '<h3 style="margin-top:-6px; margin-bottom: 16px; color:var(--text-accent); font-size:16px;">' + stepData.title + '</h3>';
         
         stepData.fields.forEach(f => {
             html += `
               <div class="sheet-field-group" style="margin-bottom: 1rem;">
                 <label for="${f.id}" style="display: block; font-weight: normal; font-size: 14px; margin-bottom: 0.5rem; color: var(--text-dark);">${f.label}</label>
-                <textarea id="${f.id}" class="sheet-input multistep-textarea" rows="1" style="width: 100%; resize: vertical; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; font-family: inherit; background-color: var(--surface-2); color: var(--text-primary); outline:none;"></textarea>
+                <textarea id="${f.id}" class="sheet-input multistep-textarea" rows="1" style="width: 100%; box-sizing: border-box; resize: vertical; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; font-family: inherit; background-color: var(--surface-2); color: var(--text-primary); outline:none;"></textarea>
               </div>
             `;
         });
@@ -5061,6 +5076,9 @@ function renderTrackingBar() {
 }
 
 function updateStepView() {
+    const formEl = document.getElementById('clientAnswersForm');
+    if(formEl) formEl.scrollTop = 0;
+
     document.querySelectorAll('.form-step').forEach(el => el.style.display = 'none');
     const curr = document.getElementById('step-' + currentStep);
     if(curr) curr.style.display = 'block';
@@ -5160,7 +5178,115 @@ document.addEventListener('DOMContentLoaded', () => {
     if(btnFin) {
         btnFin.addEventListener('click', () => {
             summarizeFormToDetails();
-            alert('Formulário finalizado! Detalhes atualizados.');
+            
+            // Hide form and buttons
+            const formEl = document.getElementById('clientAnswersForm');
+            const barEl = document.getElementById('formTrackingBar');
+            const btnsEl = document.getElementById('stepButtonsContainer');
+            if (formEl) formEl.style.display = 'none';
+            if (barEl) barEl.style.display = 'none';
+            if (btnsEl) btnsEl.style.display = 'none';
+            
+            // Generate cards
+            const cardsContainer = document.getElementById('summaryCardsContainer');
+            if (cardsContainer) {
+                cardsContainer.innerHTML = '';
+                cardsContainer.scrollTop = 0;
+            }
+            
+            dynamicStepsData.forEach(step => {
+                let icon = 'ti-file-description';
+                let color = 'var(--text-accent)';
+                if (step.title === 'Qualidade de segurado') { icon = 'ti-shield-check'; color = '#10b981'; }
+                else if (step.title === 'Tipo de Trabalho') { icon = 'ti-briefcase'; color = '#f59e0b'; }
+                else if (step.title === 'Atividade Especial') { icon = 'ti-star'; color = '#8b5cf6'; }
+                
+                const card = document.createElement('div');
+                card.style.cssText = `
+                    border-radius: 8px;
+                    border: 1px solid var(--border);
+                    background: var(--surface-2);
+                    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                    flex-shrink: 0;
+                    box-sizing: border-box;
+                    width: 100%;
+                `;
+                
+                let isExpanded = false;
+
+                card.onmouseover = () => {
+                    card.style.borderColor = color;
+                    card.style.transform = isExpanded ? 'none' : 'translateY(-2px)';
+                    card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+                };
+                card.onmouseout = () => {
+                    if (!isExpanded) {
+                        card.style.borderColor = 'var(--border)';
+                    }
+                    card.style.transform = 'translateY(0)';
+                    card.style.boxShadow = 'none';
+                };
+                
+                const cardHeader = document.createElement('div');
+                cardHeader.style.cssText = `
+                    padding: 16px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    user-select: none;
+                `;
+                cardHeader.innerHTML = `
+                    <div style="display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:8px; background: ${color}20; color: ${color}; flex-shrink: 0;">
+                        <i class="ti ${icon}" style="font-size: 20px;"></i>
+                    </div>
+                    <div style="flex:1;">
+                        <h4 style="margin:0; font-size:15px; color:var(--text-primary); font-weight: 500;">${step.title}</h4>
+                        <p style="margin:2px 0 0; font-size:13px; color:var(--text-secondary);">Revisar informações</p>
+                    </div>
+                    <i class="ti ti-chevron-right chevron-icon" style="color:var(--text-muted); font-size:18px; transition: transform 0.3s ease;"></i>
+                `;
+
+                const cardDetail = document.createElement('div');
+                cardDetail.style.cssText = `
+                    display: none;
+                    flex-direction: column;
+                    gap: 20px;
+                    padding: 0 16px 20px 16px;
+                `;
+                cardDetail.innerHTML = `
+                    <div style="margin-top: 0px; padding-top: 16px; border-top: 1px solid var(--border);">
+                        <h5 style="margin:0 0 6px 0; color:var(--text-accent); font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Implicação</h5>
+                        <p style="margin:0; font-size:16px; font-weight:500; color:var(--text-primary);">[ Placeholder da implicação ]</p>
+                    </div>
+                    <div>
+                        <h5 style="margin:0 0 6px 0; color:var(--text-accent); font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Solução</h5>
+                        <p style="margin:0; font-size:16px; font-weight:500; color:var(--text-primary);">[ Placeholder da solução ]</p>
+                    </div>
+                `;
+
+                cardHeader.onclick = () => {
+                    isExpanded = !isExpanded;
+                    if (!isExpanded) {
+                        cardDetail.style.display = 'none';
+                        cardHeader.querySelector('.chevron-icon').style.transform = 'rotate(0deg)';
+                        card.style.borderColor = 'var(--border)';
+                    } else {
+                        cardDetail.style.display = 'flex';
+                        cardHeader.querySelector('.chevron-icon').style.transform = 'rotate(90deg)';
+                        card.style.borderColor = color;
+                    }
+                };
+
+                card.appendChild(cardHeader);
+                card.appendChild(cardDetail);
+                if (cardsContainer) cardsContainer.appendChild(card);
+            });
+            
+            if (cardsContainer) cardsContainer.style.display = 'flex';
         });
     }
     

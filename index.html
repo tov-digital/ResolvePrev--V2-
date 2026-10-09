@@ -646,100 +646,66 @@ Ficha"></i>
         </div>
       </div>
 
-      <div style="overflow-y: auto; flex-grow: 1; display: flex; 
-flex-direction: column;">
+      <div style="overflow: hidden; flex-grow: 1; display: flex; flex-direction: column; min-height: 0;">
         
         <!-- Header info -->
-        <div style="padding:16px 20px 12px; 
-display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-          <div style="width:40px; height:40px; 
-border-radius:50%; background:var(--bg-accent); color:var(--text-accent); display:flex; align-items:center; 
-justify-content:center; font-weight:500; font-size:14px;">AR</div>
-          <div style="flex:1; 
-min-width:180px;">
-            <input type="text" id="sheetClientNameInput" value="Antônio José Real" 
-style="margin:0; font-size:20px; font-weight:bold; color:var(--text-accent); line-height:1.2; width: 100%; border: 
-none; background: transparent; outline: none; padding: 0;" placeholder="Nome completo do cliente">
-          
-</div>
+        <div style="padding:16px 20px 12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; flex-shrink: 0;">
+          <div style="width:40px; height:40px; border-radius:50%; background:var(--bg-accent); color:var(--text-accent); display:flex; align-items:center; justify-content:center; font-weight:500; font-size:14px;">AR</div>
+          <div style="flex:1; min-width:180px;">
+            <input type="text" id="sheetClientNameInput" value="Antônio José Real" style="margin:0; font-size:20px; font-weight:bold; color:var(--text-accent); line-height:1.2; width: 100%; border: none; background: transparent; outline: none; padding: 0;" placeholder="Nome completo do cliente">
+          </div>
           
           <div class="status-dropdown-wrapper" style="position: relative;">
-            
-<button id="sheetStatusDropdownBtn" style="display:flex; align-items:center; gap:6px; background:var(--surface-1); color:var(--color-primary); height:36px; padding:6px 12px; border-radius:var(--radius); font-size:13px; font-weight:500; border: 1px solid var(--border); cursor: pointer;">
+            <button id="sheetStatusDropdownBtn" style="display:flex; align-items:center; gap:6px; background:var(--surface-1); color:var(--color-primary); height:36px; padding:6px 12px; border-radius:var(--radius); font-size:13px; font-weight:500; border: 1px solid var(--border); cursor: pointer;">
               <span class="status-tag-dot" id="sheetStatusDot" style="display:inline-block; margin-right:2px;"></span>
               <span id="sheetStatusText">Reunião</span>
               <i class="ti ti-chevron-down" style="font-size:14px" aria-hidden="true"></i>
             </button>
-            <div 
-id="statusDropdownMenu" class="status-dropdown-menu hidden" style="position: absolute; right: 0; top: 100%; 
-margin-top: 4px; z-index: 100;">
-              <div class="status-option" data-status="novo" 
-data-tab="comercial">
+            <div id="statusDropdownMenu" class="status-dropdown-menu hidden" style="position: absolute; right: 0; top: 100%; margin-top: 4px; z-index: 100;">
+              <div class="status-option" data-status="novo" data-tab="comercial">
                 <span class="column-status-dot dot-novo"></span> Novo
-              
-</div>
+              </div>
               <div class="status-option" data-status="qualificacao" data-tab="comercial">
-              
-  <span class="column-status-dot dot-qualificacao"></span> Qualificação
+                <span class="column-status-dot dot-qualificacao"></span> Qualificação
               </div>
-              <div 
-class="status-option" data-status="acompanhamento" data-tab="comercial">
-                <span 
-class="column-status-dot dot-acompanhamento"></span> Acompanhamento
+              <div class="status-option" data-status="acompanhamento" data-tab="comercial">
+                <span class="column-status-dot dot-acompanhamento"></span> Acompanhamento
               </div>
-              <div 
-class="status-option" data-status="reuniao" data-tab="comercial">
-                <span 
-class="column-status-dot dot-reuniao"></span> Reunião
+              <div class="status-option" data-status="reuniao" data-tab="comercial">
+                <span class="column-status-dot dot-reuniao"></span> Reunião
               </div>
-              <div 
-class="status-option" data-status="proposta" data-tab="comercial">
-                <span 
-class="column-status-dot dot-proposta"></span> Proposta
+              <div class="status-option" data-status="proposta" data-tab="comercial">
+                <span class="column-status-dot dot-proposta"></span> Proposta
               </div>
-              <div 
-class="status-option hidden" data-status="documentacao" data-tab="operacao">
-                <span 
-class="column-status-dot dot-documentacao"></span> Documentação
+              <div class="status-option hidden" data-status="documentacao" data-tab="operacao">
+                <span class="column-status-dot dot-documentacao"></span> Documentação
               </div>
-              <div 
-class="status-option hidden" data-status="na_fila" data-tab="operacao">
-                <span 
-class="column-status-dot dot-na_fila"></span> Na Fila
+              <div class="status-option hidden" data-status="na_fila" data-tab="operacao">
+                <span class="column-status-dot dot-na_fila"></span> Na Fila
               </div>
-              <div 
-class="status-option hidden" data-status="requerido" data-tab="operacao">
-                <span 
-class="column-status-dot dot-requerido"></span> Requerido
+              <div class="status-option hidden" data-status="requerido" data-tab="operacao">
+                <span class="column-status-dot dot-requerido"></span> Requerido
               </div>
-              <div 
-class="status-option hidden" data-status="exigencia" data-tab="operacao">
-                <span 
-class="column-status-dot dot-exigencia"></span> Exigência
+              <div class="status-option hidden" data-status="exigencia" data-tab="operacao">
+                <span class="column-status-dot dot-exigencia"></span> Exigência
               </div>
-              <div 
-class="status-option hidden" data-status="concedido" data-tab="operacao">
-                <span 
-class="column-status-dot dot-concedido"></span> Concedido
+              <div class="status-option hidden" data-status="concedido" data-tab="operacao">
+                <span class="column-status-dot dot-concedido"></span> Concedido
               </div>
-              <div 
-class="status-option hidden" data-status="negado" data-tab="judicial">
-                <span 
-class="column-status-dot dot-negado"></span> Negado
+              <div class="status-option hidden" data-status="negado" data-tab="judicial">
+                <span class="column-status-dot dot-negado"></span> Negado
               </div>
             </div>
           </div>
 
-  
-        <button id="sheetNotesBtn" style="position:relative; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid var(--border); border-radius:8px; font-size:18px; background: var(--surface-1); cursor: pointer; color: var(--color-primary);">
+          <button id="sheetNotesBtn" style="position:relative; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid var(--border); border-radius:8px; font-size:18px; background: var(--surface-1); cursor: pointer; color: var(--color-primary);">
             <i class="ti ti-message" aria-hidden="true"></i>
             <span id="sheetNotesCountBadge" class="hidden" style="position:absolute; top:-6px; right:-6px; background:#ef4444; color:white; font-size:10px; font-weight:bold; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:2px solid white;">0</span>
           </button>
         </div>
 
         <!-- Metrics -->
-        <div style="padding:0 20px 
-16px; display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px;">
+        <div style="padding:0 20px 16px; display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; flex-shrink: 0;">
           <div 
 style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
             <p 
@@ -770,33 +736,48 @@ width:100%; color:var(--text-primary);">
           </div>
         </div>
 
-        <!-- 
-Tabs Content Container -->
-        <div class="tab-content-container" style="border-top: 0.5px solid var(--border); flex-grow: 1; display: flex; 
-flex-direction: column;">
+        <!-- Tabs Content Container -->
+        <div class="tab-content-container" style="border-top: 0.5px solid var(--border); flex-grow: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
           
           <!-- Respostas -->
-          <div id="tabContentRespostas" 
-class="tab-pane active" style="flex-grow: 1; display: flex; flex-direction: column;">
-            <div 
-style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); 
-flex-grow: 1;">
-              <div id="qualificacaoView" style="padding:16px 20px; border-right:0.5px solid var(--border); display: flex; flex-direction: column;">
-           
-     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-            
-      <p style="margin:0; font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px;"><i class="ti 
-ti-clipboard-text" style="font-size:18px; color:var(--text-accent)" aria-hidden="true"></i>Formulário de 
-qualificação</p>
-                </div>
+          <div id="tabContentRespostas" class="tab-pane active" style="flex-grow: 1; display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden;">
+            <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); grid-template-rows: minmax(0, 1fr); flex-grow: 1; min-height: 0; height: 100%; overflow: hidden;">
+              <div id="qualificacaoView" style="padding:16px 20px; border-right:0.5px solid var(--border); display: flex; flex-direction: column; min-height: 0; height: 100%; box-sizing: border-box; overflow: hidden;">
+                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-shrink: 0;">
+                    <p style="margin:0; font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px;"><i class="ti ti-clipboard-text" style="font-size:18px; color:var(--text-accent)" aria-hidden="true"></i>Formulário de qualificação</p>
+                 </div>
 
-                <style>#clientAnswersForm .btn-add-info { display: none !important; }</style>
-                <div id="multiStepFormContainer" style="display: flex; flex-direction: column; flex-grow: 1; position: relative;">
-                  <div id="formTrackingBar" style="display: flex; gap: 4px; margin-bottom: 16px;">
-                      <div class="step-indicator active" style="flex: 1; height: 4px; background: var(--fill-accent); border-radius: 2px;"></div>
-                  </div>
-                  <form id="clientAnswersForm" style="display: flex; flex-direction: column; flex-grow: 1; overflow-y: auto;">
-                    <div id="step-1" class="form-step">
+                 <style>
+                   #clientAnswersForm .btn-add-info { display: none !important; }
+                   #clientAnswersForm::-webkit-scrollbar,
+                   #summaryCardsContainer::-webkit-scrollbar {
+                     width: 6px;
+                   }
+                   #clientAnswersForm::-webkit-scrollbar-track,
+                   #summaryCardsContainer::-webkit-scrollbar-track {
+                     background: transparent;
+                   }
+                   #clientAnswersForm::-webkit-scrollbar-thumb,
+                   #summaryCardsContainer::-webkit-scrollbar-thumb {
+                     background: var(--border);
+                     border-radius: 3px;
+                   }
+                   #clientAnswersForm::-webkit-scrollbar-thumb:hover,
+                   #summaryCardsContainer::-webkit-scrollbar-thumb:hover {
+                     background: var(--text-muted);
+                   }
+                   #clientAnswersForm,
+                   #summaryCardsContainer {
+                     scrollbar-width: thin;
+                     scrollbar-color: var(--border) transparent;
+                   }
+                 </style>
+                 <div id="multiStepFormContainer" style="display: flex; flex-direction: column; flex-grow: 1; position: relative; min-height: 0; height: 100%; overflow: hidden;">
+                   <div id="formTrackingBar" style="display: flex; gap: 4px; margin-bottom: 16px; flex-shrink: 0;">
+                       <div class="step-indicator active" style="flex: 1; height: 4px; background: var(--fill-accent); border-radius: 2px;"></div>
+                   </div>
+                   <form id="clientAnswersForm" style="display: block; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-right: 6px; min-height: 0;">
+                    <div id="step-1" class="form-step" style="width: 100%; box-sizing: border-box;">
                   <input type="hidden" id="respIdade">
                   
            
@@ -858,8 +839,7 @@ appearance: none; color:var(--text-primary);">
                       
 <option value="Não sei responder.">Não sei responder.</option>
                     </select>
-                  
-</div>
+                  </div>
 
                   <!-- Tipo de trabalho -->
                   <div style="padding:10px 0; 
@@ -924,10 +904,11 @@ color:var(--text-primary);">
 </div>
                     </div>
                 </form>
-                <div style="display: flex; justify-content: space-between; margin-top: 4px; padding-top: 0px;">
-                   <button id="btnVoltarStep" type="button" style="display: none; padding: 8px 16px; border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; cursor: pointer; color: var(--text-primary); font-weight: 500;">Voltar</button>
-                   <button id="btnProximoStep" type="button" style="padding: 8px 16px; background: var(--fill-accent); color: var(--on-accent); border: 1px solid transparent; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500;">Próximo</button>
-                   <button id="btnFinalizarStep" type="button" style="display: none; padding: 8px 16px; background: #10b981; color: white; border: 1px solid transparent; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500;">Finalizar</button>
+                <div id="summaryCardsContainer" style="display: none; flex-direction: column; gap: 12px; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 8px 16px 6px; min-height: 0; box-sizing: border-box;"></div>
+                <div id="stepButtonsContainer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 0px; flex-shrink: 0;">
+                   <button id="btnVoltarStep" type="button" style="display: none; height: 38px; padding: 0 16px; border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; cursor: pointer; color: var(--text-primary); font-weight: 500; font-size: 13px;">Voltar</button>
+                   <button id="btnProximoStep" type="button" style="height: 38px; padding: 0 16px; background: var(--fill-accent); color: var(--on-accent); border: 1px solid transparent; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500; font-size: 13px;">Próximo</button>
+                   <button id="btnFinalizarStep" type="button" style="display: none; height: 38px; padding: 0 16px; background: #10b981; color: white; border: 1px solid transparent; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500; font-size: 13px;">Finalizar</button>
                 </div>
               </div>
               </div>
@@ -942,44 +923,26 @@ color:var(--text-primary);">
                 </div>
               </div>
 
-              <div style="padding:16px 20px; 
-background:var(--surface-1); display: flex; flex-direction: column;">
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+              <div style="padding:16px 20px; background:var(--surface-1); display: flex; flex-direction: column; min-height: 0; height: 100%; box-sizing: border-box; overflow: hidden;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-shrink: 0;">
                   <p style="margin:0; font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px;"><i class="ti ti-notes" style="font-size:18px; color:var(--text-accent)" aria-hidden="true"></i>Detalhes do caso</p>
 
                 </div>
-                <div 
-style="background:var(--surface-2); border:0.5px solid var(--border); border-radius:var(--radius); padding:12px 14px; 
-font-size:13px; line-height:1.6; flex-grow: 1; position: relative;">
-                  <textarea id="respDetalhes" 
-placeholder="Digite os detalhes adicionais sobre o histórico ou caso do cliente..." style="width: 100%; height: 
-100%; border: none; background: transparent; resize: none; outline: none; box-sizing: border-box; font-family: 
-inherit; font-size: inherit; color:var(--text-primary);"></textarea>
-                  <button type="button" 
-id="btnExpandDetalhes" title="Expandir Detalhes" style="position: absolute; bottom: 8px; right: 8px; background: 
-none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; 
-justify-content: center; transition: all 0.2s; border-radius: 4px;" onmouseover="this.style.color='#0f172a'; 
-this.style.backgroundColor='#f1f5f9';" onmouseout="this.style.color='#94a3b8'; 
-this.style.backgroundColor='transparent';">
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
-stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="15 3 21 3 21 
-9"></polyline>
+                <div style="background:var(--surface-2); border:0.5px solid var(--border); border-radius:var(--radius); padding:12px 14px; font-size:13px; line-height:1.6; flex-grow: 1; position: relative; min-height: 0; display: flex; flex-direction: column;">
+                  <textarea id="respDetalhes" placeholder="Digite os detalhes adicionais sobre o histórico ou caso do cliente..." style="width: 100%; height: 100%; border: none; background: transparent; resize: none; outline: none; box-sizing: border-box; font-family: inherit; font-size: inherit; color:var(--text-primary); flex-grow: 1;"></textarea>
+                  <button type="button" id="btnExpandDetalhes" title="Expandir Detalhes" style="position: absolute; bottom: 8px; right: 8px; background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; border-radius: 4px;" onmouseover="this.style.color='#0f172a'; this.style.backgroundColor='#f1f5f9';" onmouseout="this.style.color='#94a3b8'; this.style.backgroundColor='transparent';">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="15 3 21 3 21 9"></polyline>
                       <polyline points="9 21 3 21 3 15"></polyline>
-                      <line 
-x1="21" y1="3" x2="14" y2="10"></line>
-                      <line x1="3" y1="21" x2="10" 
-y2="14"></line>
+                      <line x1="21" y1="3" x2="14" y2="10"></line>
+                      <line x1="3" y1="21" x2="10" y2="14"></line>
                     </svg>
                   </button>
                 </div>
-              
-</div>
+              </div>
             </div>
             
-            <div style="border-top:0.5px solid var(--border); padding:12px 
-20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--surface-2);">
+            <div style="border-top:0.5px solid var(--border); padding:12px 20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--surface-2); flex-shrink: 0;">
               <span id="nextStepLabel" style="font-size:12px; color:var(--text-secondary); margin-right:auto;">Próxima etapa:</span>
              
  <button class="btn-whatsapp" style="border:1px solid var(--border); background:var(--surface-1); border-radius:8px; padding:8px 14px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--color-primary);">
