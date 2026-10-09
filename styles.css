@@ -873,19 +873,18 @@ html, body {
   position: relative;
 }
 
-/* Painel flutuante */
 /* Painel flutuante de Filtros */
 .filter-panel {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
   z-index: 300;
-  width: 310px;
+  width: 360px;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.18), 0 0 1px 1px rgba(15, 23, 42, 0.04);
-  padding: 1.15rem;
+  border-radius: 14px;
+  box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  padding: 1.1rem 1.15rem;
   animation: filterPanelIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: top right;
 }
@@ -893,8 +892,8 @@ html, body {
 .filter-panel.hidden { display: none; }
 
 @keyframes filterPanelIn {
-  from { opacity: 0; transform: scale(0.96) translateY(-8px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0);     }
+  from { opacity: 0; transform: scale(0.97) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 /* Cabeçalho do painel */
@@ -904,94 +903,149 @@ html, body {
   justify-content: space-between;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid #F1F5F9;
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.85rem;
 }
 
 .filter-title-group {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--color-primary, #17375E);
+}
+
+.filter-icon-pill {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: rgba(30, 80, 128, 0.08);
+  color: var(--color-primary, #1E5080);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .filter-panel-title {
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: 0.3px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
   color: #0F172A;
-  text-transform: uppercase;
+}
+
+.filter-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .filter-clear-btn {
-  font-size: 0.76rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: #64748B;
-  background: transparent;
-  border: none;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.55rem;
   border-radius: 6px;
   transition: all 0.15s ease;
 }
 
 .filter-clear-btn:hover {
   color: #EF4444;
+  border-color: #FECACA;
   background: #FEF2F2;
+}
+
+.filter-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-close-btn:hover {
+  background: #F1F5F9;
+  color: #0F172A;
 }
 
 /* Seções */
 .filter-section {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.45rem;
+}
+
+.filter-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .filter-section-label {
-  font-size: 0.72rem;
+  font-size: 0.69rem;
   font-weight: 700;
-  color: #94A3B8;
+  color: #64748B;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  margin-bottom: 0.15rem;
 }
 
 .filter-divider {
   height: 1px;
   background: #F1F5F9;
-  margin: 0.85rem 0;
+  margin: 0.75rem 0;
 }
 
-/* Grupos de Opções (Chips / Radio / Checkbox) */
+/* Grid de Status (2 Colunas) */
 .filter-options-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  max-height: 220px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  max-height: 240px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 2px;
 }
 
+.filter-options-grid::-webkit-scrollbar {
+  width: 4px;
+}
+.filter-options-grid::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+/* Grid de Período (2 Colunas) */
 .filter-radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
 }
 
+/* Chips / Itens Selecionáveis */
 .filter-chip,
 .filter-radio-chip {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 10px;
+  gap: 0.45rem;
+  padding: 0.45rem 0.55rem;
+  min-height: 32px;
+  border-radius: 7px;
   cursor: pointer;
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   font-weight: 500;
   color: #334155;
   background: #F8FAFC;
-  border: 1px solid #F1F5F9;
+  border: 1px solid #E2E8F0;
   transition: all 0.15s ease;
   user-select: none;
+  box-sizing: border-box;
 }
 
 .filter-chip:hover,
@@ -1006,13 +1060,12 @@ html, body {
   display: none;
 }
 
-/* Checkbox / Radio Personalizados */
-.filter-chip-custom-check,
-.filter-chip-custom-radio {
-  width: 16px;
-  height: 16px;
+/* Checkbox e Radio Customizados */
+.filter-chip-custom-check {
+  width: 13px;
+  height: 13px;
   border: 1.5px solid #94A3B8;
-  border-radius: 4px;
+  border-radius: 3.5px;
   background: #FFFFFF;
   display: flex;
   align-items: center;
@@ -1022,51 +1075,62 @@ html, body {
 }
 
 .filter-chip-custom-radio {
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid #94A3B8;
   border-radius: 50%;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
 }
 
 .filter-chip:has(input:checked) .filter-chip-custom-check,
 .filter-radio-chip:has(input:checked) .filter-chip-custom-radio {
-  border-color: var(--color-primary, #17375E);
-  background: var(--color-primary, #17375E);
+  border-color: var(--color-primary, #1E5080);
+  background: var(--color-primary, #1E5080);
 }
 
 .filter-chip:has(input:checked) .filter-chip-custom-check::after {
   content: '';
-  width: 4px;
-  height: 8px;
+  width: 3.5px;
+  height: 6.5px;
   border: solid #FFFFFF;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg) translate(-1px, -1px);
+  border-width: 0 1.8px 1.8px 0;
+  transform: rotate(45deg) translate(-0.5px, -0.5px);
 }
 
 .filter-radio-chip:has(input:checked) .filter-chip-custom-radio::after {
   content: '';
-  width: 6px;
-  height: 6px;
+  width: 4.5px;
+  height: 4.5px;
   border-radius: 50%;
   background: #FFFFFF;
 }
 
-/* Estado Ativo/Selecionado nos Chips */
+/* Estado Ativo/Selecionado */
 .filter-chip:has(input:checked),
 .filter-radio-chip:has(input:checked) {
   background: #EFF6FF;
-  border-color: #BFDBFE;
-  color: var(--color-primary, #17375E);
+  border-color: #93C5FD;
+  color: var(--color-primary, #1E5080);
   font-weight: 600;
+  box-shadow: 0 1px 2px rgba(30, 80, 128, 0.05);
 }
 
-/* Dot de Status */
+/* Dots Coloridos */
 .filter-chip-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .dot-planejamento {
   background: #EAB308;
-  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
+  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.2);
 }
 
 .filter-chip-text {
@@ -1074,56 +1138,125 @@ html, body {
   align-items: center;
   justify-content: space-between;
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Opção Vencidos com alerta */
+/* Opção Vencidos / Ultrapassado */
+.filter-chip-vencido {
+  grid-column: span 2;
+}
+
 .filter-radio-vencido {
   color: #DC2626;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .icon-warning {
   color: #DC2626;
+  flex-shrink: 0;
 }
 
-.filter-radio-chip:has(input:checked) .filter-radio-vencido {
+.filter-radio-chip.filter-chip-vencido:has(input:checked) {
+  background: #FEF2F2;
+  border-color: #FCA5A5;
   color: #B91C1C;
-  font-weight: 700;
+}
+
+.filter-radio-chip.filter-chip-vencido:has(input:checked) .filter-chip-custom-radio {
+  border-color: #DC2626;
+  background: #DC2626;
+}
+
+/* Custom Select de Operador */
+.filter-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.filter-select-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.filter-select-chevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.filter-custom-select {
+  width: 100%;
+  height: 36px;
+  padding: 0 28px 0 32px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1E293B;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.filter-custom-select:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+}
+
+.filter-custom-select:focus {
+  background: #FFFFFF;
+  border-color: var(--color-primary, #1E5080);
+  box-shadow: 0 0 0 3px rgba(30, 80, 128, 0.15);
 }
 
 /* Rodapé do painel */
 .filter-panel-footer {
-  margin-top: 1rem;
-  padding-top: 0.85rem;
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
   border-top: 1px solid #F1F5F9;
-  display: flex;
-  justify-content: flex-end;
 }
 
 .btn-apply-filters {
   width: 100%;
-  background: linear-gradient(135deg, var(--color-primary, #17375E) 0%, #1E40AF 100%);
+  background: linear-gradient(135deg, var(--color-primary, #1E5080) 0%, #163E65 100%);
   color: #FFFFFF;
   border: none;
-  border-radius: 10px;
-  padding: 0.65rem 1.2rem;
-  font-size: 0.84rem;
-  font-weight: 700;
+  border-radius: 8px;
+  height: 38px;
+  padding: 0 1rem;
+  font-size: 0.83rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   font-family: var(--font-family);
-  box-shadow: 0 4px 12px rgba(23, 55, 94, 0.2);
+  box-shadow: 0 2px 8px rgba(30, 80, 128, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.45rem;
 }
 
 .btn-apply-filters:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(23, 55, 94, 0.3);
-  filter: brightness(1.08);
+  box-shadow: 0 4px 12px rgba(30, 80, 128, 0.3);
+  filter: brightness(1.06);
 }
 
 .btn-apply-filters:active {

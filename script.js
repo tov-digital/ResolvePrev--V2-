@@ -1937,6 +1937,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Fechar painel pelo botão X
+  const filterCloseBtnEl = document.getElementById('filterCloseBtn');
+  if (filterCloseBtnEl && filterPanel) {
+    filterCloseBtnEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      filterPanel.classList.add('hidden');
+    });
+  }
+
   // Fechar painel ao clicar fora
   document.addEventListener('click', (e) => {
     if (filterPanel && !filterPanel.classList.contains('hidden')) {

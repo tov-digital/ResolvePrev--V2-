@@ -257,20 +257,38 @@
             </button>
 
             <!-- Painel de Filtros -->
+            <!-- Painel de Filtros -->
             <div id="filterPanel" class="filter-panel hidden">
               <div class="filter-panel-header">
                 <div class="filter-title-group">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                  </svg>
+                  <div class="filter-icon-pill">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                    </svg>
+                  </div>
                   <span class="filter-panel-title">Filtros</span>
                 </div>
-                <button class="filter-clear-btn" id="filterClearBtn" title="Limpar todos os filtros">Limpar tudo</button>
+                <div class="filter-header-actions">
+                  <button class="filter-clear-btn" id="filterClearBtn" title="Limpar todos os filtros">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                    </svg>
+                    <span>Limpar</span>
+                  </button>
+                  <button class="filter-close-btn" id="filterCloseBtn" title="Fechar painel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               <!-- Seção: Status -->
               <div class="filter-section filter-status-section" id="filterStatusSection">
-                <span class="filter-section-label">Status</span>
+                <div class="filter-section-header">
+                  <span class="filter-section-label">Status</span>
+                </div>
                 <div class="filter-options-grid">
                   <label class="filter-chip filter-chip-status">
                     <input type="checkbox" class="filter-status-cb" value="novo">
@@ -351,7 +369,9 @@
 
               <!-- Seção: Período de Requerimento -->
               <div class="filter-section">
-                <span class="filter-section-label">Período de Requerimento</span>
+                <div class="filter-section-header">
+                  <span class="filter-section-label">Período de Requerimento</span>
+                </div>
                 <div class="filter-radio-group">
                   <label class="filter-radio-chip">
                     <input type="radio" name="filterDate" class="filter-date-radio" value="" checked>
@@ -359,9 +379,9 @@
                     <span class="filter-chip-text">Qualquer período</span>
                   </label>
                   <label class="filter-radio-chip">
-                    <input type="radio" name="filterDate" class="filter-date-radio" value="menos365">
+                    <input type="radio" name="filterDate" class="filter-date-radio" value="menos7">
                     <span class="filter-chip-custom-radio"></span>
-                    <span class="filter-chip-text">Em um ano</span>
+                    <span class="filter-chip-text">Em uma semana</span>
                   </label>
                   <label class="filter-radio-chip">
                     <input type="radio" name="filterDate" class="filter-date-radio" value="menos30">
@@ -369,15 +389,15 @@
                     <span class="filter-chip-text">Em um mês</span>
                   </label>
                   <label class="filter-radio-chip">
-                    <input type="radio" name="filterDate" class="filter-date-radio" value="menos7">
+                    <input type="radio" name="filterDate" class="filter-date-radio" value="menos365">
                     <span class="filter-chip-custom-radio"></span>
-                    <span class="filter-chip-text">Em uma semana</span>
+                    <span class="filter-chip-text">Em um ano</span>
                   </label>
                   <label class="filter-radio-chip filter-chip-vencido">
                     <input type="radio" name="filterDate" class="filter-date-radio" value="vencidos">
                     <span class="filter-chip-custom-radio"></span>
                     <span class="filter-chip-text filter-radio-vencido">
-                      Ultrapassado
+                      <span>Ultrapassado</span>
                       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="icon-warning">
                         <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
                         <line x1="12" y1="9" x2="12" y2="13"/>
@@ -392,14 +412,28 @@
 
               <!-- Seção: Atribuição (Apenas Admin) -->
               <div class="filter-section" id="filterOperatorSection" style="display: none;">
-                <span class="filter-section-label">Operador</span>
-                <select id="filterOperatorSelect" class="form-input" style="width: 100%; margin-top: 8px;">
-                  <option value="">Todos</option>
-                </select>
+                <div class="filter-section-header">
+                  <span class="filter-section-label">Operador Responsável</span>
+                </div>
+                <div class="filter-select-wrapper">
+                  <svg class="filter-select-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  <select id="filterOperatorSelect" class="filter-custom-select">
+                    <option value="">Todos</option>
+                  </select>
+                  <svg class="filter-select-chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </div>
               </div>
 
               <div class="filter-panel-footer">
                 <button class="btn-apply-filters" id="filterApplyBtn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
                   <span>Aplicar Filtros</span>
                 </button>
               </div>
