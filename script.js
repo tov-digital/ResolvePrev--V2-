@@ -4938,40 +4938,34 @@ function getQuestionsConfig(fieldId, val) {
     const questionsConfig = {
       'respJaContribuiu': [
         { id: 'addInfoTempoParou', label: 'Há quanto tempo parou de contribuir?', type: 'textarea' },
-        { id: 'addInfoQualidadeSegurado', label: 'Você sabe se ainda tem qualidade de segurado?', type: 'textarea' },
-        { id: 'addInfo120Contribuicoes', label: 'Sabe se fez mais de 120 contribuições sem interrupção?', type: 'textarea' },
-        { id: 'addInfo12MesesSem', label: 'Sabe se ficou um período maior que 12 meses sem contribuir?', type: 'textarea' }
+        { id: 'addInfo120Contribuicoes', label: 'Contribuiu 10 anos sem interrupção?', type: 'textarea' },
+        { id: 'addInfo12MesesSem', label: 'Ficou mais de 1 ano sem contribuir voluntariamente?', type: 'textarea' }
       ],
       'respExerceuAtividadeEspecial': [
-        { id: 'addInfoAtivEspecial1', label: 'Por quanto tempo, e qual era a atividade?', type: 'textarea' },
-        { id: 'addInfoAtivEspecial2', label: 'As empresas ainda existem, caso precise fazer alguma correção ou pedir documentos?', type: 'textarea' },
-        { id: 'addInfoAtivEspecial3', label: 'Sabe a classificação de exposição aos agentes nocivos?', type: 'textarea' },
-        { id: 'addInfoAtivEspecial4', label: 'Sabe se o uso de EPIs neutraliza a exposição a ponto de anular o direito?', type: 'textarea' }
+        { id: 'addInfoAtivEspecial1', label: 'Qual a atividade e por quanto tempo exerceu?', type: 'textarea' },
+        { id: 'addInfoAtivEspecial2', label: 'Possui e já fez análise do PPP ou LTCAT?', type: 'textarea' },
+        { id: 'addInfoAtivEspecial3', label: 'As empresas ainda existem?', type: 'textarea' }
       ]
     };
 
     if (fieldId === 'respTipoTrabalho') {
       if (val === 'Emprego de carteira assinada (CLT)') {
         return [
-          { id: 'addInfoCLT1', label: 'Como CLT, com o que você trabalhava?', type: 'textarea' },
-          { id: 'addInfoCLT2', label: 'Alguém já analisou o seu CNIS pra ver se todo o período em que trabalhou como CLT está registrado corretamente?', type: 'textarea' },
-          { id: 'addInfoCLT3', label: 'Você sabe se tem alguma contribuição que foi registrada com valor errado ou abaixo de um salário mínimo?', type: 'textarea' },
-          { id: 'addInfoCLT4', label: 'Você sabe se tem alguma data de entrada, saída ou de intervalo que precisa ser corrigida ?', type: 'textarea' }
+          { id: 'addInfoCLT1', label: 'Com o que você trabalhava?', type: 'textarea' },
+          { id: 'addInfoCLT2', label: 'Todos seus registros aparecem no CNIS?', type: 'textarea' },
+          { id: 'addInfoCLT3', label: 'Alguma contribuição está com valor ou data incorretos?', type: 'textarea' }
         ];
       } else if (val === 'Empresário / Autônomo / MEI') {
         return [
-          { id: 'addInfoMEI1', label: 'Como autônomo, com o que você trabalhava, e suas contribuições eram no carnê, ou como MEI?', type: 'textarea' },
-          { id: 'addInfoMEI2', label: 'Alguém já analisou como essas contribuições aparecem no seu CNIS, se existe alguma lacuna ou se algo não foi contabilizado?', type: 'textarea' },
-          { id: 'addInfoMEI3', label: 'Você sabe se tem alguma contribuição duplicada?', type: 'textarea' },
-          { id: 'addInfoMEI4', label: 'Você sabe se todas as contribuições foram feitas no código correto?', type: 'textarea' }
+          { id: 'addInfoMEI1', label: 'Qual sua atividade, e contribuia no carnê ou MEI?', type: 'textarea' },
+          { id: 'addInfoMEI2', label: 'Há alguma lacuna ou contribuição duplicada?', type: 'textarea' },
+          { id: 'addInfoMEI3', label: 'As contribuições foram feitas no código correto?', type: 'textarea' }
         ];
       } else if (val === 'Trabalhador rural') {
         return [
-          { id: 'addInfoRural1', label: 'Na roça, para quem você trabalhava?', type: 'textarea' },
-          { id: 'addInfoRural2', label: 'As terras eram da sua família, e se sim, sabe quantos hectares ?', type: 'textarea' },
-          { id: 'addInfoRural3', label: 'Você tem algum registro documental desse tempo de trabalho e que você produzia na terra?', type: 'textarea' },
-          { id: 'addInfoRural4', label: 'Ainda existem testemunhas vivas do seu trabalho rural?', type: 'textarea' },
-          { id: 'addInfoRural5', label: 'Você tem algum registro documental da sua relação com a terra?', type: 'textarea' }
+          { id: 'addInfoRural1', label: 'A terra era da sua família?', type: 'textarea' },
+          { id: 'addInfoRural2', label: 'Quantos hectares de área produtiva?', type: 'textarea' },
+          { id: 'addInfoRural3', label: 'Você tem documentos e testemunhas?', type: 'textarea' }
         ];
       } else if (val === 'Servidor público') {
         return [];
@@ -5001,7 +4995,7 @@ function calculateSteps() {
     // Já contribuiu
     if (valContribuiu && valContribuiu !== 'Sim - e continuo contribuindo.') {
         const fields = getQuestionsConfig('respJaContribuiu');
-        if (fields.length) dynamicStepsData.push({ title: 'Contribuição', fields });
+        if (fields.length) dynamicStepsData.push({ title: 'Qualidade de segurado', fields });
     }
 
     // Tipo de trabalho
@@ -5032,14 +5026,13 @@ function renderSteps() {
         stepDiv.id = 'step-' + stepNum;
         stepDiv.className = 'form-step dynamic-step';
         stepDiv.style.display = 'none';
-        
-        let html = '<h3 style="margin-top:0; color:var(--text-accent); font-size:16px;">' + stepData.title + '</h3>';
+        let html = '<h3 style="margin-top:-6px; margin-bottom: 16px; color:var(--text-accent); font-size:16px;">' + stepData.title + '</h3>';
         
         stepData.fields.forEach(f => {
             html += `
               <div class="sheet-field-group" style="margin-bottom: 1rem;">
-                <label for="${f.id}" style="display: block; font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text-dark);">${f.label}</label>
-                <textarea id="${f.id}" class="sheet-input multistep-textarea" rows="3" style="width: 100%; resize: vertical; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border); font-size: 0.95rem; font-family: inherit; background-color: var(--surface-2); color: var(--text-primary); outline:none;"></textarea>
+                <label for="${f.id}" style="display: block; font-weight: normal; font-size: 14px; margin-bottom: 0.5rem; color: var(--text-dark);">${f.label}</label>
+                <textarea id="${f.id}" class="sheet-input multistep-textarea" rows="1" style="width: 100%; resize: vertical; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; font-family: inherit; background-color: var(--surface-2); color: var(--text-primary); outline:none;"></textarea>
               </div>
             `;
         });

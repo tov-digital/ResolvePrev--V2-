@@ -781,7 +781,7 @@ class="tab-pane active" style="flex-grow: 1; display: flex; flex-direction: colu
             <div 
 style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); 
 flex-grow: 1;">
-              <div id="qualificacaoView" style="padding:16px 20px; border-right:0.5px solid var(--border);">
+              <div id="qualificacaoView" style="padding:16px 20px; border-right:0.5px solid var(--border); display: flex; flex-direction: column;">
            
      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
             
@@ -887,8 +887,7 @@ color:var(--text-primary);">
  <option value="Empresário / Autônomo / MEI">Empresário / Autônomo / MEI</option>
                       <option 
 value="Servidor público">Servidor público</option>
-                      <option value="Trabalhador 
-rural">Trabalhador rural</option>
+                      <option value="Trabalhador rural">Trabalhador rural</option>
                       <option value="Outro">Outro</option>
                     
 </select>
@@ -925,7 +924,7 @@ color:var(--text-primary);">
 </div>
                     </div>
                 </form>
-                <div style="display: flex; justify-content: space-between; margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; margin-top: 4px; padding-top: 0px;">
                    <button id="btnVoltarStep" type="button" style="display: none; padding: 8px 16px; border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; cursor: pointer; color: var(--text-primary); font-weight: 500;">Voltar</button>
                    <button id="btnProximoStep" type="button" style="padding: 8px 16px; background: var(--fill-accent); color: var(--on-accent); border: none; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500;">Próximo</button>
                    <button id="btnFinalizarStep" type="button" style="display: none; padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500;">Finalizar</button>
@@ -947,9 +946,7 @@ color:var(--text-primary);">
 background:var(--surface-1); display: flex; flex-direction: column;">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
                   <p style="margin:0; font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px;"><i class="ti ti-notes" style="font-size:18px; color:var(--text-accent)" aria-hidden="true"></i>Detalhes do caso</p>
-                  <button id="btnAjudaDetalhes" type="button" title="Ajuda" style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid var(--border); border-radius:8px; font-size:18px; background: var(--surface-1); cursor: pointer; color: var(--color-primary);">
-                    <i class="ti ti-help" aria-hidden="true"></i>
-                  </button>
+
                 </div>
                 <div 
 style="background:var(--surface-2); border:0.5px solid var(--border); border-radius:var(--radius); padding:12px 14px; 
@@ -989,7 +986,7 @@ y2="14"></line>
                 <i class="ti ti-brand-whatsapp" style="font-size:16px" aria-hidden="true"></i>Enviar mensagem</button>
               <button class="btn-gmail" style="border:1px solid var(--border); background:var(--surface-1); border-radius:8px; padding:8px 14px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--color-primary);">
                 <i class="ti ti-calendar-plus" style="font-size:16px" aria-hidden="true"></i>Agendar reunião</button>
-              <button style="background:var(--fill-accent); color:var(--on-accent); border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; cursor:pointer;">Mover etapa<i class="ti ti-arrow-right" style="font-size:16px" aria-hidden="true"></i></button>
+
             </div>
           
 </div>
