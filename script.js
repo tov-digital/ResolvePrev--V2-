@@ -1868,6 +1868,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     allUserCards = cards || [];
+
+    // Atualiza filtro de operador se for admin/supervisor
+    if (canSeeAllCards) {
+      const opDivider = document.getElementById('filterOperatorDivider');
+      const opSection = document.getElementById('filterOperatorSection');
+      const opSelect = document.getElementById('filterOperatorSelect');
+      
+      if (opDivider) opDivider.style.display = 'block';
+      if (opSection) opSection.style.display = 'flex'; // ou block
+      
+      if (opSelect) {
+        const uniqueUserIds = [...new Set(allUserCards.map(c => c.user_id).filter(Boolean))];
+        
+        window.crmProfilesCache = window.crmProfilesCache || [];
+        if (window.crmProfilesCache.length === 0) {
+          const { data: profiles } = await supabase.from('profiles').select('*');
+          if (profiles) window.crmProfilesCache = profiles;
+        }
+        
+        const currentSelected = opSelect.value;
+        opSelect.innerHTML = '<option value="">Todos</option>';
+        
+        uniqueUserIds.forEach(uId => {
+          const prof = window.crmProfilesCache.find(p => p.id === uId);
+          const name = prof ? getUserDisplayName(prof) : 'Usuário Desconhecido';
+          const opt = document.createElement('option');
+          opt.value = uId;
+          opt.textContent = name;
+          opSelect.appendChild(opt);
+        });
+        
+        if (uniqueUserIds.includes(currentSelected)) {
+          opSelect.value = currentSelected;
+        }
+      }
+    } else {
+       const opDivider = document.getElementById('filterOperatorDivider');
+       const opSection = document.getElementById('filterOperatorSection');
+       if (opDivider) opDivider.style.display = 'none';
+       if (opSection) opSection.style.display = 'none';
+    }
+
     const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
     filterAndRenderCards(searchTerm);
   }
@@ -1884,6 +1926,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Estado ativo dos filtros (aplicados ao clicar em "Aplicar")
   let activeStatusFilters = []; // array de strings e.g. ['novo','proposta']
   let activeDateFilter    = ''; // string e.g. 'menos7'
+  let activeOperatorFilter = ''; // string, id do operador
 
   // Toggle do painel
   const crmFilterBtnEl = document.getElementById('crmFilterBtn');
@@ -1914,7 +1957,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Atualiza badge de filtros ativos no botão
   function updateFilterBadge() {
-    const count = activeStatusFilters.length + (activeDateFilter ? 1 : 0);
+    const count = activeStatusFilters.length + (activeDateFilter ? 1 : 0) + (activeOperatorFilter ? 1 : 0);
     if (filterActiveBadge) {
       if (count > 0) {
         filterActiveBadge.textContent = count;
@@ -1941,6 +1984,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       const checkedRadio = document.querySelector('.filter-date-radio:checked');
       activeDateFilter = checkedRadio ? checkedRadio.value : '';
 
+      // Lê select de operador
+      const opSelect = document.getElementById('filterOperatorSelect');
+      activeOperatorFilter = opSelect ? opSelect.value : '';
+
       updateFilterBadge();
       filterPanel.classList.add('hidden');
 
@@ -1958,6 +2005,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (anyDateRadio) anyDateRadio.checked = true;
       activeStatusFilters = [];
       activeDateFilter = '';
+      
+      const opSelect = document.getElementById('filterOperatorSelect');
+      if (opSelect) opSelect.value = '';
+      activeOperatorFilter = '';
+
       updateFilterBadge();
       const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
       filterAndRenderCards(searchTerm);
@@ -2013,6 +2065,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           default: return true;
         }
       });
+    }
+
+    // 4. Filtro de operador
+    if (activeOperatorFilter) {
+      filtered = filtered.filter(card => String(card.user_id) === activeOperatorFilter);
     }
 
     renderKanbanCards(filtered);
