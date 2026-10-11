@@ -787,9 +787,12 @@ width:100%; color:var(--text-primary);">
           <div id="tabContentRespostas" class="tab-pane active" style="flex-grow: 1; display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden;">
             <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); grid-template-rows: minmax(0, 1fr); flex-grow: 1; min-height: 0; height: 100%; overflow: hidden;">
               <div id="qualificacaoView" style="padding:16px 20px; border-right:0.5px solid var(--border); display: flex; flex-direction: column; min-height: 0; height: 100%; box-sizing: border-box; overflow: hidden;">
-                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-shrink: 0;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-shrink: 0;">
                     <p style="margin:0; font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px;"><i class="ti ti-clipboard-text" style="font-size:18px; color:var(--text-accent)" aria-hidden="true"></i>Formulário de qualificação</p>
-                    <button type="button" id="btnReloadForm" style="height:28px; width:28px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:4px; border:1px solid var(--border); background:var(--surface-1); cursor:pointer; color:var(--text-primary); transition: background 0.2s;" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='var(--surface-1)'" title="Recarregar formulário"><i class="ti ti-reload" style="font-size:16px"></i></button>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span id="stepCounterBadge" style="font-size:12px; color:var(--text-secondary); background:var(--surface-2); padding:2px 8px; border-radius:12px; border:1px solid var(--border); font-weight:500;">Etapa 1 de 6</span>
+                      <button type="button" id="btnReloadForm" style="height:28px; width:28px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:4px; border:1px solid var(--border); background:var(--surface-1); cursor:pointer; color:var(--text-primary); transition: background 0.2s;" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='var(--surface-1)'" title="Reiniciar formulário"><i class="ti ti-reload" style="font-size:16px"></i></button>
+                    </div>
                  </div>
 
                  <style>
@@ -816,146 +819,387 @@ width:100%; color:var(--text-primary);">
                      scrollbar-width: thin;
                      scrollbar-color: var(--border) transparent;
                    }
+                   .qual-field-group {
+                     padding: 10px 0;
+                     border-bottom: 0.5px solid var(--border);
+                   }
+                   .qual-field-label {
+                     margin: 0;
+                     font-size: 13px;
+                     font-weight: 500;
+                     color: var(--text-primary);
+                     line-height: 1.45;
+                     cursor: pointer;
+                   }
+                   .qual-select {
+                     width: 100%;
+                     border: 1px solid var(--border);
+                     background: var(--surface-2);
+                     padding: 8px 10px;
+                     margin-top: 6px;
+                     font-size: 13.5px;
+                     font-weight: 500;
+                     outline: none;
+                     box-shadow: none;
+                     cursor: pointer;
+                     border-radius: 6px;
+                     color: var(--text-primary);
+                     font-family: inherit;
+                     transition: border-color 0.2s, box-shadow 0.2s;
+                   }
+                   .qual-select:focus {
+                     border-color: var(--fill-accent);
+                     box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+                   }
+                   .qual-conditional-block {
+                     margin-top: 10px;
+                     padding: 10px 12px;
+                     background: var(--surface-2);
+                     border-left: 3px solid var(--fill-accent);
+                     border-radius: 4px;
+                     display: flex;
+                     flex-direction: column;
+                     gap: 10px;
+                   }
+                   .qual-sub-label {
+                     display: block;
+                     font-weight: 500;
+                     font-size: 12.5px;
+                     margin-bottom: 4px;
+                     color: var(--text-secondary);
+                     line-height: 1.4;
+                   }
+                   .qual-textarea {
+                     width: 100%;
+                     box-sizing: border-box;
+                     resize: vertical;
+                     padding: 6px 10px;
+                     border-radius: 6px;
+                     border: 1px solid var(--border);
+                     font-size: 13px;
+                     font-family: inherit;
+                     background-color: var(--surface-1);
+                     color: var(--text-primary);
+                     outline: none;
+                     transition: border-color 0.2s, box-shadow 0.2s;
+                   }
+                   .qual-textarea:focus {
+                     border-color: var(--fill-accent);
+                     box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+                   }
+                   .step-indicator {
+                     flex: 1;
+                     height: 4px;
+                     border-radius: 2px;
+                     background: var(--border);
+                     cursor: pointer;
+                     transition: background 0.2s;
+                   }
+                   .step-indicator.active {
+                     background: var(--fill-accent);
+                   }
                  </style>
                  <div id="multiStepFormContainer" style="display: flex; flex-direction: column; flex-grow: 1; position: relative; min-height: 0; height: 100%; overflow: hidden;">
-                   <div id="formTrackingBar" style="display: flex; gap: 4px; margin-bottom: 16px; flex-shrink: 0;">
-                       <div class="step-indicator active" style="flex: 1; height: 4px; background: var(--fill-accent); border-radius: 2px;"></div>
+                   <div id="formTrackingBar" style="display: flex; gap: 4px; margin-bottom: 14px; flex-shrink: 0;">
+                     <div class="step-indicator active" data-step="1" title="Etapa 1: Perguntas 1 e 2"></div>
+                     <div class="step-indicator" data-step="2" title="Etapa 2: Perguntas 3 a 6"></div>
+                     <div class="step-indicator" data-step="3" title="Etapa 3: Pergunta 7"></div>
+                     <div class="step-indicator" data-step="4" title="Etapa 4: Pergunta 8"></div>
+                     <div class="step-indicator" data-step="5" title="Etapa 5: Pergunta 9"></div>
+                     <div class="step-indicator" data-step="6" title="Etapa 6: Pergunta 10"></div>
                    </div>
                    <form id="clientAnswersForm" style="display: block; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-right: 6px; min-height: 0;">
-                    <div id="step-1" class="form-step" style="width: 100%; box-sizing: border-box;">
-                  <input type="hidden" id="respIdade">
-                  
-           
-       <!-- Já solicitou -->
-                  <div style="padding:10px 0; border-bottom:0.5px solid 
-var(--border);" class="sheet-field-group">
-                    <div style="margin:0; font-size:12px; 
-color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; gap:5px;">
-            
-          <label for="respSolicitouBeneficio" style="margin:0; font-weight:normal; cursor:pointer;">Já 
-solicitou?</label>
-                      <button type="button" title="Adicionar" class="btn-add-info" 
-style="background:none; border:none; padding:0; display:flex; align-items:center; color:var(--text-muted); 
-cursor:pointer;">
-                        <i class="ti ti-circle-plus" style="font-size:18px;"></i>
-            
-          </button>
-                    </div>
-                    <select id="respSolicitouBeneficio" 
-style="width: 100%; border: none; background: transparent; padding: 4px 0 0 0; font-size: 14px; font-weight: 500; 
-outline: none; box-shadow: none; cursor: pointer; appearance: none; color:var(--text-primary);">
-                    
-  <option value="">Selecione...</option>
-                      <option value="Não - nunca tentei aposentar.">Não 
-- nunca tentei aposentar.</option>
-                      <option value="Sim - já tentei e está em andamento.">Sim - 
-já tentei e está em andamento.</option>
-                      <option value="Sim - mas foi negada pelo INSS.">Sim - 
-mas foi negada pelo INSS.</option>
-                    </select>
-                  </div>
+                     <input type="hidden" id="respIdade">
 
-                  <!-- 
-Já contribuiu -->
-                  <div style="padding:10px 0; border-bottom:0.5px solid var(--border);" 
-class="sheet-field-group">
-                    <div style="margin:0; font-size:12px; color:var(--text-secondary); 
-display:flex; align-items:center; justify-content:space-between; gap:5px;">
-                      <label 
-for="respJaContribuiu" style="margin:0; font-weight:normal; cursor:pointer;">Já contribuiu?</label>
-              
-        <button type="button" title="Adicionar" class="btn-add-info" style="background:none; border:none; 
-padding:0; display:flex; align-items:center; color:var(--text-muted); cursor:pointer;">
-                        <i 
-class="ti ti-circle-plus" style="font-size:18px;"></i>
-                      </button>
-                    
-</div>
-                    <select id="respJaContribuiu" style="width: 100%; border: none; background: 
-transparent; padding: 4px 0 0 0; font-size: 14px; font-weight: 500; outline: none; box-shadow: none; cursor: pointer; 
-appearance: none; color:var(--text-primary);">
-                      <option value="">Selecione...</option>
-      
-                <option value="Sim - e continuo contribuindo.">Sim - e continuo contribuindo.</option>
-             
-         <option value="Sim - mas parei há algum tempo.">Sim - mas parei há algum tempo.</option>
-                  
-    <option value="Nunca fiz contribuição ao INSS.">Nunca fiz contribuição ao INSS.</option>
-                      
-<option value="Não sei responder.">Não sei responder.</option>
-                    </select>
-                  </div>
+                     <!-- STEP 1: Perguntas 1 e 2 -->
+                     <div id="step-1" class="form-step" style="width: 100%; box-sizing: border-box;">
+                       
+                       <!-- 1. Já contribuiu? -->
+                       <div class="qual-field-group">
+                         <label for="respJaContribuiu" class="qual-field-label">1. Já contribuiu?</label>
+                         <select id="respJaContribuiu" class="qual-select">
+                           <option value="">Selecione...</option>
+                           <option value="Sim - e continuo contribuindo.">Sim - e continuo contribuindo.</option>
+                           <option value="Sim - mas parei há algum tempo.">Sim - mas parei há algum tempo.</option>
+                           <option value="Nunca fiz contribuição ao INSS.">Nunca fiz contribuição ao INSS.</option>
+                           <option value="Não sei responder.">Não sei responder.</option>
+                         </select>
 
-                  <!-- Tipo de trabalho -->
-                  <div style="padding:10px 0; 
-border-bottom:0.5px solid var(--border);" class="sheet-field-group">
-                    <div style="margin:0; 
-font-size:12px; color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; 
-gap:5px;">
-                      <label for="respTipoTrabalho" style="margin:0; font-weight:normal; 
-cursor:pointer;">Tipo de trabalho</label>
-                      <button type="button" title="Adicionar" 
-class="btn-add-info" style="background:none; border:none; padding:0; display:flex; align-items:center; 
-color:var(--text-muted); cursor:pointer;">
-                        <i class="ti ti-circle-plus" 
-style="font-size:18px;"></i>
-                      </button>
-                    </div>
-                    
-<select id="respTipoTrabalho" style="width: 100%; border: none; background: transparent; padding: 4px 0 0 0; 
-font-size: 14px; font-weight: 500; outline: none; box-shadow: none; cursor: pointer; appearance: none; 
-color:var(--text-primary);">
-                      <option value="">Selecione...</option>
-                      
-<option value="Emprego de carteira assinada (CLT)">Emprego de carteira assinada (CLT)</option>
-                     
- <option value="Empresário / Autônomo / MEI">Empresário / Autônomo / MEI</option>
-                      <option 
-value="Servidor público">Servidor público</option>
-                      <option value="Trabalhador rural">Trabalhador rural</option>
-                      <option value="Outro">Outro</option>
-                    
-</select>
-                  </div>
+                         <!-- Condicional Q1 - Se "Sim - e continuo contribuindo." -->
+                         <div id="cond_q1_sim_box" class="qual-conditional-block" style="display: none;">
+                           <div>
+                             <label for="cond_q1_faz" class="qual-sub-label">O que você faz?</label>
+                             <textarea id="cond_q1_faz" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                         </div>
 
-                  <!-- Atividade especial -->
-                  <div 
-style="padding:10px 0 0;" class="sheet-field-group">
-                    <div style="margin:0; font-size:12px; 
-color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; gap:5px;">
-            
-          <label for="respExerceuAtividadeEspecial" style="margin:0; font-weight:normal; 
-cursor:pointer;">Atividade especial?</label>
-                      <button type="button" title="Adicionar" 
-class="btn-add-info" style="background:none; border:none; padding:0; display:flex; align-items:center; 
-color:var(--text-muted); cursor:pointer;">
-                        <i class="ti ti-circle-plus" 
-style="font-size:18px;"></i>
-                      </button>
-                    </div>
-                    
-<select id="respExerceuAtividadeEspecial" style="width: 100%; border: none; background: transparent; padding: 4px 0 
-0 0; font-size: 14px; font-weight: 500; outline: none; box-shadow: none; cursor: pointer; appearance: none; 
-color:var(--text-primary);">
-                      <option value="">Selecione...</option>
-                      
-<option value="Sim - já trabalhei nessas atividades.">Sim - já trabalhei nessas atividades.</option>
-               
-       <option value="Não - nunca trabalhei com isso.">Não - nunca trabalhei com isso.</option>
-                    
-  <option value="Não sei responder">Não sei responder</option>
-                    </select>
-                  
-</div>
-                    </div>
-                </form>
-                <div id="summaryCardsContainer" style="display: none; flex-direction: column; gap: 12px; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 8px 16px 6px; min-height: 0; box-sizing: border-box;"></div>
-                <div id="stepButtonsContainer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 0px; flex-shrink: 0;">
-                   <button id="btnVoltarStep" type="button" style="display: none; height: 38px; padding: 0 16px; border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; cursor: pointer; color: var(--text-primary); font-weight: 500; font-size: 13px;">Voltar</button>
-                   <button id="btnProximoStep" type="button" style="height: 38px; padding: 0 16px; background: var(--fill-accent); color: var(--on-accent); border: 1px solid transparent; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500; font-size: 13px;">Próximo</button>
-                   <button id="btnFinalizarStep" type="button" style="display: none; height: 38px; padding: 0 16px; background: #10b981; color: white; border: 1px solid transparent; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500; font-size: 13px;">Finalizar</button>
-                </div>
-              </div>
+                         <!-- Condicional Q1 - Se qualquer outra resposta -->
+                         <div id="cond_q1_outro_box" class="qual-conditional-block" style="display: none;">
+                           <div>
+                             <label for="cond_q1_tempo" class="qual-sub-label">Quanto tempo sem contribuir?</label>
+                             <textarea id="cond_q1_tempo" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q1_qualidade" class="qual-sub-label">Sabe se tem qualidade de segurado?</label>
+                             <textarea id="cond_q1_qualidade" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                         </div>
+                       </div>
+
+                       <!-- 2. Recebe algum benefício? -->
+                       <div class="qual-field-group">
+                         <label for="respRecebeBeneficio" class="qual-field-label">2. Recebe algum benefício?</label>
+                         <select id="respRecebeBeneficio" class="qual-select">
+                           <option value="">Selecione...</option>
+                           <option value="Não">Não</option>
+                           <option value="Sim">Sim</option>
+                         </select>
+
+                         <!-- Condicional Q2 - Se "Sim" -->
+                         <div id="cond_q2_box" class="qual-conditional-block" style="display: none;">
+                           <div>
+                             <label for="cond_q2_qual" class="qual-sub-label">Qual?</label>
+                             <textarea id="cond_q2_qual" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q2_vantagem" class="qual-sub-label">Entende a vantagem da aposentadoria em relação a esse benefício?</label>
+                             <textarea id="cond_q2_vantagem" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                         </div>
+                       </div>
+
+                     </div>
+
+                     <!-- STEP 2: Perguntas 3 a 6 -->
+                     <div id="step-2" class="form-step" style="width: 100%; box-sizing: border-box; display: none;">
+                       
+                       <!-- 3. Já solicitou? -->
+                       <div class="qual-field-group">
+                         <label for="respSolicitouBeneficio" class="qual-field-label">3. Já solicitou?</label>
+                         <select id="respSolicitouBeneficio" class="qual-select">
+                           <option value="">Selecione...</option>
+                           <option value="Não - nunca tentei aposentar.">Não - nunca tentei aposentar.</option>
+                           <option value="Sim - já tentei e está em andamento.">Sim - já tentei e está em andamento.</option>
+                           <option value="Sim - mas foi negada pelo INSS.">Sim - mas foi negada pelo INSS.</option>
+                         </select>
+
+                         <!-- Condicional Q3 - Se qualquer outra resposta -->
+                         <div id="cond_q3_box" class="qual-conditional-block" style="display: none;">
+                           <div>
+                             <label for="cond_q3_judicial" class="qual-sub-label">E levou pro judicial ou fez uma nova tentativa?</label>
+                             <textarea id="cond_q3_judicial" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                         </div>
+                       </div>
+
+                       <!-- 4. Já sabe quando vai poder se aposentar e quanto vai receber? -->
+                       <div class="qual-field-group">
+                         <label for="respSabeAposentar" class="qual-field-label">4. Já sabe quando vai poder se aposentar e quanto vai receber?</label>
+                         <select id="respSabeAposentar" class="qual-select">
+                           <option value="">Selecione...</option>
+                           <option value="Não">Não</option>
+                           <option value="Sim">Sim</option>
+                         </select>
+
+                         <!-- Condicional Q4 - Se "Sim" -->
+                         <div id="cond_q4_box" class="qual-conditional-block" style="display: none;">
+                           <div>
+                             <label for="cond_q4_quem_falou" class="qual-sub-label">Quem te falou?</label>
+                             <textarea id="cond_q4_quem_falou" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q4_contratou" class="qual-sub-label">E você já contratou essa pessoa para cuidar da sua aposentadoria?</label>
+                             <textarea id="cond_q4_contratou" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q4_caracteristica" class="qual-sub-label">E qual a característica mais importante que um profissional tem que ter pra você deixar ele cuidar da sua aposentadoria?</label>
+                             <textarea id="cond_q4_caracteristica" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                         </div>
+                       </div>
+
+                       <!-- 5. O é mais importante para você se aposentar mais rápido ou se aposentar com uma renda maior? -->
+                        <div class="qual-field-group">
+                          <label for="respPrioridade" class="qual-field-label">5. O é mais importante para você se aposentar mais rápido ou se aposentar com uma renda maior?</label>
+                          <textarea id="respPrioridade" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                        </div>
+
+                        <!-- 6. O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)? -->
+                        <div class="qual-field-group">
+                          <label for="respModalidade" class="qual-field-label">6. O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)?</label>
+                          <textarea id="respModalidade" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                        </div>
+
+                      </div>
+
+                      <!-- STEP 3: Pergunta 7 -->
+                     <div id="step-3" class="form-step" style="width: 100%; box-sizing: border-box; display: none;">
+                       
+                       <!-- 7. Tipo de trabalho: -->
+                       <div class="qual-field-group">
+                         <label for="respTipoTrabalho" class="qual-field-label">7. Tipo de trabalho:</label>
+                         <select id="respTipoTrabalho" class="qual-select">
+                           <option value="">Selecione...</option>
+                           <option value="Emprego de carteira assinada (CLT)">Emprego de carteira assinada (CLT)</option>
+                           <option value="Empresário / Autônomo / MEI">Empresário / Autônomo / MEI</option>
+                           <option value="Trabalhador rural">Trabalhador rural</option>
+                           <option value="Servidor público">Servidor público</option>
+                           <option value="Outro">Outro</option>
+                         </select>
+
+                         <!-- Condicional Q7 - CLT -->
+                         <div id="cond_q7_clt_box" class="qual-conditional-block" style="display: none;">
+                           <div>
+                             <label for="cond_q7_clt_cnis" class="qual-sub-label">E você sabe se todos os registros constam no CNIS?</label>
+                             <textarea id="cond_q7_clt_cnis" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q7_clt_aliquota" class="qual-sub-label">Sabe se as empresas fizeram as contribuições na alíquota correta?</label>
+                             <textarea id="cond_q7_clt_aliquota" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q7_clt_erro" class="qual-sub-label">Sabe se tem algum dado que foi inserido errado no CNIS, como valor ou data?</label>
+                             <textarea id="cond_q7_clt_erro" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                         </div>
+
+                         <!-- Condicional Q7 - MEI -->
+                         <div id="cond_q7_mei_box" class="qual-conditional-block" style="display: none;">
+                           <div>
+                             <label for="cond_q7_mei_carne" class="qual-sub-label">Contribuiu no carnê ou MEI?</label>
+                             <textarea id="cond_q7_mei_carne" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q7_mei_codigo" class="qual-sub-label">Sabe se todas as contribuições foram no código e na alíquota corretas?</label>
+                             <textarea id="cond_q7_mei_codigo" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q7_mei_duplicada" class="qual-sub-label">Alguém já analisou se tem alguma contribuição duplicada?</label>
+                             <textarea id="cond_q7_mei_duplicada" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q7_mei_lacuna" class="qual-sub-label">Sabe se tem alguma lacuna contributiva ou se o INSS está considerando mesmo todas as suas contribuições?</label>
+                             <textarea id="cond_q7_mei_lacuna" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                         </div>
+
+                         <!-- Condicional Q7 - Rural -->
+                         <div id="cond_q7_rural_box" class="qual-conditional-block" style="display: none;">
+                           <div>
+                             <label for="cond_q7_rural_terra" class="qual-sub-label">De quem era a terra?</label>
+                             <textarea id="cond_q7_rural_terra" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q7_rural_hectares" class="qual-sub-label">Quantos hectares a terra tinha?</label>
+                             <textarea id="cond_q7_rural_hectares" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q7_rural_docs_prod" class="qual-sub-label">Você tem documentos que comprovem a sua atividade produtiva?</label>
+                             <textarea id="cond_q7_rural_docs_prod" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q7_rural_docs_fam" class="qual-sub-label">Você tem documentos que comprovem a relação da sua família com a terra?</label>
+                             <textarea id="cond_q7_rural_docs_fam" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q7_rural_testemunhas" class="qual-sub-label">Existem testemunhas vivas se for necessário?</label>
+                             <textarea id="cond_q7_rural_testemunhas" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                         </div>
+                       </div>
+
+                     </div>
+
+                     <!-- STEP 4: Pergunta 8 -->
+                     <div id="step-4" class="form-step" style="width: 100%; box-sizing: border-box; display: none;">
+                       
+                       <!-- 8. Atividade especial? -->
+                       <div class="qual-field-group">
+                         <label for="respExerceuAtividadeEspecial" class="qual-field-label">8. Atividade especial?</label>
+                         <select id="respExerceuAtividadeEspecial" class="qual-select">
+                           <option value="">Selecione...</option>
+                           <option value="Sim - já trabalhei nessas atividades.">Sim - já trabalhei nessas atividades.</option>
+                           <option value="Não - nunca trabalhei com isso.">Não - nunca trabalhei com isso.</option>
+                           <option value="Não sei responder">Não sei responder</option>
+                         </select>
+
+                         <!-- Condicional Q8 - Se "Sim - já trabalhei nessas atividades." -->
+                         <div id="cond_q8_box" class="qual-conditional-block" style="display: none;">
+                           <div>
+                             <label for="cond_q8_tempo" class="qual-sub-label">Por quanto tempo exerceu?</label>
+                             <textarea id="cond_q8_tempo" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q8_ppps" class="qual-sub-label">Você tem os PPPs ou LTCATs?</label>
+                             <textarea id="cond_q8_ppps" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q8_empresas" class="qual-sub-label">As empresas ainda existem caso precise pedir ou complementar documentação?</label>
+                             <textarea id="cond_q8_empresas" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q8_agentes" class="qual-sub-label">Alguém já analisou a classificação dos agentes nocivos, impacto do exercício da função, uso de EPIs e etc?</label>
+                             <textarea id="cond_q8_agentes" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                         </div>
+                       </div>
+
+                     </div>
+
+                     <!-- STEP 5: Pergunta 9 -->
+                     <div id="step-5" class="form-step" style="width: 100%; box-sizing: border-box; display: none;">
+                       
+                       <!-- 9. Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta? -->
+                       <div class="qual-field-group">
+                         <label for="respConsequencias" class="qual-field-label">9. Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?</label>
+                         <select id="respConsequencias" class="qual-select">
+                           <option value="">Selecione...</option>
+                           <option value="Não">Não</option>
+                           <option value="Sim">Sim</option>
+                         </select>
+
+                         <!-- Condicional Q9 - Se "Sim" -->
+                         <div id="cond_q9_sim_box" class="qual-conditional-block" style="display: none;">
+                           <div>
+                             <label for="cond_q9_sim_futuro" class="qual-sub-label">E como isso mudaria os seus planos de futuro?</label>
+                             <textarea id="cond_q9_sim_futuro" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                         </div>
+
+                         <!-- Condicional Q9 - Se "Não" -->
+                         <div id="cond_q9_nao_box" class="qual-conditional-block" style="display: none;">
+                           <div>
+                             <label for="cond_q9_nao_atraso" class="qual-sub-label">Sua aposentadoria pode atrasar por no mínimo mais 6 meses depois de completar a idade, podendo chegar a 3, 4 anos de atraso, como isso mudaria os seus planos?</label>
+                             <textarea id="cond_q9_nao_atraso" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                           <div>
+                             <label for="cond_q9_nao_renda_menor" class="qual-sub-label">Se você descobrisse que sua renda pode ser menor do que você tem direito por alguma informação ter sido enviada errada pro INSS, como você se sentiria?</label>
+                             <textarea id="cond_q9_nao_renda_menor" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                           </div>
+                         </div>
+                       </div>
+
+                     </div>
+
+                     <!-- STEP 6: Pergunta 10 -->
+                     <div id="step-6" class="form-step" style="width: 100%; box-sizing: border-box; display: none;">
+                       
+                       <!-- 10. Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai  ter negativa do INSS? -->
+                        <div class="qual-field-group">
+                          <label for="respFazerSozinho" class="qual-field-label">10. Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai  ter negativa do INSS?</label>
+                          <textarea id="respFazerSozinho" class="qual-textarea multistep-textarea" rows="3" placeholder="Digite a resposta..."></textarea>
+                        </div>
+
+                      </div>
+
+                    </form>
+                   <div id="summaryCardsContainer" style="display: none; flex-direction: column; gap: 12px; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 8px 16px 6px; min-height: 0; box-sizing: border-box;"></div>
+                   <div id="stepButtonsContainer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 0px; flex-shrink: 0;">
+                      <button id="btnVoltarStep" type="button" style="display: none; height: 38px; padding: 0 16px; border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; cursor: pointer; color: var(--text-primary); font-weight: 500; font-size: 13px;">Voltar</button>
+                      <button id="btnProximoStep" type="button" style="height: 38px; padding: 0 16px; background: var(--fill-accent); color: var(--on-accent); border: 1px solid transparent; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500; font-size: 13px;">Próximo</button>
+                      <button id="btnFinalizarStep" type="button" style="display: none; height: 38px; padding: 0 18px; background: #10b981; color: white; border: 1px solid transparent; border-radius: 8px; cursor: pointer; margin-left: auto; font-weight: 500; font-size: 13px; align-items: center; gap: 6px;"><i class="ti ti-check" style="font-size: 16px;"></i>Finalizar</button>
+                   </div>
+                 </div>
               </div>
 
               <!-- Nova View: Lista de Perguntas (oculta por padrão) -->

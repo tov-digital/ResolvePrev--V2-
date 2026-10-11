@@ -3378,22 +3378,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateServicoMilitarUI(card.servico_militar || 'Não');
 
       const elJaContribuiu = document.getElementById('respJaContribuiu');
-      if (elJaContribuiu) elJaContribuiu.value = card.ja_contribuiu || '';
+      if (elJaContribuiu) elJaContribuiu.value = card.ja_contribuiu || 'Sim - e continuo contribuindo.';
 
       const elTempoContribuicao = document.getElementById('respTempoContribuicao');
       if (elTempoContribuicao) elTempoContribuicao.value = card.tempo_contribuicao !== undefined && card.tempo_contribuicao !== null ? card.tempo_contribuicao : '';
 
       const elTipoTrabalho = document.getElementById('respTipoTrabalho');
-      if (elTipoTrabalho) elTipoTrabalho.value = card.tipo_trabalho || '';
+      if (elTipoTrabalho) elTipoTrabalho.value = card.tipo_trabalho || 'Emprego de carteira assinada (CLT)';
 
       const elSolicitouBeneficio = document.getElementById('respSolicitouBeneficio');
-      if (elSolicitouBeneficio) elSolicitouBeneficio.value = card.solicitou_beneficio || '';
+      if (elSolicitouBeneficio) elSolicitouBeneficio.value = card.solicitou_beneficio || 'Não - nunca tentei aposentar.';
 
       const elExerceuAtividadeEspecial = document.getElementById('respExerceuAtividadeEspecial');
-      if (elExerceuAtividadeEspecial) elExerceuAtividadeEspecial.value = card.exerceu_atividade_especial || '';
+      if (elExerceuAtividadeEspecial) elExerceuAtividadeEspecial.value = card.exerceu_atividade_especial || 'Sim - já trabalhei nessas atividades.';
 
       const elDetalhes = document.getElementById('respDetalhes');
       if (elDetalhes) elDetalhes.value = card.detalhes || '';
+
+      if (typeof initQualificationForm === 'function') {
+        initQualificationForm();
+      };
 
       // Preencher campos da guia Documentos (Etiquetas de Status e Lista Eventuais)
       renderDocumentBadges(card);
@@ -4995,401 +4999,609 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 });
 
-// ==================== LÓGICA DO MULTI-STEP FORM ====================
+// ==================== LÓGICA DO FORMULÁRIO DE QUALIFICAÇÃO (6 STEPS) ====================
 let currentStep = 1;
-let totalSteps = 1;
-let dynamicStepsData = [];
+const TOTAL_STEPS = 6;
 
-function getQuestionsConfig(fieldId, val) {
-    const questionsConfig = {
-      'respJaContribuiu': [
-        { id: 'addInfoTempoParou', label: 'Há quanto tempo parou de contribuir?', type: 'textarea' },
-        { id: 'addInfo120Contribuicoes', label: 'Contribuiu 10 anos sem interrupção?', type: 'textarea' },
-        { id: 'addInfo12MesesSem', label: 'Ficou mais de 1 ano sem contribuir voluntariamente?', type: 'textarea' }
-      ],
-      'respExerceuAtividadeEspecial': [
-        { id: 'addInfoAtivEspecial1', label: 'Qual a atividade e por quanto tempo exerceu?', type: 'textarea' },
-        { id: 'addInfoAtivEspecial2', label: 'Possui e já fez análise do PPP ou LTCAT?', type: 'textarea' },
-        { id: 'addInfoAtivEspecial3', label: 'As empresas ainda existem?', type: 'textarea' }
-      ]
-    };
+// Função para atualizar tracking bar e contador
+function updateTrackingBar() {
+  const badge = document.getElementById('stepCounterBadge');
+  if (badge) {
+    badge.textContent = `Etapa ${currentStep} de ${TOTAL_STEPS}`;
+  }
 
-    if (fieldId === 'respTipoTrabalho') {
-      if (val === 'Emprego de carteira assinada (CLT)') {
-        return [
-          { id: 'addInfoCLT1', label: 'Com o que você trabalhava?', type: 'textarea' },
-          { id: 'addInfoCLT2', label: 'Todos seus registros aparecem no CNIS?', type: 'textarea' },
-          { id: 'addInfoCLT3', label: 'Alguma contribuição está com valor ou data incorretos?', type: 'textarea' }
-        ];
-      } else if (val === 'Empresário / Autônomo / MEI') {
-        return [
-          { id: 'addInfoMEI1', label: 'Qual sua atividade, e contribuia no carnê ou MEI?', type: 'textarea' },
-          { id: 'addInfoMEI2', label: 'Há alguma lacuna ou contribuição duplicada?', type: 'textarea' },
-          { id: 'addInfoMEI3', label: 'As contribuições foram feitas no código correto?', type: 'textarea' }
-        ];
-      } else if (val === 'Trabalhador rural') {
-        return [
-          { id: 'addInfoRural1', label: 'A terra era da sua família?', type: 'textarea' },
-          { id: 'addInfoRural2', label: 'Quantos hectares de área produtiva?', type: 'textarea' },
-          { id: 'addInfoRural3', label: 'Você tem documentos e testemunhas?', type: 'textarea' }
-        ];
-      } else if (val === 'Servidor público') {
-        return [];
-      } else {
-        return [
-          { id: 'addInfoGeneric_Trabalho', label: 'Por favor, detalhe mais sobre o seu tipo de trabalho.', type: 'textarea' }
-        ];
+  const indicators = document.querySelectorAll('#formTrackingBar .step-indicator');
+  indicators.forEach((ind, index) => {
+    const stepNum = index + 1;
+    if (stepNum <= currentStep) {
+      ind.classList.add('active');
+      ind.style.background = 'var(--fill-accent)';
+    } else {
+      ind.classList.remove('active');
+      ind.style.background = 'var(--border)';
+    }
+  });
+}
+
+// Alternar visibilidade das etapas
+function updateStepView() {
+  const formEl = document.getElementById('clientAnswersForm');
+  if (formEl) formEl.scrollTop = 0;
+
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const stepEl = document.getElementById('step-' + i);
+    if (stepEl) {
+      stepEl.style.display = (i === currentStep) ? 'block' : 'none';
+    }
+  }
+
+  const btnVolt = document.getElementById('btnVoltarStep');
+  const btnProx = document.getElementById('btnProximoStep');
+  const btnFin = document.getElementById('btnFinalizarStep');
+
+  if (btnVolt) {
+    btnVolt.style.display = currentStep > 1 ? 'block' : 'none';
+  }
+
+  if (currentStep === TOTAL_STEPS) {
+    if (btnProx) btnProx.style.display = 'none';
+    if (btnFin) btnFin.style.display = 'inline-flex';
+  } else {
+    if (btnProx) btnProx.style.display = 'block';
+    if (btnFin) btnFin.style.display = 'none';
+  }
+
+  updateTrackingBar();
+}
+
+// Navegar para uma etapa específica
+function goToStep(step) {
+  if (step >= 1 && step <= TOTAL_STEPS) {
+    currentStep = step;
+    updateStepView();
+  }
+}
+
+// Atualização e descarte imediato dos blocos condicionais
+function updateAllConditionals() {
+  updateQ1Conditionals();
+  updateQ2Conditionals();
+  updateQ3Conditionals();
+  updateQ4Conditionals();
+  updateQ7Conditionals();
+  updateQ8Conditionals();
+  updateQ9Conditionals();
+}
+
+// Q1: Já contribuiu?
+function updateQ1Conditionals() {
+  const val = document.getElementById('respJaContribuiu')?.value || '';
+  const simBox = document.getElementById('cond_q1_sim_box');
+  const outroBox = document.getElementById('cond_q1_outro_box');
+  const faz = document.getElementById('cond_q1_faz');
+  const tempo = document.getElementById('cond_q1_tempo');
+  const qualidade = document.getElementById('cond_q1_qualidade');
+
+  if (val === 'Sim - e continuo contribuindo.') {
+    if (simBox) simBox.style.display = 'block';
+    if (outroBox) outroBox.style.display = 'none';
+    // Descarta respostas do bloco removido
+    if (tempo) tempo.value = '';
+    if (qualidade) qualidade.value = '';
+  } else if (val !== '') {
+    if (simBox) simBox.style.display = 'none';
+    if (outroBox) outroBox.style.display = 'flex';
+    // Descarta respostas do bloco removido
+    if (faz) faz.value = '';
+  } else {
+    if (simBox) simBox.style.display = 'none';
+    if (outroBox) outroBox.style.display = 'none';
+    if (faz) faz.value = '';
+    if (tempo) tempo.value = '';
+    if (qualidade) qualidade.value = '';
+  }
+}
+
+// Q2: Recebe algum benefício?
+function updateQ2Conditionals() {
+  const val = document.getElementById('respRecebeBeneficio')?.value || '';
+  const box = document.getElementById('cond_q2_box');
+  const qual = document.getElementById('cond_q2_qual');
+  const vantagem = document.getElementById('cond_q2_vantagem');
+
+  if (val === 'Sim') {
+    if (box) box.style.display = 'flex';
+  } else {
+    if (box) box.style.display = 'none';
+    // Descarta respostas do bloco removido
+    if (qual) qual.value = '';
+    if (vantagem) vantagem.value = '';
+  }
+}
+
+// Q3: Já solicitou?
+function updateQ3Conditionals() {
+  const val = document.getElementById('respSolicitouBeneficio')?.value || '';
+  const box = document.getElementById('cond_q3_box');
+  const judicial = document.getElementById('cond_q3_judicial');
+
+  if (val && val !== 'Não - nunca tentei aposentar.') {
+    if (box) box.style.display = 'block';
+  } else {
+    if (box) box.style.display = 'none';
+    // Descarta respostas do bloco removido
+    if (judicial) judicial.value = '';
+  }
+}
+
+// Q4: Já sabe quando vai poder se aposentar e quanto vai receber?
+function updateQ4Conditionals() {
+  const val = document.getElementById('respSabeAposentar')?.value || '';
+  const box = document.getElementById('cond_q4_box');
+  const quem = document.getElementById('cond_q4_quem_falou');
+  const contratou = document.getElementById('cond_q4_contratou');
+  const carac = document.getElementById('cond_q4_caracteristica');
+
+  if (val === 'Sim') {
+    if (box) box.style.display = 'flex';
+  } else {
+    if (box) box.style.display = 'none';
+    // Descarta respostas do bloco removido
+    if (quem) quem.value = '';
+    if (contratou) contratou.value = '';
+    if (carac) carac.value = '';
+  }
+}
+
+// Q7: Tipo de trabalho:
+function updateQ7Conditionals() {
+  const val = document.getElementById('respTipoTrabalho')?.value || '';
+  const cltBox = document.getElementById('cond_q7_clt_box');
+  const meiBox = document.getElementById('cond_q7_mei_box');
+  const ruralBox = document.getElementById('cond_q7_rural_box');
+
+  const cltCnis = document.getElementById('cond_q7_clt_cnis');
+  const cltAliq = document.getElementById('cond_q7_clt_aliquota');
+  const cltErro = document.getElementById('cond_q7_clt_erro');
+
+  const meiCarne = document.getElementById('cond_q7_mei_carne');
+  const meiCod = document.getElementById('cond_q7_mei_codigo');
+  const meiDup = document.getElementById('cond_q7_mei_duplicada');
+  const meiLac = document.getElementById('cond_q7_mei_lacuna');
+
+  const ruralTerra = document.getElementById('cond_q7_rural_terra');
+  const ruralHec = document.getElementById('cond_q7_rural_hectares');
+  const ruralDocsProd = document.getElementById('cond_q7_rural_docs_prod');
+  const ruralDocsFam = document.getElementById('cond_q7_rural_docs_fam');
+  const ruralTest = document.getElementById('cond_q7_rural_testemunhas');
+
+  if (val === 'Emprego de carteira assinada (CLT)') {
+    if (cltBox) cltBox.style.display = 'flex';
+    if (meiBox) meiBox.style.display = 'none';
+    if (ruralBox) ruralBox.style.display = 'none';
+    // Descarta respostas dos blocos removidos
+    if (meiCarne) meiCarne.value = '';
+    if (meiCod) meiCod.value = '';
+    if (meiDup) meiDup.value = '';
+    if (meiLac) meiLac.value = '';
+    if (ruralTerra) ruralTerra.value = '';
+    if (ruralHec) ruralHec.value = '';
+    if (ruralDocsProd) ruralDocsProd.value = '';
+    if (ruralDocsFam) ruralDocsFam.value = '';
+    if (ruralTest) ruralTest.value = '';
+  } else if (val === 'Empresário / Autônomo / MEI') {
+    if (cltBox) cltBox.style.display = 'none';
+    if (meiBox) meiBox.style.display = 'flex';
+    if (ruralBox) ruralBox.style.display = 'none';
+    // Descarta respostas dos blocos removidos
+    if (cltCnis) cltCnis.value = '';
+    if (cltAliq) cltAliq.value = '';
+    if (cltErro) cltErro.value = '';
+    if (ruralTerra) ruralTerra.value = '';
+    if (ruralHec) ruralHec.value = '';
+    if (ruralDocsProd) ruralDocsProd.value = '';
+    if (ruralDocsFam) ruralDocsFam.value = '';
+    if (ruralTest) ruralTest.value = '';
+  } else if (val === 'Trabalhador rural') {
+    if (cltBox) cltBox.style.display = 'none';
+    if (meiBox) meiBox.style.display = 'none';
+    if (ruralBox) ruralBox.style.display = 'flex';
+    // Descarta respostas dos blocos removidos
+    if (cltCnis) cltCnis.value = '';
+    if (cltAliq) cltAliq.value = '';
+    if (cltErro) cltErro.value = '';
+    if (meiCarne) meiCarne.value = '';
+    if (meiCod) meiCod.value = '';
+    if (meiDup) meiDup.value = '';
+    if (meiLac) meiLac.value = '';
+  } else {
+    if (cltBox) cltBox.style.display = 'none';
+    if (meiBox) meiBox.style.display = 'none';
+    if (ruralBox) ruralBox.style.display = 'none';
+    if (cltCnis) cltCnis.value = '';
+    if (cltAliq) cltAliq.value = '';
+    if (cltErro) cltErro.value = '';
+    if (meiCarne) meiCarne.value = '';
+    if (meiCod) meiCod.value = '';
+    if (meiDup) meiDup.value = '';
+    if (meiLac) meiLac.value = '';
+    if (ruralTerra) ruralTerra.value = '';
+    if (ruralHec) ruralHec.value = '';
+    if (ruralDocsProd) ruralDocsProd.value = '';
+    if (ruralDocsFam) ruralDocsFam.value = '';
+    if (ruralTest) ruralTest.value = '';
+  }
+}
+
+// Q8: Atividade especial?
+function updateQ8Conditionals() {
+  const val = document.getElementById('respExerceuAtividadeEspecial')?.value || '';
+  const box = document.getElementById('cond_q8_box');
+  const tempo = document.getElementById('cond_q8_tempo');
+  const ppps = document.getElementById('cond_q8_ppps');
+  const emp = document.getElementById('cond_q8_empresas');
+  const ag = document.getElementById('cond_q8_agentes');
+
+  if (val === 'Sim - já trabalhei nessas atividades.') {
+    if (box) box.style.display = 'flex';
+  } else {
+    if (box) box.style.display = 'none';
+    // Descarta respostas do bloco removido
+    if (tempo) tempo.value = '';
+    if (ppps) ppps.value = '';
+    if (emp) emp.value = '';
+    if (ag) ag.value = '';
+  }
+}
+
+// Q9: Consequências
+function updateQ9Conditionals() {
+  const val = document.getElementById('respConsequencias')?.value || '';
+  const simBox = document.getElementById('cond_q9_sim_box');
+  const naoBox = document.getElementById('cond_q9_nao_box');
+  const simFuturo = document.getElementById('cond_q9_sim_futuro');
+  const naoAtraso = document.getElementById('cond_q9_nao_atraso');
+  const naoRenda = document.getElementById('cond_q9_nao_renda_menor');
+
+  if (val === 'Sim') {
+    if (simBox) simBox.style.display = 'block';
+    if (naoBox) naoBox.style.display = 'none';
+    // Descarta respostas do bloco removido
+    if (naoAtraso) naoAtraso.value = '';
+    if (naoRenda) naoRenda.value = '';
+  } else if (val === 'Não') {
+    if (simBox) simBox.style.display = 'none';
+    if (naoBox) naoBox.style.display = 'flex';
+    // Descarta respostas do bloco removido
+    if (simFuturo) simFuturo.value = '';
+  } else {
+    if (simBox) simBox.style.display = 'none';
+    if (naoBox) naoBox.style.display = 'none';
+    if (simFuturo) simFuturo.value = '';
+    if (naoAtraso) naoAtraso.value = '';
+    if (naoRenda) naoRenda.value = '';
+  }
+}
+
+// Inicializar ou resetar o formulário de qualificação
+function initQualificationForm() {
+  currentStep = 1;
+  updateAllConditionals();
+  updateStepView();
+}
+
+// Compilar todas as respostas respondidas e suas condicionais exibidas
+function compileQualificationSummary() {
+  const blocks = [];
+
+  // 1. Já contribuiu?
+  const q1 = document.getElementById('respJaContribuiu');
+  if (q1 && q1.value) {
+    let block = `1. Já contribuiu?\nR: ${q1.value}`;
+    if (q1.value === 'Sim - e continuo contribuindo.') {
+      const faz = document.getElementById('cond_q1_faz')?.value.trim();
+      if (faz) {
+        block += `\n- O que você faz?\nR: ${faz}`;
+      }
+    } else {
+      const tempo = document.getElementById('cond_q1_tempo')?.value.trim();
+      if (tempo) {
+        block += `\n- Quanto tempo sem contribuir?\nR: ${tempo}`;
+      }
+      const qual = document.getElementById('cond_q1_qualidade')?.value.trim();
+      if (qual) {
+        block += `\n- Sabe se tem qualidade de segurado?\nR: ${qual}`;
       }
     }
-    
-    return questionsConfig[fieldId] || [];
+    blocks.push(block);
+  }
+
+  // 2. Recebe algum benefício?
+  const q2 = document.getElementById('respRecebeBeneficio');
+  if (q2 && q2.value) {
+    let block = `2. Recebe algum benefício?\nR: ${q2.value}`;
+    if (q2.value === 'Sim') {
+      const qual = document.getElementById('cond_q2_qual')?.value.trim();
+      if (qual) {
+        block += `\n- Qual?\nR: ${qual}`;
+      }
+      const vantagem = document.getElementById('cond_q2_vantagem')?.value.trim();
+      if (vantagem) {
+        block += `\n- Entende a vantagem da aposentadoria em relação a esse benefício?\nR: ${vantagem}`;
+      }
+    }
+    blocks.push(block);
+  }
+
+  // 3. Já solicitou?
+  const q3 = document.getElementById('respSolicitouBeneficio');
+  if (q3 && q3.value) {
+    let block = `3. Já solicitou?\nR: ${q3.value}`;
+    if (q3.value !== 'Não - nunca tentei aposentar.') {
+      const judicial = document.getElementById('cond_q3_judicial')?.value.trim();
+      if (judicial) {
+        block += `\n- E levou pro judicial ou fez uma nova tentativa?\nR: ${judicial}`;
+      }
+    }
+    blocks.push(block);
+  }
+
+  // 4. Já sabe quando vai poder se aposentar e quanto vai receber?
+  const q4 = document.getElementById('respSabeAposentar');
+  if (q4 && q4.value) {
+    let block = `4. Já sabe quando vai poder se aposentar e quanto vai receber?\nR: ${q4.value}`;
+    if (q4.value === 'Sim') {
+      const quem = document.getElementById('cond_q4_quem_falou')?.value.trim();
+      if (quem) {
+        block += `\n- Quem te falou?\nR: ${quem}`;
+      }
+      const contratou = document.getElementById('cond_q4_contratou')?.value.trim();
+      if (contratou) {
+        block += `\n- E você já contratou essa pessoa para cuidar da sua aposentadoria?\nR: ${contratou}`;
+      }
+      const carac = document.getElementById('cond_q4_caracteristica')?.value.trim();
+      if (carac) {
+        block += `\n- E qual a característica mais importante que um profissional tem que ter pra você deixar ele cuidar da sua aposentadoria?\nR: ${carac}`;
+      }
+    }
+    blocks.push(block);
+  }
+
+  // 5. O é mais importante para você se aposentar mais rápido ou se aposentar com uma renda maior?
+  const q5 = document.getElementById('respPrioridade');
+  if (q5 && q5.value.trim()) {
+    blocks.push(`5. O é mais importante para você se aposentar mais rápido ou se aposentar com uma renda maior?\nR: ${q5.value.trim()}`);
+  }
+
+  // 6. O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)?
+  const q6 = document.getElementById('respModalidade');
+  if (q6 && q6.value.trim()) {
+    blocks.push(`6. O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)?\nR: ${q6.value.trim()}`);
+  }
+
+  // 7. Tipo de trabalho:
+  const q7 = document.getElementById('respTipoTrabalho');
+  if (q7 && q7.value) {
+    let block = `7. Tipo de trabalho:\nR: ${q7.value}`;
+    if (q7.value === 'Emprego de carteira assinada (CLT)') {
+      const cnis = document.getElementById('cond_q7_clt_cnis')?.value.trim();
+      if (cnis) block += `\n- E você sabe se todos os registros constam no CNIS?\nR: ${cnis}`;
+      const aliq = document.getElementById('cond_q7_clt_aliquota')?.value.trim();
+      if (aliq) block += `\n- Sabe se as empresas fizeram as contribuições na alíquota correta?\nR: ${aliq}`;
+      const erro = document.getElementById('cond_q7_clt_erro')?.value.trim();
+      if (erro) block += `\n- Sabe se tem algum dado que foi inserido errado no CNIS, como valor ou data?\nR: ${erro}`;
+    } else if (q7.value === 'Empresário / Autônomo / MEI') {
+      const carne = document.getElementById('cond_q7_mei_carne')?.value.trim();
+      if (carne) block += `\n- Contribuiu no carnê ou MEI?\nR: ${carne}`;
+      const cod = document.getElementById('cond_q7_mei_codigo')?.value.trim();
+      if (cod) block += `\n- Sabe se todas as contribuições foram no código e na alíquota corretas?\nR: ${cod}`;
+      const dup = document.getElementById('cond_q7_mei_duplicada')?.value.trim();
+      if (dup) block += `\n- Alguém já analisou se tem alguma contribuição duplicada?\nR: ${dup}`;
+      const lac = document.getElementById('cond_q7_mei_lacuna')?.value.trim();
+      if (lac) block += `\n- Sabe se tem alguma lacuna contributiva ou se o INSS está considerando mesmo todas as suas contribuições?\nR: ${lac}`;
+    } else if (q7.value === 'Trabalhador rural') {
+      const terra = document.getElementById('cond_q7_rural_terra')?.value.trim();
+      if (terra) block += `\n- De quem era a terra?\nR: ${terra}`;
+      const hec = document.getElementById('cond_q7_rural_hectares')?.value.trim();
+      if (hec) block += `\n- Quantos hectares a terra tinha?\nR: ${hec}`;
+      const prod = document.getElementById('cond_q7_rural_docs_prod')?.value.trim();
+      if (prod) block += `\n- Você tem documentos que comprovem a sua atividade produtiva?\nR: ${prod}`;
+      const fam = document.getElementById('cond_q7_rural_docs_fam')?.value.trim();
+      if (fam) block += `\n- Você tem documentos que comprovem a relação da sua família com a terra?\nR: ${fam}`;
+      const test = document.getElementById('cond_q7_rural_testemunhas')?.value.trim();
+      if (test) block += `\n- Existem testemunhas vivas se for necessário?\nR: ${test}`;
+    }
+    blocks.push(block);
+  }
+
+  // 8. Atividade especial?
+  const q8 = document.getElementById('respExerceuAtividadeEspecial');
+  if (q8 && q8.value) {
+    let block = `8. Atividade especial?\nR: ${q8.value}`;
+    if (q8.value === 'Sim - já trabalhei nessas atividades.') {
+      const tempo = document.getElementById('cond_q8_tempo')?.value.trim();
+      if (tempo) block += `\n- Por quanto tempo exerceu?\nR: ${tempo}`;
+      const ppps = document.getElementById('cond_q8_ppps')?.value.trim();
+      if (ppps) block += `\n- Você tem os PPPs ou LTCATs?\nR: ${ppps}`;
+      const emp = document.getElementById('cond_q8_empresas')?.value.trim();
+      if (emp) block += `\n- As empresas ainda existem caso precise pedir ou complementar documentação?\nR: ${emp}`;
+      const ag = document.getElementById('cond_q8_agentes')?.value.trim();
+      if (ag) block += `\n- Alguém já analisou a classificação dos agentes nocivos, impacto do exercício da função, uso de EPIs e etc?\nR: ${ag}`;
+    }
+    blocks.push(block);
+  }
+
+  // 9. Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?
+  const q9 = document.getElementById('respConsequencias');
+  if (q9 && q9.value) {
+    let block = `9. Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?\nR: ${q9.value}`;
+    if (q9.value === 'Sim') {
+      const fut = document.getElementById('cond_q9_sim_futuro')?.value.trim();
+      if (fut) block += `\n- E como isso mudaria os seus planos de futuro?\nR: ${fut}`;
+    } else if (q9.value === 'Não') {
+      const atr = document.getElementById('cond_q9_nao_atraso')?.value.trim();
+      if (atr) block += `\n- Sua aposentadoria pode atrasar por no mínimo mais 6 meses depois de completar a idade, podendo chegar a 3, 4 anos de atraso, como isso mudaria os seus planos?\nR: ${atr}`;
+      const ren = document.getElementById('cond_q9_nao_renda_menor')?.value.trim();
+      if (ren) block += `\n- Se você descobrisse que sua renda pode ser menor do que você tem direito por alguma informação ter sido enviada errada pro INSS, como você se sentiria?\nR: ${ren}`;
+    }
+    blocks.push(block);
+  }
+
+  // 10. Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai  ter negativa do INSS?
+  const q10 = document.getElementById('respFazerSozinho');
+  if (q10 && q10.value.trim()) {
+    blocks.push(`10. Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai  ter negativa do INSS?\nR: ${q10.value.trim()}`);
+  }
+
+  if (blocks.length === 0) return '';
+  return `=== QUALIFICAÇÃO DO CLIENTE ===\n\n` + blocks.join('\n\n');
 }
 
-function calculateSteps() {
-    const valSolicitou = document.getElementById('respSolicitouBeneficio')?.value || '';
-    const valContribuiu = document.getElementById('respJaContribuiu')?.value || '';
-    const valTrabalho = document.getElementById('respTipoTrabalho')?.value || '';
-    const valEspecial = document.getElementById('respExerceuAtividadeEspecial')?.value || '';
+// Sincronizar as respostas da qualificação na caixa de texto 'Detalhes do caso'
+function syncQualificationToDetails(isFinal = false) {
+  const detalhesField = document.getElementById('respDetalhes');
+  if (!detalhesField) return;
 
-    dynamicStepsData = [];
-    
-    // Se solicitou for diferente de "Não - nunca tentei aposentar.", trava o form e não tem próximos steps
-    if (valSolicitou && valSolicitou !== 'Não - nunca tentei aposentar.') {
-        return; // não adiciona mais steps
+  const summary = compileQualificationSummary();
+  if (!summary) {
+    if (isFinal && typeof showToast === 'function') {
+      showToast('Nenhuma resposta preenchida para finalizar.');
     }
+    return;
+  }
 
-    // Já contribuiu
-    if (valContribuiu && valContribuiu !== 'Sim - e continuo contribuindo.') {
-        const fields = getQuestionsConfig('respJaContribuiu');
-        if (fields.length) dynamicStepsData.push({ title: 'Qualidade de segurado', fields });
-    }
+  let currentVal = detalhesField.value.trim();
+  const qualRegex = /=== QUALIFICAÇÃO DO CLIENTE ===[\s\S]*?(?=\n\n===|\n\n[A-Z]|$)/;
 
-    // Tipo de trabalho
-    if (valTrabalho) {
-        const fields = getQuestionsConfig('respTipoTrabalho', valTrabalho);
-        if (fields.length) dynamicStepsData.push({ title: 'Tipo de Trabalho', fields });
-    }
+  if (qualRegex.test(currentVal)) {
+    currentVal = currentVal.replace(qualRegex, summary).trim();
+  } else if (currentVal) {
+    currentVal = currentVal + '\n\n' + summary;
+  } else {
+    currentVal = summary;
+  }
 
-    // Atividade especial
-    if (valEspecial && valEspecial !== 'Não - nunca trabalhei com isso.') {
-        const fields = getQuestionsConfig('respExerceuAtividadeEspecial');
-        if (fields.length) dynamicStepsData.push({ title: 'Atividade Especial', fields });
+  detalhesField.value = currentVal;
+  detalhesField.dispatchEvent(new Event('input', { bubbles: true }));
+  detalhesField.dispatchEvent(new Event('change', { bubbles: true }));
+
+  if (typeof saveClientData === 'function') {
+    saveClientData(true);
+  }
+
+  if (isFinal) {
+    if (typeof showToast === 'function') {
+      showToast('Qualificação concluída e inserida em Detalhes do caso!');
     }
+    const btnFin = document.getElementById('btnFinalizarStep');
+    if (btnFin) {
+      const originalHtml = btnFin.innerHTML;
+      btnFin.innerHTML = '<i class="ti ti-check" style="font-size: 16px;"></i>Salvo!';
+      btnFin.style.background = '#059669';
+      setTimeout(() => {
+        btnFin.innerHTML = originalHtml;
+        btnFin.style.background = '#10b981';
+      }, 2000);
+    }
+  }
 }
 
-function renderSteps() {
-    const formEl = document.getElementById('clientAnswersForm');
-    const barEl = document.getElementById('formTrackingBar');
-    const btnsEl = document.getElementById('stepButtonsContainer');
-    const cardsContainer = document.getElementById('summaryCardsContainer');
+// Ação de finalizar o formulário
+function finalizeQualificationForm() {
+  syncQualificationToDetails(true);
+}
 
-    if(!formEl) return;
-    
-    // Restaurar formulário se estava em cards
-    formEl.style.display = 'block';
-    if(barEl) barEl.style.display = 'flex';
-    if(btnsEl) btnsEl.style.display = 'flex';
-    if(cardsContainer) {
-        cardsContainer.style.display = 'none';
-        cardsContainer.innerHTML = '';
-    }
-    
-    // Remover todos os steps dinâmicos anteriores
-    formEl.querySelectorAll('.dynamic-step').forEach(el => el.remove());
-    
-    totalSteps = 1 + dynamicStepsData.length;
-    
-    dynamicStepsData.forEach((stepData, index) => {
-        const stepNum = index + 2;
-        const stepDiv = document.createElement('div');
-        stepDiv.id = 'step-' + stepNum;
-        stepDiv.className = 'form-step dynamic-step';
-        stepDiv.style.display = 'none';
-        stepDiv.style.width = '100%';
-        stepDiv.style.boxSizing = 'border-box';
-        let html = '<h3 style="margin-top:-6px; margin-bottom: 16px; color:var(--text-accent); font-size:16px;">' + stepData.title + '</h3>';
-        
-        stepData.fields.forEach(f => {
-            html += `
-              <div class="sheet-field-group" style="margin-bottom: 1rem;">
-                <label for="${f.id}" style="display: block; font-weight: normal; font-size: 14px; margin-bottom: 0.5rem; color: var(--text-dark);">${f.label}</label>
-                <textarea id="${f.id}" class="sheet-input multistep-textarea" rows="1" style="width: 100%; box-sizing: border-box; resize: vertical; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; font-family: inherit; background-color: var(--surface-2); color: var(--text-primary); outline:none;"></textarea>
-              </div>
-            `;
-        });
-        
-        stepDiv.innerHTML = html;
-        formEl.appendChild(stepDiv);
+// Limpar todas as respostas do formulário ao clicar em recarregar
+function resetQualificationFormAnswers() {
+  const form = document.getElementById('clientAnswersForm');
+  if (form) {
+    form.querySelectorAll('select').forEach(sel => {
+      sel.value = '';
     });
-    
-    renderTrackingBar();
-    updateStepView();
-}
-
-function renderTrackingBar() {
-    const bar = document.getElementById('formTrackingBar');
-    if(!bar) return;
-    bar.innerHTML = '';
-    for(let i = 1; i <= totalSteps; i++) {
-        const indicator = document.createElement('div');
-        indicator.className = 'step-indicator ' + (i <= currentStep ? 'active' : '');
-        indicator.style.flex = '1';
-        indicator.style.height = '4px';
-        indicator.style.borderRadius = '2px';
-        indicator.style.background = i <= currentStep ? 'var(--fill-accent)' : 'var(--border)';
-        bar.appendChild(indicator);
-    }
-}
-
-function updateStepView() {
-    const formEl = document.getElementById('clientAnswersForm');
-    if(formEl) formEl.scrollTop = 0;
-
-    document.querySelectorAll('.form-step').forEach(el => el.style.display = 'none');
-    const curr = document.getElementById('step-' + currentStep);
-    if(curr) curr.style.display = 'block';
-    
-    document.getElementById('btnVoltarStep').style.display = currentStep > 1 ? 'block' : 'none';
-    
-    const valSolicitou = document.getElementById('respSolicitouBeneficio')?.value || '';
-    if (valSolicitou && valSolicitou !== 'Não - nunca tentei aposentar.') {
-        // Bloqueado
-        document.getElementById('btnProximoStep').style.display = 'none';
-        document.getElementById('btnFinalizarStep').style.display = 'none';
-        
-        const detailsField = document.getElementById('respDetalhes');
-        if(detailsField && !detailsField.value) {
-            detailsField.value = 'Cliente travado no formulário.\nJá solicitou: ' + valSolicitou;
-        }
-        return;
-    }
-    
-    if (currentStep === totalSteps) {
-        document.getElementById('btnProximoStep').style.display = 'none';
-        document.getElementById('btnFinalizarStep').style.display = 'block';
-    } else {
-        document.getElementById('btnProximoStep').style.display = 'block';
-        document.getElementById('btnFinalizarStep').style.display = 'none';
-    }
-    
-    renderTrackingBar();
-}
-
-function summarizeFormToDetails() {
-    let summary = "=== Resumo do Formulário ===\n\n";
-    
-    // Step 1
-    const q1 = document.getElementById('respSolicitouBeneficio');
-    if(q1 && q1.value) summary += "Já solicitou? " + q1.value + "\n";
-    
-    const q2 = document.getElementById('respJaContribuiu');
-    if(q2 && q2.value) summary += "Já contribuiu? " + q2.value + "\n";
-    
-    const q3 = document.getElementById('respTipoTrabalho');
-    if(q3 && q3.value) summary += "Tipo de trabalho: " + q3.value + "\n";
-    
-    const q4 = document.getElementById('respExerceuAtividadeEspecial');
-    if(q4 && q4.value) summary += "Atividade especial? " + q4.value + "\n";
-    
-    summary += "\n";
-    
-    // Dinâmicos
-    document.querySelectorAll('.multistep-textarea').forEach(ta => {
-        if(ta.value.trim()) {
-            const label = ta.previousElementSibling ? ta.previousElementSibling.innerText : ta.id;
-            summary += label + "\nR: " + ta.value.trim() + "\n\n";
-        }
+    form.querySelectorAll('textarea').forEach(tx => {
+      tx.value = '';
     });
-    
-    const detalhes = document.getElementById('respDetalhes');
-    if(detalhes) {
-        const existing = detalhes.value.trim();
-        detalhes.value = (existing ? existing + "\n\n" : "") + summary;
+    form.querySelectorAll('input:not([type="hidden"])').forEach(inp => {
+      inp.value = '';
+    });
+  }
+  currentStep = 1;
+  updateAllConditionals();
+  updateStepView();
+  if (typeof showToast === 'function') {
+    showToast('Respostas do formulário limpas.');
+  }
+}
+
+// Configuração dos Event Listeners do formulário de qualificação
+function setupQualificationEventListeners() {
+  const btnProx = document.getElementById('btnProximoStep');
+  const btnVolt = document.getElementById('btnVoltarStep');
+  const btnFin = document.getElementById('btnFinalizarStep');
+  const btnReload = document.getElementById('btnReloadForm');
+
+  if (btnProx) {
+    btnProx.onclick = () => {
+      syncQualificationToDetails(false);
+      if (currentStep < TOTAL_STEPS) {
+        currentStep++;
+        updateStepView();
+      }
+    };
+  }
+
+  if (btnVolt) {
+    btnVolt.onclick = () => {
+      if (currentStep > 1) {
+        currentStep--;
+        updateStepView();
+      }
+    };
+  }
+
+  if (btnFin) {
+    btnFin.onclick = () => {
+      finalizeQualificationForm();
+    };
+  }
+
+  if (btnReload) {
+    btnReload.onclick = () => {
+      resetQualificationFormAnswers();
+    };
+  }
+
+  // Clicar nos passos da tracking bar
+  document.querySelectorAll('#formTrackingBar .step-indicator').forEach(ind => {
+    ind.onclick = () => {
+      const stepTarget = parseInt(ind.getAttribute('data-step') || '1', 10);
+      if (stepTarget) {
+        goToStep(stepTarget);
+      }
+    };
+  });
+
+  // Listeners de mudança nas perguntas condicionais
+  const conditionMap = {
+    'respJaContribuiu': updateQ1Conditionals,
+    'respRecebeBeneficio': updateQ2Conditionals,
+    'respSolicitouBeneficio': updateQ3Conditionals,
+    'respSabeAposentar': updateQ4Conditionals,
+    'respTipoTrabalho': updateQ7Conditionals,
+    'respExerceuAtividadeEspecial': updateQ8Conditionals,
+    'respConsequencias': updateQ9Conditionals
+  };
+
+  Object.entries(conditionMap).forEach(([id, handler]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', handler);
     }
+  });
+
+  initQualificationForm();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const btnProx = document.getElementById('btnProximoStep');
-    const btnVolt = document.getElementById('btnVoltarStep');
-    const btnFin = document.getElementById('btnFinalizarStep');
-    const btnReload = document.getElementById('btnReloadForm');
-    
-    if (btnReload) {
-        btnReload.addEventListener('click', () => {
-            currentStep = 1;
-            calculateSteps();
-            renderSteps();
-        });
-    }
-
-    ['respSolicitouBeneficio', 'respJaContribuiu', 'respTipoTrabalho', 'respExerceuAtividadeEspecial'].forEach(id => {
-        const el = document.getElementById(id);
-        if(el) {
-            el.addEventListener('change', () => {
-                calculateSteps();
-                renderSteps();
-            });
-        }
-    });
-    
-    if(btnProx) {
-        btnProx.addEventListener('click', () => {
-            if(currentStep < totalSteps) {
-                currentStep++;
-                updateStepView();
-            }
-        });
-    }
-    
-    if(btnVolt) {
-        btnVolt.addEventListener('click', () => {
-            if(currentStep > 1) {
-                currentStep--;
-                updateStepView();
-            }
-        });
-    }
-    
-    if(btnFin) {
-        btnFin.addEventListener('click', () => {
-            summarizeFormToDetails();
-            
-            // Hide form and buttons
-            const formEl = document.getElementById('clientAnswersForm');
-            const barEl = document.getElementById('formTrackingBar');
-            const btnsEl = document.getElementById('stepButtonsContainer');
-            if (formEl) formEl.style.display = 'none';
-            if (barEl) barEl.style.display = 'none';
-            if (btnsEl) btnsEl.style.display = 'none';
-            
-            // Generate cards
-            const cardsContainer = document.getElementById('summaryCardsContainer');
-            if (cardsContainer) {
-                cardsContainer.innerHTML = '';
-                cardsContainer.scrollTop = 0;
-            }
-            
-            dynamicStepsData.forEach(step => {
-                let icon = 'ti-file-description';
-                let color = 'var(--text-accent)';
-                let implicacaoText = "[ Placeholder da implicação ]";
-                let solucaoText = "[ Placeholder da solução ]";
-                
-                if (step.title === 'Qualidade de segurado') {
-                    icon = 'ti-shield-check'; color = '#10b981';
-                    implicacaoText = "Se a sua qualidade de segurado já tiver sido perdida, o que acontece com o seu direito de se aposentar ou de receber benefícios como auxílio-doença e pensão para a sua família, e quanto isso pesaria no seu orçamento hoje?";
-                    solucaoText = "Se fosse possível verificar agora se a sua qualidade de segurado está mantida, e o que fazer para recuperá-la caso tenha sido perdida, o quanto isso traria de tranquilidade para você e para a sua família em relação ao futuro?";
-                } else if (step.title === 'Tipo de Trabalho') {
-                    icon = 'ti-briefcase'; color = '#f59e0b';
-                    const tipoTrabalho = document.getElementById('respTipoTrabalho')?.value || '';
-                    if (tipoTrabalho === 'Emprego de carteira assinada (CLT)') {
-                        implicacaoText = "Se houver vínculos faltando ou contribuições com valor ou data errados no seu CNIS, quanto você estaria perdendo por mês no valor da aposentadoria e quanto tempo a mais teria de trabalhar para compensar essa diferença?";
-                        solucaoText = "Se um advogado pudesse corrigir os vínculos e contribuições do seu CNIS antes do pedido, e isso aumentasse o valor da sua aposentadoria todo mês, que diferença isso faria no seu orçamento?";
-                    } else if (tipoTrabalho === 'Empresário / Autônomo / MEI') {
-                        implicacaoText = "Se existirem lacunas, contribuições duplicadas ou recolhimentos no código errado, que tempo seu pode ser desconsiderado pelo INSS, e o que isso significaria em anos a mais de trabalho ou em um benefício menor?";
-                        solucaoText = "Se alguém pudesse revisar as suas contribuições, regularizar lacunas, duplicidades e códigos errados, e garantir que todo o seu tempo fosse contado, qual seria o valor disso para você?";
-                    } else if (tipoTrabalho === 'Trabalhador rural') {
-                        implicacaoText = "Se você não conseguir comprovar com documentos e testemunhas o tempo na terra, o que acontece com o seu pedido de aposentadoria rural e como a sua família ficaria sem essa renda?";
-                        solucaoText = "Se você tivesse ajuda para reunir os documentos e testemunhas certos e comprovar o seu tempo na terra, o quanto isso aumentaria a sua segurança de ter o benefício aprovado e a renda garantida para a sua família?";
-                    }
-                } else if (step.title === 'Atividade Especial') {
-                    icon = 'ti-star'; color = '#8b5cf6';
-                    implicacaoText = "Se o tempo de atividade especial não for comprovado por falta de PPP ou LTCAT, ou porque a empresa fechou, quantos anos de contribuição a mais você teria de cumprir e qual seria o impacto disso na sua saúde e na sua renda até conseguir se aposentar?";
-                    solucaoText = "Se fosse possível analisar o seu PPP e LTCAT e comprovar o tempo especial, mesmo com a empresa fechada, o quanto isso ajudaria você a se aposentar mais cedo e com um benefício maior?";
-                }
-                
-                const card = document.createElement('div');
-                card.style.cssText = `
-                    border-radius: 8px;
-                    border: 1px solid var(--border);
-                    background: var(--surface-2);
-                    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-                    overflow: hidden;
-                    display: flex;
-                    flex-direction: column;
-                    flex-shrink: 0;
-                    box-sizing: border-box;
-                    width: 100%;
-                `;
-                
-                let isExpanded = false;
-
-                card.onmouseover = () => {
-                    card.style.borderColor = color;
-                    card.style.transform = isExpanded ? 'none' : 'translateY(-2px)';
-                    card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
-                };
-                card.onmouseout = () => {
-                    if (!isExpanded) {
-                        card.style.borderColor = 'var(--border)';
-                    }
-                    card.style.transform = 'translateY(0)';
-                    card.style.boxShadow = 'none';
-                };
-                
-                const cardHeader = document.createElement('div');
-                cardHeader.style.cssText = `
-                    padding: 16px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    user-select: none;
-                `;
-                cardHeader.innerHTML = `
-                    <div style="display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:8px; background: ${color}20; color: ${color}; flex-shrink: 0;">
-                        <i class="ti ${icon}" style="font-size: 20px;"></i>
-                    </div>
-                    <div style="flex:1;">
-                        <h4 style="margin:0; font-size:15px; color:var(--text-primary); font-weight: 500;">${step.title}</h4>
-                        <p style="margin:2px 0 0; font-size:13px; color:var(--text-secondary);">Revisar informações</p>
-                    </div>
-                    <i class="ti ti-chevron-right chevron-icon" style="color:var(--text-muted); font-size:18px; transition: transform 0.3s ease;"></i>
-                `;
-
-                const cardDetail = document.createElement('div');
-                cardDetail.style.cssText = `
-                    display: none;
-                    flex-direction: column;
-                    gap: 20px;
-                    padding: 0 16px 20px 16px;
-                `;
-                cardDetail.innerHTML = `
-                    <div style="margin-top: 0px; padding-top: 16px; border-top: 1px solid var(--border);">
-                        <h5 style="margin:0 0 6px 0; color:var(--text-accent); font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Implicação</h5>
-                        <p style="margin:0; font-size:16px; font-weight:500; color:var(--text-primary);">${implicacaoText}</p>
-                    </div>
-                    <div>
-                        <h5 style="margin:0 0 6px 0; color:var(--text-accent); font-size:13px; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Solução</h5>
-                        <p style="margin:0; font-size:16px; font-weight:500; color:var(--text-primary);">${solucaoText}</p>
-                    </div>
-                `;
-
-                cardHeader.onclick = () => {
-                    isExpanded = !isExpanded;
-                    if (!isExpanded) {
-                        cardDetail.style.display = 'none';
-                        cardHeader.querySelector('.chevron-icon').style.transform = 'rotate(0deg)';
-                        card.style.borderColor = 'var(--border)';
-                    } else {
-                        cardDetail.style.display = 'flex';
-                        cardHeader.querySelector('.chevron-icon').style.transform = 'rotate(90deg)';
-                        card.style.borderColor = color;
-                    }
-                };
-
-                card.appendChild(cardHeader);
-                card.appendChild(cardDetail);
-                if (cardsContainer) cardsContainer.appendChild(card);
-            });
-            
-            if (cardsContainer) cardsContainer.style.display = 'flex';
-        });
-    }
-    
-    // Inicializar os steps na primeira carga
-    setTimeout(() => {
-        calculateSteps();
-        renderSteps();
-    }, 500);
+  setupQualificationEventListeners();
 });
