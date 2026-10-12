@@ -4999,67 +4999,85 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 });
 
-// ==================== LÓGICA DO FORMULÁRIO DE QUALIFICAÇÃO (6 STEPS) ====================
-let currentStep = 1;
-const TOTAL_STEPS = 6;
+// ==================== LÓGICA DO FORMULÁRIO DE QUALIFICAÇÃO (TELA ÚNICA COM EVOLUÇÃO %) ====================
 
-// Função para atualizar tracking bar e contador
+// Função para atualizar a barra de progresso única e o badge em porcentagem
 function updateTrackingBar() {
-  const badge = document.getElementById('stepCounterBadge');
-  if (badge) {
-    badge.textContent = `Etapa ${currentStep} de ${TOTAL_STEPS}`;
-  }
+  updateQualificationProgress();
+}
 
-  const indicators = document.querySelectorAll('#formTrackingBar .step-indicator');
-  indicators.forEach((ind, index) => {
-    const stepNum = index + 1;
-    if (stepNum <= currentStep) {
-      ind.classList.add('active');
-      ind.style.background = 'var(--fill-accent)';
-    } else {
-      ind.classList.remove('active');
-      ind.style.background = 'var(--border)';
+function updateQualificationProgress() {
+  const form = document.getElementById('clientAnswersForm');
+  if (!form) return;
+
+  // Perguntas base (10 perguntas / subperguntas principais)
+  const baseQuestions = [
+    document.getElementById('respJaContribuiu'),
+    document.getElementById('respRecebeBeneficio'),
+    document.getElementById('respSolicitouBeneficio'),
+    document.getElementById('respSabeAposentar'),
+    document.getElementById('respPrioridade'),
+    document.getElementById('respModalidade'),
+    document.getElementById('respTipoTrabalho'),
+    document.getElementById('respExerceuAtividadeEspecial'),
+    document.getElementById('respConsequencias'),
+    document.getElementById('respFazerSozinho')
+  ];
+
+  let totalCount = 0;
+  let filledCount = 0;
+
+  baseQuestions.forEach(el => {
+    if (el) {
+      totalCount += 1;
+      if (el.value && el.value.trim() !== '') {
+        filledCount += 1;
+      }
     }
   });
-}
 
-// Alternar visibilidade das etapas
-function updateStepView() {
-  const formEl = document.getElementById('clientAnswersForm');
-  if (formEl) formEl.scrollTop = 0;
+  // Campos condicionais atualmente ativos/visíveis
+  const visibleConditionals = form.querySelectorAll('.qual-conditional-block, .qual-nested-conditional');
+  visibleConditionals.forEach(block => {
+    if (block.style.display !== 'none' && window.getComputedStyle(block).display !== 'none') {
+      const inputs = block.querySelectorAll('textarea, select, input:not([type="hidden"])');
+      inputs.forEach(input => {
+        totalCount += 1;
+        if (input.value && input.value.trim() !== '') {
+          filledCount += 1;
+        }
+      });
+    }
+  });
 
-  for (let i = 1; i <= TOTAL_STEPS; i++) {
-    const stepEl = document.getElementById('step-' + i);
-    if (stepEl) {
-      stepEl.style.display = (i === currentStep) ? 'block' : 'none';
+  const pct = totalCount > 0 ? Math.round((filledCount / totalCount) * 100) : 0;
+
+  const badge = document.getElementById('stepCounterBadge');
+  if (badge) {
+    badge.textContent = `${pct}%`;
+  }
+
+  const fill = document.getElementById('formProgressBarFill');
+  if (fill) {
+    fill.style.width = `${pct}%`;
+    if (pct === 100) {
+      fill.style.background = '#10b981';
+    } else {
+      fill.style.background = 'var(--fill-accent)';
     }
   }
-
-  const btnVolt = document.getElementById('btnVoltarStep');
-  const btnProx = document.getElementById('btnProximoStep');
-  const btnFin = document.getElementById('btnFinalizarStep');
-
-  if (btnVolt) {
-    btnVolt.style.display = currentStep > 1 ? 'block' : 'none';
-  }
-
-  if (currentStep === TOTAL_STEPS) {
-    if (btnProx) btnProx.style.display = 'none';
-    if (btnFin) btnFin.style.display = 'inline-flex';
-  } else {
-    if (btnProx) btnProx.style.display = 'block';
-    if (btnFin) btnFin.style.display = 'none';
-  }
-
-  updateTrackingBar();
 }
 
-// Navegar para uma etapa específica
+// Mantido para compatibilidade se invocado externamente
+function updateStepView() {
+  updateQualificationProgress();
+}
+
 function goToStep(step) {
-  if (step >= 1 && step <= TOTAL_STEPS) {
-    currentStep = step;
-    updateStepView();
-  }
+  // Tela única: rolagem para o início ou foco
+  const formEl = document.getElementById('clientAnswersForm');
+  if (formEl) formEl.scrollTop = 0;
+  updateQualificationProgress();
 }
 
 // Atualização e descarte imediato dos blocos condicionais
@@ -5071,9 +5089,10 @@ function updateAllConditionals() {
   updateQ7Conditionals();
   updateQ8Conditionals();
   updateQ9Conditionals();
+  updateQualificationProgress();
 }
 
-// Q1: Já contribuiu?
+// 1: Já contribuiu?
 function updateQ1Conditionals() {
   const val = document.getElementById('respJaContribuiu')?.value || '';
   const simBox = document.getElementById('cond_q1_sim_box');
@@ -5085,13 +5104,11 @@ function updateQ1Conditionals() {
   if (val === 'Sim - e continuo contribuindo.') {
     if (simBox) simBox.style.display = 'block';
     if (outroBox) outroBox.style.display = 'none';
-    // Descarta respostas do bloco removido
     if (tempo) tempo.value = '';
     if (qualidade) qualidade.value = '';
   } else if (val !== '') {
     if (simBox) simBox.style.display = 'none';
     if (outroBox) outroBox.style.display = 'flex';
-    // Descarta respostas do bloco removido
     if (faz) faz.value = '';
   } else {
     if (simBox) simBox.style.display = 'none';
@@ -5100,9 +5117,10 @@ function updateQ1Conditionals() {
     if (tempo) tempo.value = '';
     if (qualidade) qualidade.value = '';
   }
+  updateQualificationProgress();
 }
 
-// Q2: Recebe algum benefício?
+// Subpergunta: Recebe algum benefício?
 function updateQ2Conditionals() {
   const val = document.getElementById('respRecebeBeneficio')?.value || '';
   const box = document.getElementById('cond_q2_box');
@@ -5113,13 +5131,13 @@ function updateQ2Conditionals() {
     if (box) box.style.display = 'flex';
   } else {
     if (box) box.style.display = 'none';
-    // Descarta respostas do bloco removido
     if (qual) qual.value = '';
     if (vantagem) vantagem.value = '';
   }
+  updateQualificationProgress();
 }
 
-// Q3: Já solicitou?
+// 2: Já solicitou?
 function updateQ3Conditionals() {
   const val = document.getElementById('respSolicitouBeneficio')?.value || '';
   const box = document.getElementById('cond_q3_box');
@@ -5129,12 +5147,12 @@ function updateQ3Conditionals() {
     if (box) box.style.display = 'block';
   } else {
     if (box) box.style.display = 'none';
-    // Descarta respostas do bloco removido
     if (judicial) judicial.value = '';
   }
+  updateQualificationProgress();
 }
 
-// Q4: Já sabe quando vai poder se aposentar e quanto vai receber?
+// Subpergunta: Já sabe quando vai poder se aposentar e quanto vai receber?
 function updateQ4Conditionals() {
   const val = document.getElementById('respSabeAposentar')?.value || '';
   const box = document.getElementById('cond_q4_box');
@@ -5146,14 +5164,14 @@ function updateQ4Conditionals() {
     if (box) box.style.display = 'flex';
   } else {
     if (box) box.style.display = 'none';
-    // Descarta respostas do bloco removido
     if (quem) quem.value = '';
     if (contratou) contratou.value = '';
     if (carac) carac.value = '';
   }
+  updateQualificationProgress();
 }
 
-// Q7: Tipo de trabalho:
+// 3: Tipo de trabalho:
 function updateQ7Conditionals() {
   const val = document.getElementById('respTipoTrabalho')?.value || '';
   const cltBox = document.getElementById('cond_q7_clt_box');
@@ -5179,7 +5197,6 @@ function updateQ7Conditionals() {
     if (cltBox) cltBox.style.display = 'flex';
     if (meiBox) meiBox.style.display = 'none';
     if (ruralBox) ruralBox.style.display = 'none';
-    // Descarta respostas dos blocos removidos
     if (meiCarne) meiCarne.value = '';
     if (meiCod) meiCod.value = '';
     if (meiDup) meiDup.value = '';
@@ -5193,7 +5210,6 @@ function updateQ7Conditionals() {
     if (cltBox) cltBox.style.display = 'none';
     if (meiBox) meiBox.style.display = 'flex';
     if (ruralBox) ruralBox.style.display = 'none';
-    // Descarta respostas dos blocos removidos
     if (cltCnis) cltCnis.value = '';
     if (cltAliq) cltAliq.value = '';
     if (cltErro) cltErro.value = '';
@@ -5206,7 +5222,6 @@ function updateQ7Conditionals() {
     if (cltBox) cltBox.style.display = 'none';
     if (meiBox) meiBox.style.display = 'none';
     if (ruralBox) ruralBox.style.display = 'flex';
-    // Descarta respostas dos blocos removidos
     if (cltCnis) cltCnis.value = '';
     if (cltAliq) cltAliq.value = '';
     if (cltErro) cltErro.value = '';
@@ -5231,9 +5246,10 @@ function updateQ7Conditionals() {
     if (ruralDocsFam) ruralDocsFam.value = '';
     if (ruralTest) ruralTest.value = '';
   }
+  updateQualificationProgress();
 }
 
-// Q8: Atividade especial?
+// 4: Atividade especial?
 function updateQ8Conditionals() {
   const val = document.getElementById('respExerceuAtividadeEspecial')?.value || '';
   const box = document.getElementById('cond_q8_box');
@@ -5246,15 +5262,15 @@ function updateQ8Conditionals() {
     if (box) box.style.display = 'flex';
   } else {
     if (box) box.style.display = 'none';
-    // Descarta respostas do bloco removido
     if (tempo) tempo.value = '';
     if (ppps) ppps.value = '';
     if (emp) emp.value = '';
     if (ag) ag.value = '';
   }
+  updateQualificationProgress();
 }
 
-// Q9: Consequências
+// Subpergunta Outros: Consequências
 function updateQ9Conditionals() {
   const val = document.getElementById('respConsequencias')?.value || '';
   const simBox = document.getElementById('cond_q9_sim_box');
@@ -5264,15 +5280,13 @@ function updateQ9Conditionals() {
   const naoRenda = document.getElementById('cond_q9_nao_renda_menor');
 
   if (val === 'Sim') {
-    if (simBox) simBox.style.display = 'block';
+    if (simBox) simBox.style.display = 'flex';
     if (naoBox) naoBox.style.display = 'none';
-    // Descarta respostas do bloco removido
     if (naoAtraso) naoAtraso.value = '';
     if (naoRenda) naoRenda.value = '';
   } else if (val === 'Não') {
     if (simBox) simBox.style.display = 'none';
     if (naoBox) naoBox.style.display = 'flex';
-    // Descarta respostas do bloco removido
     if (simFuturo) simFuturo.value = '';
   } else {
     if (simBox) simBox.style.display = 'none';
@@ -5281,16 +5295,16 @@ function updateQ9Conditionals() {
     if (naoAtraso) naoAtraso.value = '';
     if (naoRenda) naoRenda.value = '';
   }
+  updateQualificationProgress();
 }
 
 // Inicializar ou resetar o formulário de qualificação
 function initQualificationForm() {
-  currentStep = 1;
   updateAllConditionals();
-  updateStepView();
+  updateQualificationProgress();
 }
 
-// Compilar todas as respostas respondidas e suas condicionais exibidas
+// Compilar todas as respostas respondidas com a nova hierarquia (1, Sub / 2, Subs / 3 / 4 / Outros: Subs)
 function compileQualificationSummary() {
   const blocks = [];
 
@@ -5316,28 +5330,28 @@ function compileQualificationSummary() {
     blocks.push(block);
   }
 
-  // 2. Recebe algum benefício?
-  const q2 = document.getElementById('respRecebeBeneficio');
-  if (q2 && q2.value) {
-    let block = `2. Recebe algum benefício?\nR: ${q2.value}`;
-    if (q2.value === 'Sim') {
+  // Subpergunta: Recebe algum benefício?
+  const q1a = document.getElementById('respRecebeBeneficio');
+  if (q1a && q1a.value) {
+    let block = `- Recebe algum benefício?\nR: ${q1a.value}`;
+    if (q1a.value === 'Sim') {
       const qual = document.getElementById('cond_q2_qual')?.value.trim();
       if (qual) {
-        block += `\n- Qual?\nR: ${qual}`;
+        block += `\n  - Qual?\n  R: ${qual}`;
       }
       const vantagem = document.getElementById('cond_q2_vantagem')?.value.trim();
       if (vantagem) {
-        block += `\n- Entende a vantagem da aposentadoria em relação a esse benefício?\nR: ${vantagem}`;
+        block += `\n  - Entende a vantagem da aposentadoria em relação a esse benefício?\n  R: ${vantagem}`;
       }
     }
     blocks.push(block);
   }
 
-  // 3. Já solicitou?
-  const q3 = document.getElementById('respSolicitouBeneficio');
-  if (q3 && q3.value) {
-    let block = `3. Já solicitou?\nR: ${q3.value}`;
-    if (q3.value !== 'Não - nunca tentei aposentar.') {
+  // 2. Já solicitou?
+  const q2 = document.getElementById('respSolicitouBeneficio');
+  if (q2 && q2.value) {
+    let block = `2. Já solicitou?\nR: ${q2.value}`;
+    if (q2.value !== 'Não - nunca tentei aposentar.') {
       const judicial = document.getElementById('cond_q3_judicial')?.value.trim();
       if (judicial) {
         block += `\n- E levou pro judicial ou fez uma nova tentativa?\nR: ${judicial}`;
@@ -5346,51 +5360,51 @@ function compileQualificationSummary() {
     blocks.push(block);
   }
 
-  // 4. Já sabe quando vai poder se aposentar e quanto vai receber?
-  const q4 = document.getElementById('respSabeAposentar');
-  if (q4 && q4.value) {
-    let block = `4. Já sabe quando vai poder se aposentar e quanto vai receber?\nR: ${q4.value}`;
-    if (q4.value === 'Sim') {
+  // Subpergunta: Já sabe quando vai poder se aposentar e quanto vai receber?
+  const q2a = document.getElementById('respSabeAposentar');
+  if (q2a && q2a.value) {
+    let block = `- Já sabe quando vai poder se aposentar e quanto vai receber?\nR: ${q2a.value}`;
+    if (q2a.value === 'Sim') {
       const quem = document.getElementById('cond_q4_quem_falou')?.value.trim();
       if (quem) {
-        block += `\n- Quem te falou?\nR: ${quem}`;
+        block += `\n  - Quem te falou?\n  R: ${quem}`;
       }
       const contratou = document.getElementById('cond_q4_contratou')?.value.trim();
       if (contratou) {
-        block += `\n- E você já contratou essa pessoa para cuidar da sua aposentadoria?\nR: ${contratou}`;
+        block += `\n  - E você já contratou essa pessoa para cuidar da sua aposentadoria?\n  R: ${contratou}`;
       }
       const carac = document.getElementById('cond_q4_caracteristica')?.value.trim();
       if (carac) {
-        block += `\n- E qual a característica mais importante que um profissional tem que ter pra você deixar ele cuidar da sua aposentadoria?\nR: ${carac}`;
+        block += `\n  - E qual a característica mais importante que um profissional tem que ter pra você deixar ele cuidar da sua aposentadoria?\n  R: ${carac}`;
       }
     }
     blocks.push(block);
   }
 
-  // 5. O é mais importante para você se aposentar mais rápido ou se aposentar com uma renda maior?
-  const q5 = document.getElementById('respPrioridade');
-  if (q5 && q5.value.trim()) {
-    blocks.push(`5. O é mais importante para você se aposentar mais rápido ou se aposentar com uma renda maior?\nR: ${q5.value.trim()}`);
+  // Subpergunta: O que é mais importante para você: se aposentar mais rápido ou se aposentar com uma renda maior?
+  const q2b = document.getElementById('respPrioridade');
+  if (q2b && q2b.value.trim()) {
+    blocks.push(`- O que é mais importante para você: se aposentar mais rápido ou se aposentar com uma renda maior?\nR: ${q2b.value.trim()}`);
   }
 
-  // 6. O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)?
-  const q6 = document.getElementById('respModalidade');
-  if (q6 && q6.value.trim()) {
-    blocks.push(`6. O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)?\nR: ${q6.value.trim()}`);
+  // Subpergunta: O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)?
+  const q2c = document.getElementById('respModalidade');
+  if (q2c && q2c.value.trim()) {
+    blocks.push(`- O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)?\nR: ${q2c.value.trim()}`);
   }
 
-  // 7. Tipo de trabalho:
-  const q7 = document.getElementById('respTipoTrabalho');
-  if (q7 && q7.value) {
-    let block = `7. Tipo de trabalho:\nR: ${q7.value}`;
-    if (q7.value === 'Emprego de carteira assinada (CLT)') {
+  // 3. Tipo de trabalho:
+  const q3 = document.getElementById('respTipoTrabalho');
+  if (q3 && q3.value) {
+    let block = `3. Tipo de trabalho:\nR: ${q3.value}`;
+    if (q3.value === 'Emprego de carteira assinada (CLT)') {
       const cnis = document.getElementById('cond_q7_clt_cnis')?.value.trim();
       if (cnis) block += `\n- E você sabe se todos os registros constam no CNIS?\nR: ${cnis}`;
       const aliq = document.getElementById('cond_q7_clt_aliquota')?.value.trim();
       if (aliq) block += `\n- Sabe se as empresas fizeram as contribuições na alíquota correta?\nR: ${aliq}`;
       const erro = document.getElementById('cond_q7_clt_erro')?.value.trim();
       if (erro) block += `\n- Sabe se tem algum dado que foi inserido errado no CNIS, como valor ou data?\nR: ${erro}`;
-    } else if (q7.value === 'Empresário / Autônomo / MEI') {
+    } else if (q3.value === 'Empresário / Autônomo / MEI') {
       const carne = document.getElementById('cond_q7_mei_carne')?.value.trim();
       if (carne) block += `\n- Contribuiu no carnê ou MEI?\nR: ${carne}`;
       const cod = document.getElementById('cond_q7_mei_codigo')?.value.trim();
@@ -5399,7 +5413,7 @@ function compileQualificationSummary() {
       if (dup) block += `\n- Alguém já analisou se tem alguma contribuição duplicada?\nR: ${dup}`;
       const lac = document.getElementById('cond_q7_mei_lacuna')?.value.trim();
       if (lac) block += `\n- Sabe se tem alguma lacuna contributiva ou se o INSS está considerando mesmo todas as suas contribuições?\nR: ${lac}`;
-    } else if (q7.value === 'Trabalhador rural') {
+    } else if (q3.value === 'Trabalhador rural') {
       const terra = document.getElementById('cond_q7_rural_terra')?.value.trim();
       if (terra) block += `\n- De quem era a terra?\nR: ${terra}`;
       const hec = document.getElementById('cond_q7_rural_hectares')?.value.trim();
@@ -5414,11 +5428,11 @@ function compileQualificationSummary() {
     blocks.push(block);
   }
 
-  // 8. Atividade especial?
-  const q8 = document.getElementById('respExerceuAtividadeEspecial');
-  if (q8 && q8.value) {
-    let block = `8. Atividade especial?\nR: ${q8.value}`;
-    if (q8.value === 'Sim - já trabalhei nessas atividades.') {
+  // 4. Atividade especial?
+  const q4 = document.getElementById('respExerceuAtividadeEspecial');
+  if (q4 && q4.value) {
+    let block = `4. Atividade especial?\nR: ${q4.value}`;
+    if (q4.value === 'Sim - já trabalhei nessas atividades.') {
       const tempo = document.getElementById('cond_q8_tempo')?.value.trim();
       if (tempo) block += `\n- Por quanto tempo exerceu?\nR: ${tempo}`;
       const ppps = document.getElementById('cond_q8_ppps')?.value.trim();
@@ -5431,31 +5445,36 @@ function compileQualificationSummary() {
     blocks.push(block);
   }
 
-  // 9. Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?
-  const q9 = document.getElementById('respConsequencias');
-  if (q9 && q9.value) {
-    let block = `9. Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?\nR: ${q9.value}`;
-    if (q9.value === 'Sim') {
+  // Categoria Outros:
+  const outrosBlocks = [];
+  const qOutrosA = document.getElementById('respConsequencias');
+  if (qOutrosA && qOutrosA.value) {
+    let block = `- Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?\nR: ${qOutrosA.value}`;
+    if (qOutrosA.value === 'Sim') {
       const fut = document.getElementById('cond_q9_sim_futuro')?.value.trim();
-      if (fut) block += `\n- E como isso mudaria os seus planos de futuro?\nR: ${fut}`;
-    } else if (q9.value === 'Não') {
+      if (fut) block += `\n  - E como isso mudaria os seus planos de futuro?\n  R: ${fut}`;
+    } else if (qOutrosA.value === 'Não') {
       const atr = document.getElementById('cond_q9_nao_atraso')?.value.trim();
-      if (atr) block += `\n- Sua aposentadoria pode atrasar por no mínimo mais 6 meses depois de completar a idade, podendo chegar a 3, 4 anos de atraso, como isso mudaria os seus planos?\nR: ${atr}`;
+      if (atr) block += `\n  - Sua aposentadoria pode atrasar por no mínimo mais 6 meses depois de completar a idade, podendo chegar a 3, 4 anos de atraso, como isso mudaria os seus planos?\n  R: ${atr}`;
       const ren = document.getElementById('cond_q9_nao_renda_menor')?.value.trim();
-      if (ren) block += `\n- Se você descobrisse que sua renda pode ser menor do que você tem direito por alguma informação ter sido enviada errada pro INSS, como você se sentiria?\nR: ${ren}`;
+      if (ren) block += `\n  - Se você descobrisse que sua renda pode ser menor do que você tem direito por alguma informação ter sido enviada errada pro INSS, como você se sentiria?\n  R: ${ren}`;
     }
-    blocks.push(block);
+    outrosBlocks.push(block);
   }
 
-  // 10. Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai  ter negativa do INSS?
-  const q10 = document.getElementById('respFazerSozinho');
-  if (q10 && q10.value.trim()) {
-    blocks.push(`10. Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai  ter negativa do INSS?\nR: ${q10.value.trim()}`);
+  const qOutrosB = document.getElementById('respFazerSozinho');
+  if (qOutrosB && qOutrosB.value.trim()) {
+    outrosBlocks.push(`- Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai ter negativa do INSS?\nR: ${qOutrosB.value.trim()}`);
+  }
+
+  if (outrosBlocks.length > 0) {
+    blocks.push(`Outros:\n` + outrosBlocks.join('\n\n'));
   }
 
   if (blocks.length === 0) return '';
   return `=== QUALIFICAÇÃO DO CLIENTE ===\n\n` + blocks.join('\n\n');
 }
+
 
 // Sincronizar as respostas da qualificação na caixa de texto 'Detalhes do caso'
 function syncQualificationToDetails(isFinal = false) {
@@ -5465,7 +5484,7 @@ function syncQualificationToDetails(isFinal = false) {
   const summary = compileQualificationSummary();
   if (!summary) {
     if (isFinal && typeof showToast === 'function') {
-      showToast('Nenhuma resposta preenchida para finalizar.');
+      showToast('Nenhuma resposta preenchida para salvar.');
     }
     return;
   }
@@ -5491,7 +5510,7 @@ function syncQualificationToDetails(isFinal = false) {
 
   if (isFinal) {
     if (typeof showToast === 'function') {
-      showToast('Qualificação concluída e inserida em Detalhes do caso!');
+      showToast('Qualificação salva em Detalhes do caso!');
     }
     const btnFin = document.getElementById('btnFinalizarStep');
     if (btnFin) {
@@ -5506,7 +5525,7 @@ function syncQualificationToDetails(isFinal = false) {
   }
 }
 
-// Ação de finalizar o formulário
+// Ação de finalizar / salvar o formulário
 function finalizeQualificationForm() {
   syncQualificationToDetails(true);
 }
@@ -5525,9 +5544,8 @@ function resetQualificationFormAnswers() {
       inp.value = '';
     });
   }
-  currentStep = 1;
   updateAllConditionals();
-  updateStepView();
+  updateQualificationProgress();
   if (typeof showToast === 'function') {
     showToast('Respostas do formulário limpas.');
   }
@@ -5535,29 +5553,9 @@ function resetQualificationFormAnswers() {
 
 // Configuração dos Event Listeners do formulário de qualificação
 function setupQualificationEventListeners() {
-  const btnProx = document.getElementById('btnProximoStep');
-  const btnVolt = document.getElementById('btnVoltarStep');
   const btnFin = document.getElementById('btnFinalizarStep');
   const btnReload = document.getElementById('btnReloadForm');
-
-  if (btnProx) {
-    btnProx.onclick = () => {
-      syncQualificationToDetails(false);
-      if (currentStep < TOTAL_STEPS) {
-        currentStep++;
-        updateStepView();
-      }
-    };
-  }
-
-  if (btnVolt) {
-    btnVolt.onclick = () => {
-      if (currentStep > 1) {
-        currentStep--;
-        updateStepView();
-      }
-    };
-  }
+  const form = document.getElementById('clientAnswersForm');
 
   if (btnFin) {
     btnFin.onclick = () => {
@@ -5571,15 +5569,17 @@ function setupQualificationEventListeners() {
     };
   }
 
-  // Clicar nos passos da tracking bar
-  document.querySelectorAll('#formTrackingBar .step-indicator').forEach(ind => {
-    ind.onclick = () => {
-      const stepTarget = parseInt(ind.getAttribute('data-step') || '1', 10);
-      if (stepTarget) {
-        goToStep(stepTarget);
-      }
-    };
-  });
+  // Atualização em tempo real de progresso e sincronização
+  if (form) {
+    form.addEventListener('input', () => {
+      updateQualificationProgress();
+      syncQualificationToDetails(false);
+    });
+    form.addEventListener('change', () => {
+      updateQualificationProgress();
+      syncQualificationToDetails(false);
+    });
+  }
 
   // Listeners de mudança nas perguntas condicionais
   const conditionMap = {
