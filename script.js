@@ -4723,7 +4723,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.stopPropagation();
         const isShowing = menu.classList.contains('show');
         document.querySelectorAll('.custom-select-menu').forEach(m => m.classList.remove('show'));
-        if (!isShowing) menu.classList.add('show');
+        if (!isShowing) {
+          menu.classList.add('show');
+          setTimeout(() => {
+            const form = document.getElementById('clientAnswersForm');
+            if (form && menu.classList.contains('show')) {
+              const menuRect = menu.getBoundingClientRect();
+              const formRect = form.getBoundingClientRect();
+              if (menuRect.bottom > formRect.bottom) {
+                form.scrollBy({ top: (menuRect.bottom - formRect.bottom) + 30, behavior: 'smooth' });
+              }
+            }
+          }, 60);
+        }
       });
 
       select.addEventListener('change', () => {
