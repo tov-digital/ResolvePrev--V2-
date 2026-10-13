@@ -1869,6 +1869,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     allUserCards = cards || [];
 
+    // Carregar cache de perfis (para exibição de operador atribuído e filtros)
+    window.crmProfilesCache = window.crmProfilesCache || [];
+    if (window.crmProfilesCache.length === 0) {
+      try {
+        const { data: profiles } = await supabase.from('profiles').select('*');
+        if (profiles) window.crmProfilesCache = profiles;
+      } catch (e) { /* fallback */ }
+    }
+
     // Atualiza filtro de operador se for admin/supervisor
     if (canSeeAllCards) {
       const opDivider = document.getElementById('filterOperatorDivider');
@@ -2164,9 +2173,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       const badgeHidden = notasCount === 0 ? 'hidden' : '';
 
-      const tr = document.createElement('tr');
-      tr.className = 'list-row';
-      tr.dataset.id = card.id;
+      // ---- Operador atribuído ----
+      let operatorHtml = '';
+      if (card.user_id) {
+        const profile = (window.crmProfilesCache || []).find(p => p.id === card.user_id);
+        const opName = profile ? getUserDisplayName(profile) : 'Atribuído';
+        const opInitial = opName.charAt(0).toUpperCase();
+        operatorHtml = `
+          <div class="list-assignee-badge" title="${escapeHtml(opName)}">
+            <span class="list-assignee-avatar">${escapeHtml(opInitial)}</span>
+            <span class="list-assignee-name">${escapeHtml(opName)}</span>
+          </div>
+        `;
+      }
 
       tr.innerHTML = `
         <td class="td-check">
@@ -2189,7 +2208,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </svg>
           </a>
         </td>
-        <td class="list-profession">${escapeHtml(card.profissao || '—')}</td>
+        <td class="list-assignee">${operatorHtml}</td>
         <td>
           <span class="list-date-badge ${dateClass}">
             <span class="list-date-dot"></span>

@@ -1669,7 +1669,7 @@ html, body {
 .col-check      { width: 48px;  min-width: 48px;  text-align: center; padding: 0.85rem 0.75rem !important; }
 .col-name       { width: 26%;   min-width: 160px; }
 .col-phone      { width: 17%;   min-width: 140px; }
-.col-profession { width: 17%;   min-width: 120px; }
+.col-assignee { width: 17%;   min-width: 130px; }
 .col-date       { width: 16%;   min-width: 140px; }
 .col-status     { width: 16%;   min-width: 120px; }
 .col-notes      { width: 52px;  min-width: 52px;  text-align: center; }
@@ -2048,10 +2048,50 @@ html, body {
   flex-shrink: 0;
 }
 
-/* ---- Profissão Cell ---- */
-.list-profession {
+/* ---- Atribuição Cell ---- */
+.list-assignee {
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: var(--color-neutral);
+  white-space: nowrap;
+}
+
+.list-assignee-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #1E293B;
+  background-color: #F1F5F9;
+  padding: 0.2rem 0.55rem 0.2rem 0.35rem;
+  border-radius: 9999px;
+  max-width: 100%;
+}
+
+.list-assignee-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-tertiary) 100%);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.list-assignee-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-assignee-empty {
+  color: #94A3B8;
+  display: inline-block;
 }
 
 /* ---- Date Cell ---- */
