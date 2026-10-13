@@ -1888,7 +1888,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         const currentSelected = opSelect.value;
-        opSelect.innerHTML = '<option value="">Todos</option>';
+        opSelect.innerHTML = '<option value="">Todos</option><option value="unassigned">Não atribuído</option>';
         
         uniqueUserIds.forEach(uId => {
           const prof = window.crmProfilesCache.find(p => p.id === uId);
@@ -1899,7 +1899,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           opSelect.appendChild(opt);
         });
         
-        if (uniqueUserIds.includes(currentSelected)) {
+        if (uniqueUserIds.includes(currentSelected) || currentSelected === 'unassigned') {
           opSelect.value = currentSelected;
         }
       }
@@ -2078,7 +2078,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 4. Filtro de operador
     if (activeOperatorFilter) {
-      filtered = filtered.filter(card => String(card.user_id) === activeOperatorFilter);
+      if (activeOperatorFilter === 'unassigned') {
+        filtered = filtered.filter(card => !card.user_id);
+      } else {
+        filtered = filtered.filter(card => String(card.user_id) === activeOperatorFilter);
+      }
     }
 
     renderKanbanCards(filtered);
