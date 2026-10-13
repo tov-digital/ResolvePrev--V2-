@@ -5547,7 +5547,7 @@ function updateSubquestionToggleIndicators() {
     const q1Tempo = document.getElementById('cond_q1_tempo')?.value?.trim();
     const q1Qualidade = document.getElementById('cond_q1_qualidade')?.value?.trim();
     const hasQ1 = !!(q1Ans || q1Qual || q1Vant || q1Faz || q1Tempo || q1Qualidade);
-    btnQ1.classList.toggle('has-answers', hasQ1);
+    // btnQ1.classList.toggle('has-answers', hasQ1);
   }
 
   // Q2 (Subperguntas: Aposentadoria, Prioridade, Modalidade + Condicional Q2)
@@ -5559,7 +5559,7 @@ function updateSubquestionToggleIndicators() {
     const q2Quem = document.getElementById('cond_q4_quem_falou')?.value?.trim();
     const q2Judicial = document.getElementById('cond_q3_judicial')?.value?.trim();
     const hasQ2 = !!(q2Apos || q2Prio || q2Mod || q2Quem || q2Judicial);
-    btnQ2.classList.toggle('has-answers', hasQ2);
+    // btnQ2.classList.toggle('has-answers', hasQ2);
   }
 
   // Q3 (Subperguntas: Condicionais de CLT, MEI, Rural)
@@ -5578,7 +5578,7 @@ function updateSubquestionToggleIndicators() {
     const q3Fam = document.getElementById('cond_q7_rural_docs_fam')?.value?.trim();
     const q3Test = document.getElementById('cond_q7_rural_testemunhas')?.value?.trim();
     const hasQ3 = !!(q3Cnis || q3Aliq || q3Erro || q3Carne || q3Codigo || q3Dup || q3Lac || q3Terra || q3Hec || q3Prod || q3Fam || q3Test);
-    btnQ3.classList.toggle('has-answers', hasQ3);
+    // btnQ3.classList.toggle('has-answers', hasQ3);
   }
 
   // Q4 (Subperguntas: Condicionais de Atividade Especial)
@@ -5589,7 +5589,7 @@ function updateSubquestionToggleIndicators() {
     const q4Empresas = document.getElementById('cond_q8_empresas')?.value?.trim();
     const q4Agentes = document.getElementById('cond_q8_agentes')?.value?.trim();
     const hasQ4 = !!(q4Tempo || q4Ppps || q4Empresas || q4Agentes);
-    btnQ4.classList.toggle('has-answers', hasQ4);
+    // btnQ4.classList.toggle('has-answers', hasQ4);
   }
 
   // Q5 (Subperguntas: Consequências e Apoio Profissional)
@@ -5601,7 +5601,7 @@ function updateSubquestionToggleIndicators() {
     const q5Atr = document.getElementById('cond_q9_nao_atraso')?.value?.trim();
     const q5Renda = document.getElementById('cond_q9_nao_renda_menor')?.value?.trim();
     const hasQ5 = !!(q5Cons || q5Faz || q5Fut || q5Atr || q5Renda);
-    btnQ5.classList.toggle('has-answers', hasQ5);
+    // btnQ5.classList.toggle('has-answers', hasQ5);
   }
 }
 
