@@ -2102,19 +2102,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Ordenação
     const sorted = [...cards].sort((a, b) => {
       if (window.currentTab === 'operacao') {
-        const da = a.data_requerimento ? new Date(a.data_requerimento).getTime() : Infinity;
-        const db = b.data_requerimento ? new Date(b.data_requerimento).getTime() : Infinity;
-        return da - db;
+        return sortCardsByDateAndName(a, b);
       } else {
         // Comercial: ordenação invertida por status na lista (proposta -> novo)
         const order = { proposta: 1, reuniao: 2, acompanhamento: 3, qualificacao: 4, novo: 5 };
         const oA = order[a.status] || 99;
         const oB = order[b.status] || 99;
         if (oA !== oB) return oA - oB;
-        // fallback para data
-        const da = new Date(a.atualizado_em || a.criado_em || 0).getTime();
-        const db = new Date(b.atualizado_em || b.criado_em || 0).getTime();
-        return db - da;
+        return sortCardsByDateAndName(a, b);
       }
     });
 
@@ -2531,6 +2526,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Função auxiliar para ordenar cards por data de requerimento e nome
+  function getCardSortWeight(card) {
+    if (!card.data_requerimento) return 999999;
+    const diff = daysDiff(card.data_requerimento);
+    if (diff === null) return 999999;
+    // Se diff < 0 (data já passou): prioridade máxima, mais recente primeiro (ex: -1 antes de -2)
+    // Se diff >= 0 (futuro/hoje): da mais próxima para a mais distante (0, 1, 2...)
+    return diff < 0 ? diff : (100000 + diff);
+  }
+
+  function sortCardsByDateAndName(a, b) {
+    const weightA = getCardSortWeight(a);
+    const weightB = getCardSortWeight(b);
+    if (weightA !== weightB) {
+      if (weightA < 0 && weightB < 0) {
+        // Ambas no passado: mais recente primeiro (ex: -1 > -5 -> retorno negativo para vir antes)
+        return weightB - weightA;
+      }
+      return weightA - weightB;
+    }
+    const nameA = (a.nome || '').trim();
+    const nameB = (b.nome || '').trim();
+    return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'base' });
+  }
+
   function renderKanbanCards(cards) {
     let stages = [];
     if (window.currentTab === 'comercial') {
@@ -2550,17 +2570,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         container.innerHTML = '';
         
         // Filtrar cards da coluna e ordenar
-        const stageCards = cards.filter(c => c.status === stage).sort((a, b) => {
-          if (window.currentTab === 'operacao') {
-            const da = a.data_requerimento ? new Date(a.data_requerimento).getTime() : Infinity;
-            const db = b.data_requerimento ? new Date(b.data_requerimento).getTime() : Infinity;
-            return da - db;
-          } else {
-            const dateA = new Date(a.atualizado_em || a.criado_em || 0).getTime();
-            const dateB = new Date(b.atualizado_em || b.criado_em || 0).getTime();
-            return dateB - dateA;
-          }
-        });
+        const stageCards = cards.filter(c => c.status === stage).sort(sortCardsByDateAndName);
 
         countSpan.textContent = stageCards.length;
 
