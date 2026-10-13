@@ -3317,7 +3317,7 @@ html, body {
   gap: 1rem 1.25rem;
 }
 
-select {
+select:not(.qual-select) {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -3326,6 +3326,16 @@ select {
   background-position: right 1.1rem center;
   padding-right: 2.35rem !important;
   cursor: pointer;
+}
+
+select.qual-select,
+.qual-select {
+  background-image: none !important;
+  background: var(--surface-2) !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  padding-right: 10px !important;
 }
 
 .sheet-field-group {

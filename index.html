@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="styles.css?v=61">
+  <link rel="stylesheet" href="styles.css?v=63">
     <style>
       .browser-tab {
         color: var(--text-secondary) !important;
@@ -25,7 +25,92 @@
         color: var(--text-accent) !important;
         border-bottom-color: var(--text-accent) !important;
       }
-    </style>
+    
+                    /* Estilos dos Toggles e Acordeão Exclusivo */
+                    .qual-header-row {
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      gap: 8px;
+                    }
+                    .qual-sub-toggle {
+                      margin-right: 0;
+                      background: var(--surface-2);
+                      border: 1px solid var(--border);
+                      border-radius: 6px;
+                      width: 24px;
+                      height: 24px;
+                      padding: 0;
+                      color: var(--text-secondary);
+                      cursor: pointer;
+                      display: inline-flex;
+                      align-items: center;
+                      justify-content: center;
+                      position: relative;
+                      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                      font-family: inherit;
+                    }
+                    .qual-sub-toggle:hover {
+                      background: var(--surface-hover);
+                      color: var(--text-primary);
+                      border-color: var(--text-accent);
+                    }
+                    .qual-sub-toggle.active {
+                      background: var(--color-primary-light, rgba(30, 80, 128, 0.1));
+                      color: var(--color-primary, #1E5080);
+                      border-color: var(--color-primary, #1E5080);
+                    }
+                    .qual-sub-toggle i {
+                      font-size: 15px;
+                      line-height: 1;
+                      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+                    .qual-sub-toggle.active i {
+                      transform: rotate(45deg);
+                    }
+                    .qual-toggle-dot {
+                      position: absolute;
+                      top: -2px;
+                      right: -2px;
+                      width: 6px;
+                      height: 6px;
+                      border-radius: 50%;
+                      background: #10B981;
+                      box-shadow: 0 0 5px rgba(16, 185, 129, 0.6);
+                      display: none;
+                    }
+                    .qual-sub-toggle.has-answers .qual-toggle-dot {
+                      display: block;
+                    }
+                    .qual-subquestions-container {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 8px;
+                      margin-top: 10px;
+                      overflow: hidden;
+                      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+                    .qual-subquestions-container.collapsed {
+                      display: none !important;
+                    }
+                  
+                    /* Remoção definitiva de qualquer ícone de seta nos seletores de qualificação */
+                    #clientAnswersForm select,
+                    #clientAnswersForm select.qual-select,
+                    select.qual-select,
+                    .qual-select {
+                      background-image: none !important;
+                      -webkit-appearance: none !important;
+                      -moz-appearance: none !important;
+                      appearance: none !important;
+                      padding-right: 10px !important;
+                    }
+                    #clientAnswersForm select::-ms-expand,
+                    select.qual-select::-ms-expand,
+                    .qual-select::-ms-expand {
+                      display: none !important;
+                    }
+                  </style>
 </head>
 <body>
 
@@ -790,8 +875,7 @@ width:100%; color:var(--text-primary);">
                   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-shrink: 0;">
                     <p style="margin:0; font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px;"><i class="ti ti-clipboard-text" style="font-size:18px; color:var(--text-accent)" aria-hidden="true"></i>Formulário de qualificação</p>
                     <div style="display:flex; align-items:center; gap:8px;">
-                      <span id="stepCounterBadge" style="font-size:12px; color:var(--text-accent); background:var(--surface-2); padding:2px 8px; border-radius:12px; border:1px solid var(--border); font-weight:600;">0%</span>
-                      <button type="button" id="btnReloadForm" style="height:28px; width:28px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:4px; border:1px solid var(--border); background:var(--surface-1); cursor:pointer; color:var(--text-primary); transition: background 0.2s;" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='var(--surface-1)'" title="Reiniciar formulário"><i class="ti ti-reload" style="font-size:16px"></i></button>
+                      <button type="button" id="btnReloadForm" style="height:24px; width:24px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:6px; border:1px solid #8eb747; background:var(--color-secondary, #A3CA5C); cursor:pointer; color:#FFFFFF; transition: all 0.2s;" onmouseover="this.style.background='var(--color-secondary-hover, #8eb747)'" onmouseout="this.style.background='var(--color-secondary, #A3CA5C)'" title="Salvar respostas em Detalhes do caso e limpar formulário"><i class="ti ti-check" style="font-size:17px; font-weight:bold; color:#FFFFFF;"></i></button>
                     </div>
                  </div>
 
@@ -845,21 +929,25 @@ width:100%; color:var(--text-primary);">
                      cursor: pointer;
                    }
                    .qual-select {
-                     width: 100%;
-                     border: 1px solid var(--border);
-                     background: var(--surface-2);
-                     padding: 8px 10px;
-                     margin-top: 6px;
-                     font-size: 13.5px;
-                     font-weight: 500;
-                     outline: none;
-                     box-shadow: none;
-                     cursor: pointer;
-                     border-radius: 6px;
-                     color: var(--text-primary);
-                     font-family: inherit;
-                     transition: border-color 0.2s, box-shadow 0.2s;
-                   }
+                        width: 100%;
+                        border: 1px solid var(--border);
+                        background-color: var(--surface-2);
+                        background-image: none !important;
+                        -webkit-appearance: none !important;
+                        -moz-appearance: none !important;
+                        appearance: none !important;
+                        padding: 8px 10px;
+                        margin-top: 6px;
+                        font-size: 13.5px;
+                        font-weight: 500;
+                        outline: none;
+                        box-shadow: none;
+                        cursor: pointer;
+                        border-radius: 6px;
+                        color: var(--text-primary);
+                        font-family: inherit;
+                        transition: border-color 0.2s, box-shadow 0.2s;
+                      }
                    .qual-select:focus {
                      border-color: var(--fill-accent);
                      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
@@ -922,13 +1010,19 @@ width:100%; color:var(--text-primary);">
                      <div id="formProgressBarFill" style="height: 100%; width: 0%; background: var(--fill-accent); border-radius: 999px; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);"></div>
                    </div>
 
-                   <form id="clientAnswersForm" style="display: block; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-right: 6px; min-height: 0;">
+                   <form id="clientAnswersForm" style="display: block; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-right: 0; min-height: 0;">
                      <input type="hidden" id="respIdade">
 
                      <!-- 1. Já contribuiu? -->
                      <div class="qual-field-group">
-                       <label for="respJaContribuiu" class="qual-field-label">1. Já contribuiu?</label>
-                       <select id="respJaContribuiu" class="qual-select">
+                       <div class="qual-header-row">
+                          <label for="respJaContribuiu" class="qual-field-label">1. Já contribuiu?</label>
+                          <button type="button" class="qual-sub-toggle" data-target="subgroup_q1" title="Subperguntas (Benefício)" aria-expanded="false">
+                             <i class="ti ti-plus"></i>
+                             <span class="qual-toggle-dot"></span>
+                           </button>
+                        </div>
+                       <select id="respJaContribuiu" class="qual-select" style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
                          <option value="">Selecione...</option>
                          <option value="Sim - e continuo contribuindo.">Sim - e continuo contribuindo.</option>
                          <option value="Sim - mas parei há algum tempo.">Sim - mas parei há algum tempo.</option>
@@ -936,7 +1030,9 @@ width:100%; color:var(--text-primary);">
                          <option value="Não sei responder.">Não sei responder.</option>
                        </select>
 
-                       <!-- Condicional Q1 - Se "Sim - e continuo contribuindo." -->
+                       <!-- Container de Subperguntas Q1 (Recolhido por padrão) -->
+                        <div id="subgroup_q1" class="qual-subquestions-container collapsed">
+                        <!-- Condicional Q1 - Se "Sim - e continuo contribuindo." -->
                        <div id="cond_q1_sim_box" class="qual-conditional-block" style="display: none;">
                          <div>
                            <label for="cond_q1_faz" class="qual-sub-label">O que você faz?</label>
@@ -955,12 +1051,11 @@ width:100%; color:var(--text-primary);">
                            <textarea id="cond_q1_qualidade" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
                          </div>
                        </div>
-
-                       <!-- Subpergunta: Recebe algum benefício? -->
+                          <!-- Subpergunta: Recebe algum benefício? -->
                        <div class="qual-subquestion-card">
                          <div>
                            <label for="respRecebeBeneficio" class="qual-sub-label">Recebe algum benefício?</label>
-                           <select id="respRecebeBeneficio" class="qual-select">
+                           <select id="respRecebeBeneficio" class="qual-select" style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
                              <option value="">Selecione...</option>
                              <option value="Não">Não</option>
                              <option value="Sim">Sim</option>
@@ -979,31 +1074,39 @@ width:100%; color:var(--text-primary);">
                            </div>
                          </div>
                        </div>
+                        </div>
                      </div>
 
                      <!-- 2. Já solicitou? -->
                      <div class="qual-field-group">
-                       <label for="respSolicitouBeneficio" class="qual-field-label">2. Já solicitou?</label>
-                       <select id="respSolicitouBeneficio" class="qual-select">
+                       <div class="qual-header-row">
+                          <label for="respSolicitouBeneficio" class="qual-field-label">2. Já solicitou?</label>
+                          <button type="button" class="qual-sub-toggle" data-target="subgroup_q2" title="Subperguntas (Aposentadoria e Prioridade)" aria-expanded="false">
+                             <i class="ti ti-plus"></i>
+                             <span class="qual-toggle-dot"></span>
+                           </button>
+                        </div>
+                       <select id="respSolicitouBeneficio" class="qual-select" style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
                          <option value="">Selecione...</option>
                          <option value="Não - nunca tentei aposentar.">Não - nunca tentei aposentar.</option>
                          <option value="Sim - já tentei e está em andamento.">Sim - já tentei e está em andamento.</option>
                          <option value="Sim - mas foi negada pelo INSS.">Sim - mas foi negada pelo INSS.</option>
                        </select>
 
-                       <!-- Condicional Q2 - Se qualquer outra resposta -->
+                       <!-- Container de Subperguntas Q2 (Recolhido por padrão) -->
+                        <div id="subgroup_q2" class="qual-subquestions-container collapsed">
+                        <!-- Condicional Q2 - Se qualquer outra resposta -->
                        <div id="cond_q3_box" class="qual-conditional-block" style="display: none;">
                          <div>
                            <label for="cond_q3_judicial" class="qual-sub-label">E levou pro judicial ou fez uma nova tentativa?</label>
                            <textarea id="cond_q3_judicial" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
                          </div>
                        </div>
-
-                       <!-- Subpergunta: Já sabe quando vai poder se aposentar e quanto vai receber? -->
+                          <!-- Subpergunta: Já sabe quando vai poder se aposentar e quanto vai receber? -->
                        <div class="qual-subquestion-card">
                          <div>
                            <label for="respSabeAposentar" class="qual-sub-label">Já sabe quando vai poder se aposentar e quanto vai receber?</label>
-                           <select id="respSabeAposentar" class="qual-select">
+                           <select id="respSabeAposentar" class="qual-select" style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
                              <option value="">Selecione...</option>
                              <option value="Não">Não</option>
                              <option value="Sim">Sim</option>
@@ -1042,21 +1145,30 @@ width:100%; color:var(--text-primary);">
                            <textarea id="respModalidade" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
                          </div>
                        </div>
+                        </div>
                      </div>
 
                      <!-- 3. Tipo de trabalho: -->
-                     <div class="qual-field-group">
-                       <label for="respTipoTrabalho" class="qual-field-label">3. Tipo de trabalho:</label>
-                       <select id="respTipoTrabalho" class="qual-select">
-                         <option value="">Selecione...</option>
-                         <option value="Emprego de carteira assinada (CLT)">Emprego de carteira assinada (CLT)</option>
-                         <option value="Empresário / Autônomo / MEI">Empresário / Autônomo / MEI</option>
-                         <option value="Trabalhador rural">Trabalhador rural</option>
-                         <option value="Servidor público">Servidor público</option>
-                         <option value="Outro">Outro</option>
-                       </select>
+                      <div class="qual-field-group">
+                        <div class="qual-header-row">
+                          <label for="respTipoTrabalho" class="qual-field-label">3. Tipo de trabalho:</label>
+                          <button type="button" class="qual-sub-toggle" data-target="subgroup_q3" title="Subperguntas (Tipo de trabalho)" aria-expanded="false">
+                            <i class="ti ti-plus"></i>
+                            <span class="qual-toggle-dot"></span>
+                          </button>
+                        </div>
+                        <select id="respTipoTrabalho" class="qual-select" style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
+                          <option value="">Selecione...</option>
+                          <option value="Emprego de carteira assinada (CLT)">Emprego de carteira assinada (CLT)</option>
+                          <option value="Empresário / Autônomo / MEI">Empresário / Autônomo / MEI</option>
+                          <option value="Trabalhador rural">Trabalhador rural</option>
+                          <option value="Servidor público">Servidor público</option>
+                          <option value="Outro">Outro</option>
+                        </select>
 
-                       <!-- Condicional Q3 - CLT -->
+                        <!-- Container de Subperguntas Q3 (Recolhido por padrão) -->
+                        <div id="subgroup_q3" class="qual-subquestions-container collapsed">
+                          <!-- Condicional Q3 - CLT -->
                        <div id="cond_q7_clt_box" class="qual-conditional-block" style="display: none;">
                          <div>
                            <label for="cond_q7_clt_cnis" class="qual-sub-label">E você sabe se todos os registros constam no CNIS?</label>
@@ -1115,92 +1227,105 @@ width:100%; color:var(--text-primary);">
                            <textarea id="cond_q7_rural_testemunhas" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
                          </div>
                        </div>
-                     </div>
+                        </div>
+                      </div>
 
                      <!-- 4. Atividade especial? -->
                      <div class="qual-field-group">
-                       <label for="respExerceuAtividadeEspecial" class="qual-field-label">4. Atividade especial?</label>
-                       <select id="respExerceuAtividadeEspecial" class="qual-select">
+                       <div class="qual-header-row">
+                          <label for="respExerceuAtividadeEspecial" class="qual-field-label">4. Atividade especial?</label>
+                          <button type="button" class="qual-sub-toggle" data-target="subgroup_q4" title="Subperguntas (Atividade especial)" aria-expanded="false">
+                             <i class="ti ti-plus"></i>
+                             <span class="qual-toggle-dot"></span>
+                           </button>
+                        </div>
+                       <select id="respExerceuAtividadeEspecial" class="qual-select" style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
                          <option value="">Selecione...</option>
                          <option value="Sim - já trabalhei nessas atividades.">Sim - já trabalhei nessas atividades.</option>
                          <option value="Não - nunca trabalhei com isso.">Não - nunca trabalhei com isso.</option>
                          <option value="Não sei responder">Não sei responder</option>
                        </select>
 
-                       <!-- Condicional Q4 - Especial -->
-                       <div id="cond_q8_box" class="qual-conditional-block" style="display: none;">
-                         <div>
-                           <label for="cond_q8_tempo" class="qual-sub-label">Por quanto tempo exerceu?</label>
-                           <textarea id="cond_q8_tempo" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
-                         </div>
-                         <div>
-                           <label for="cond_q8_ppps" class="qual-sub-label">Você tem os PPPs ou LTCATs?</label>
-                           <textarea id="cond_q8_ppps" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
-                         </div>
-                         <div>
-                           <label for="cond_q8_empresas" class="qual-sub-label">As empresas ainda existem caso precise pedir ou complementar documentação?</label>
-                           <textarea id="cond_q8_empresas" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
-                         </div>
-                         <div>
-                           <label for="cond_q8_agentes" class="qual-sub-label">Alguém já analisou a classificação dos agentes nocivos, impacto do exercício da função, uso de EPIs e etc?</label>
-                           <textarea id="cond_q8_agentes" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
-                         </div>
-                       </div>
-                     </div>
+                       <!-- Container de Subperguntas Q4 (Recolhido por padrão) -->
+                        <div id="subgroup_q4" class="qual-subquestions-container collapsed">
+                        <!-- Condicional Q4 - Especial -->
+                        <div id="cond_q8_box" class="qual-conditional-block" style="display: none;">
+                          <div>
+                            <label for="cond_q8_tempo" class="qual-sub-label">Por quanto tempo exerceu?</label>
+                            <textarea id="cond_q8_tempo" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                          </div>
+                          <div>
+                            <label for="cond_q8_ppps" class="qual-sub-label">Você tem os PPPs ou LTCATs?</label>
+                            <textarea id="cond_q8_ppps" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                          </div>
+                          <div>
+                            <label for="cond_q8_empresas" class="qual-sub-label">As empresas ainda existem caso precise pedir ou complementar documentação?</label>
+                            <textarea id="cond_q8_empresas" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                          </div>
+                          <div>
+                            <label for="cond_q8_agentes" class="qual-sub-label">Alguém já analisou a classificação dos agentes nocivos, impacto do exercício da função, uso de EPIs e etc?</label>
+                            <textarea id="cond_q8_agentes" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                          </div>
+                        </div>
+                                                  </div>
+                      </div>
 
-                     <!-- Categoria Outros: -->
-                     <div class="qual-field-group" style="border-bottom: none;">
-                       <div class="qual-section-title" style="margin-top: 0; padding-top: 4px;">
-                         <i class="ti ti-dots-circle-horizontal" style="font-size: 16px; color: var(--text-accent);"></i>
-                         Outros:
-                       </div>
+                      <!-- 5. Outros: -->
+                      <div class="qual-field-group" style="border-bottom: none;">
+                        <div class="qual-header-row">
+                          <label class="qual-field-label">5. Outros:</label>
+                          <button type="button" class="qual-sub-toggle" data-target="subgroup_q5" title="Subperguntas (Outros)" aria-expanded="false">
+                            <i class="ti ti-plus"></i>
+                            <span class="qual-toggle-dot"></span>
+                          </button>
+                        </div>
 
-                       <!-- Subpergunta Outros: Após recapitular as pendências... -->
-                       <div class="qual-subquestion-card">
-                         <div>
-                           <label for="respConsequencias" class="qual-sub-label">Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?</label>
-                           <select id="respConsequencias" class="qual-select">
-                             <option value="">Selecione...</option>
-                             <option value="Não">Não</option>
-                             <option value="Sim">Sim</option>
-                           </select>
-                         </div>
+                        <!-- Container de Subperguntas Q5 (Recolhido por padrão) -->
+                        <div id="subgroup_q5" class="qual-subquestions-container collapsed">
+                          <!-- Subpergunta: Consequências de fazer incorreto -->
+                          <div class="qual-subquestion-card">
+                            <div>
+                              <label for="respConsequencias" class="qual-sub-label">Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?</label>
+                              <select id="respConsequencias" class="qual-select" style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
+                                <option value="">Selecione...</option>
+                                <option value="Não">Não</option>
+                                <option value="Sim">Sim</option>
+                              </select>
+                            </div>
 
-                         <!-- Condicional Outros - Se "Sim" -->
-                         <div id="cond_q9_sim_box" class="qual-nested-conditional" style="display: none;">
-                           <div>
-                             <label for="cond_q9_sim_futuro" class="qual-sub-label">E como isso mudaria os seus planos de futuro?</label>
-                             <textarea id="cond_q9_sim_futuro" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
-                           </div>
-                         </div>
+                            <!-- Condicional Outros - Se "Sim" -->
+                            <div id="cond_q9_sim_box" class="qual-nested-conditional" style="display: none;">
+                              <div>
+                                <label for="cond_q9_sim_futuro" class="qual-sub-label">E como isso mudaria os seus planos de futuro?</label>
+                                <textarea id="cond_q9_sim_futuro" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                              </div>
+                            </div>
 
-                         <!-- Condicional Outros - Se "Não" -->
-                         <div id="cond_q9_nao_box" class="qual-nested-conditional" style="display: none;">
-                           <div>
-                             <label for="cond_q9_nao_atraso" class="qual-sub-label">Sua aposentadoria pode atrasar por no mínimo mais 6 meses depois de completar a idade, podendo chegar a 3, 4 anos de atraso, como isso mudaria os seus planos?</label>
-                             <textarea id="cond_q9_nao_atraso" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
-                           </div>
-                           <div>
-                             <label for="cond_q9_nao_renda_menor" class="qual-sub-label">Se você descobrisse que sua renda pode ser menor do que você tem direito por alguma informação ter sido enviada errada pro INSS, como você se sentiria?</label>
-                             <textarea id="cond_q9_nao_renda_menor" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
-                           </div>
-                         </div>
-                       </div>
+                            <!-- Condicional Outros - Se "Não" -->
+                            <div id="cond_q9_nao_box" class="qual-nested-conditional" style="display: none;">
+                              <div>
+                                <label for="cond_q9_nao_atraso" class="qual-sub-label">Sua aposentadoria pode atrasar por no mínimo mais 6 meses depois de completar a idade, podendo chegar a 3, 4 anos de atraso, como isso mudaria os seus planos?</label>
+                                <textarea id="cond_q9_nao_atraso" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                              </div>
+                              <div>
+                                <label for="cond_q9_nao_renda_menor" class="qual-sub-label">Se você descobrisse que sua renda pode ser menor do que você tem direito por alguma informação ter sido enviada errada pro INSS, como você se sentiria?</label>
+                                <textarea id="cond_q9_nao_renda_menor" class="qual-textarea multistep-textarea" rows="2" placeholder="Digite a resposta..."></textarea>
+                              </div>
+                            </div>
+                          </div>
 
-                       <!-- Subpergunta Outros: Você acha que conseguiria fazer isso sozinho... -->
-                       <div class="qual-subquestion-card">
-                         <div>
-                           <label for="respFazerSozinho" class="qual-sub-label">Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai ter negativa do INSS?</label>
-                           <textarea id="respFazerSozinho" class="qual-textarea multistep-textarea" rows="3" placeholder="Digite a resposta..."></textarea>
-                         </div>
-                       </div>
-                     </div>
+                          <!-- Subpergunta: Fazer sozinho ou especialista -->
+                          <div class="qual-subquestion-card">
+                            <div>
+                              <label for="respFazerSozinho" class="qual-sub-label">Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai ter negativa do INSS?</label>
+                              <textarea id="respFazerSozinho" class="qual-textarea multistep-textarea" rows="3" placeholder="Digite a resposta..."></textarea>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-                   </form>
+                    </form>
                    <div id="summaryCardsContainer" style="display: none; flex-direction: column; gap: 12px; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 8px 16px 6px; min-height: 0; box-sizing: border-box;"></div>
-                   <div id="stepButtonsContainer" style="display: flex; justify-content: flex-end; align-items: center; margin-top: 12px; padding-top: 0px; flex-shrink: 0;">
-                      <button id="btnFinalizarStep" type="button" style="display: inline-flex; height: 38px; padding: 0 18px; background: #10b981; color: white; border: 1px solid transparent; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 13px; align-items: center; gap: 6px;"><i class="ti ti-check" style="font-size: 16px;"></i>Salvar Respostas</button>
-                   </div>
                  </div>
               </div>
 

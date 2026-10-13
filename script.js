@@ -3810,7 +3810,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     saveClientData(false); // Salva os dados silenciosamente ao fechar
     currentActiveCard = null;
     closeNotesSidebar();
-    if (statusDropdownMenu) statusDropdownMenu.classList.add('hidden');
+    const menuToHide = document.getElementById('statusDropdownMenu'); if (menuToHide) menuToHide.classList.add('hidden');
     if (modalClientSheet) modalClientSheet.classList.add('hidden');
   }
 
@@ -3996,10 +3996,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Toggle do Dropdown de Etiqueta (Status)
-  if (sheetStatusDropdownBtn && statusDropdownMenu) {
-    sheetStatusDropdownBtn.addEventListener('click', (e) => {
+    // Toggle do Dropdown de Etiqueta (Status)
+  const statusBtnEl = document.getElementById('sheetStatusDropdownBtn');
+  const statusMenuEl = document.getElementById('statusDropdownMenu');
+  if (statusBtnEl && statusMenuEl) {
+    statusBtnEl.addEventListener('click', (e) => {
       e.stopPropagation();
-      statusDropdownMenu.classList.toggle('hidden');
+      statusMenuEl.classList.toggle('hidden');
     });
   }
 
@@ -4010,7 +4013,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const newStatus = option.dataset.status;
       if (!newStatus || !currentActiveCard) return;
 
-      if (statusDropdownMenu) statusDropdownMenu.classList.add('hidden');
+      const menuToHide = document.getElementById('statusDropdownMenu'); if (menuToHide) menuToHide.classList.add('hidden');
 
       if (newStatus !== currentActiveCard.status) {
         if (newStatus === 'proposta') {
@@ -4030,8 +4033,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Fechar dropdown de status ao clicar em qualquer outro lugar da tela
   window.addEventListener('click', (e) => {
-    if (statusDropdownMenu && !e.target.closest('.status-dropdown-wrapper')) {
-      statusDropdownMenu.classList.add('hidden');
+    const menuToHide = document.getElementById('statusDropdownMenu');
+    if (menuToHide && !e.target.closest('.status-dropdown-wrapper')) {
+      menuToHide.classList.add('hidden');
     }
   });
 
@@ -4686,14 +4690,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const textSpan = document.createElement('span');
       textSpan.textContent = select.options[select.selectedIndex]?.text || 'Selecione...';
       
-      const icon = document.createElement('i');
-      icon.className = 'ti ti-chevron-down';
-      icon.style.color = 'var(--text-secondary)';
-      icon.style.fontSize = '14px';
-      icon.style.marginRight = '2px';
-
-      trigger.appendChild(textSpan);
-      trigger.appendChild(icon);
+            trigger.appendChild(textSpan);
 
       const menu = document.createElement('div');
       menu.className = 'custom-select-menu';
@@ -5066,6 +5063,8 @@ function updateQualificationProgress() {
       fill.style.background = 'var(--fill-accent)';
     }
   }
+
+  updateSubquestionToggleIndicators();
 }
 
 // Mantido para compatibilidade se invocado externamente
@@ -5445,30 +5444,29 @@ function compileQualificationSummary() {
     blocks.push(block);
   }
 
-  // Categoria Outros:
-  const outrosBlocks = [];
-  const qOutrosA = document.getElementById('respConsequencias');
-  if (qOutrosA && qOutrosA.value) {
-    let block = `- Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?\nR: ${qOutrosA.value}`;
-    if (qOutrosA.value === 'Sim') {
-      const fut = document.getElementById('cond_q9_sim_futuro')?.value.trim();
-      if (fut) block += `\n  - E como isso mudaria os seus planos de futuro?\n  R: ${fut}`;
-    } else if (qOutrosA.value === 'Não') {
-      const atr = document.getElementById('cond_q9_nao_atraso')?.value.trim();
-      if (atr) block += `\n  - Sua aposentadoria pode atrasar por no mínimo mais 6 meses depois de completar a idade, podendo chegar a 3, 4 anos de atraso, como isso mudaria os seus planos?\n  R: ${atr}`;
-      const ren = document.getElementById('cond_q9_nao_renda_menor')?.value.trim();
-      if (ren) block += `\n  - Se você descobrisse que sua renda pode ser menor do que você tem direito por alguma informação ter sido enviada errada pro INSS, como você se sentiria?\n  R: ${ren}`;
+  // 5. Outros: (Consequências e Apoio Profissional)
+  const q5SubA = document.getElementById('respConsequencias');
+  const q5SubB = document.getElementById('respFazerSozinho');
+  const hasOutrosAnswers = !!(q5SubA?.value || q5SubB?.value?.trim());
+
+  if (hasOutrosAnswers) {
+    let outrosBlock = '5. Outros:';
+    if (q5SubA && q5SubA.value) {
+      outrosBlock += `\n- Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?\nR: ${q5SubA.value}`;
+      if (q5SubA.value === 'Sim') {
+        const fut = document.getElementById('cond_q9_sim_futuro')?.value.trim();
+        if (fut) outrosBlock += `\n  - E como isso mudaria os seus planos de futuro?\n  R: ${fut}`;
+      } else if (q5SubA.value === 'Não') {
+        const atr = document.getElementById('cond_q9_nao_atraso')?.value.trim();
+        if (atr) outrosBlock += `\n  - Sua aposentadoria pode atrasar por no mínimo mais 6 meses depois de completar a idade, podendo chegar a 3, 4 anos de atraso, como isso mudaria os seus planos?\n  R: ${atr}`;
+        const ren = document.getElementById('cond_q9_nao_renda_menor')?.value.trim();
+        if (ren) outrosBlock += `\n  - Se você descobrisse que sua renda pode ser menor do que você tem direito por alguma informação ter sido enviada errada pro INSS, como você se sentiria?\n  R: ${ren}`;
+      }
     }
-    outrosBlocks.push(block);
-  }
-
-  const qOutrosB = document.getElementById('respFazerSozinho');
-  if (qOutrosB && qOutrosB.value.trim()) {
-    outrosBlocks.push(`- Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai ter negativa do INSS?\nR: ${qOutrosB.value.trim()}`);
-  }
-
-  if (outrosBlocks.length > 0) {
-    blocks.push(`Outros:\n` + outrosBlocks.join('\n\n'));
+    if (q5SubB && q5SubB.value.trim()) {
+      outrosBlock += `\n- Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai ter negativa do INSS?\nR: ${q5SubB.value.trim()}`;
+    }
+    blocks.push(outrosBlock);
   }
 
   if (blocks.length === 0) return '';
@@ -5525,59 +5523,219 @@ function syncQualificationToDetails(isFinal = false) {
   }
 }
 
-// Ação de finalizar / salvar o formulário
-function finalizeQualificationForm() {
-  syncQualificationToDetails(true);
+// Atualizar indicadores visuais dos toggles de subperguntas
+function updateSubquestionToggleIndicators() {
+  // Q1 (Subperguntas: Recebe benefício? + Condicionais de Q1)
+  const btnQ1 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q1"]');
+  if (btnQ1) {
+    const q1Ans = document.getElementById('respRecebeBeneficio')?.value;
+    const q1Qual = document.getElementById('cond_q2_qual')?.value?.trim();
+    const q1Vant = document.getElementById('cond_q2_vantagem')?.value?.trim();
+    const q1Faz = document.getElementById('cond_q1_faz')?.value?.trim();
+    const q1Tempo = document.getElementById('cond_q1_tempo')?.value?.trim();
+    const q1Qualidade = document.getElementById('cond_q1_qualidade')?.value?.trim();
+    const hasQ1 = !!(q1Ans || q1Qual || q1Vant || q1Faz || q1Tempo || q1Qualidade);
+    btnQ1.classList.toggle('has-answers', hasQ1);
+  }
+
+  // Q2 (Subperguntas: Aposentadoria, Prioridade, Modalidade + Condicional Q2)
+  const btnQ2 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q2"]');
+  if (btnQ2) {
+    const q2Apos = document.getElementById('respSabeAposentar')?.value;
+    const q2Prio = document.getElementById('respPrioridade')?.value?.trim();
+    const q2Mod = document.getElementById('respModalidade')?.value?.trim();
+    const q2Quem = document.getElementById('cond_q4_quem_falou')?.value?.trim();
+    const q2Judicial = document.getElementById('cond_q3_judicial')?.value?.trim();
+    const hasQ2 = !!(q2Apos || q2Prio || q2Mod || q2Quem || q2Judicial);
+    btnQ2.classList.toggle('has-answers', hasQ2);
+  }
+
+  // Q3 (Subperguntas: Condicionais de CLT, MEI, Rural)
+  const btnQ3 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q3"]');
+  if (btnQ3) {
+    const q3Cnis = document.getElementById('cond_q7_clt_cnis')?.value?.trim();
+    const q3Aliq = document.getElementById('cond_q7_clt_aliquota')?.value?.trim();
+    const q3Erro = document.getElementById('cond_q7_clt_erro')?.value?.trim();
+    const q3Carne = document.getElementById('cond_q7_mei_carne')?.value?.trim();
+    const q3Codigo = document.getElementById('cond_q7_mei_codigo')?.value?.trim();
+    const q3Dup = document.getElementById('cond_q7_mei_duplicada')?.value?.trim();
+    const q3Lac = document.getElementById('cond_q7_mei_lacuna')?.value?.trim();
+    const q3Terra = document.getElementById('cond_q7_rural_terra')?.value?.trim();
+    const q3Hec = document.getElementById('cond_q7_rural_hectares')?.value?.trim();
+    const q3Prod = document.getElementById('cond_q7_rural_docs_prod')?.value?.trim();
+    const q3Fam = document.getElementById('cond_q7_rural_docs_fam')?.value?.trim();
+    const q3Test = document.getElementById('cond_q7_rural_testemunhas')?.value?.trim();
+    const hasQ3 = !!(q3Cnis || q3Aliq || q3Erro || q3Carne || q3Codigo || q3Dup || q3Lac || q3Terra || q3Hec || q3Prod || q3Fam || q3Test);
+    btnQ3.classList.toggle('has-answers', hasQ3);
+  }
+
+  // Q4 (Subperguntas: Condicionais de Atividade Especial)
+  const btnQ4 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q4"]');
+  if (btnQ4) {
+    const q4Tempo = document.getElementById('cond_q8_tempo')?.value?.trim();
+    const q4Ppps = document.getElementById('cond_q8_ppps')?.value?.trim();
+    const q4Empresas = document.getElementById('cond_q8_empresas')?.value?.trim();
+    const q4Agentes = document.getElementById('cond_q8_agentes')?.value?.trim();
+    const hasQ4 = !!(q4Tempo || q4Ppps || q4Empresas || q4Agentes);
+    btnQ4.classList.toggle('has-answers', hasQ4);
+  }
+
+  // Q5 (Subperguntas: Consequências e Apoio Profissional)
+  const btnQ5 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q5"]');
+  if (btnQ5) {
+    const q5Cons = document.getElementById('respConsequencias')?.value;
+    const q5Faz = document.getElementById('respFazerSozinho')?.value?.trim();
+    const q5Fut = document.getElementById('cond_q9_sim_futuro')?.value?.trim();
+    const q5Atr = document.getElementById('cond_q9_nao_atraso')?.value?.trim();
+    const q5Renda = document.getElementById('cond_q9_nao_renda_menor')?.value?.trim();
+    const hasQ5 = !!(q5Cons || q5Faz || q5Fut || q5Atr || q5Renda);
+    btnQ5.classList.toggle('has-answers', hasQ5);
+  }
 }
 
-// Limpar todas as respostas do formulário ao clicar em recarregar
-function resetQualificationFormAnswers() {
+// Configurar o comportamento de acordeão exclusivo dos toggles (quando um abre, os outros recolhem)
+function setupSubquestionToggles() {
+  const toggles = document.querySelectorAll('.qual-sub-toggle');
+  toggles.forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const targetId = btn.getAttribute('data-target');
+      const target = document.getElementById(targetId);
+      if (!target) return;
+
+      const isCurrentlyCollapsed = target.classList.contains('collapsed');
+
+      // Fechar todos os contêineres e desativar todos os botões de toggle (comportamento acordeão exclusivo)
+      document.querySelectorAll('.qual-subquestions-container').forEach(c => {
+        c.classList.add('collapsed');
+      });
+      toggles.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-expanded', 'false');
+      });
+
+      // Se estava recolhido, abrir apenas este
+      if (isCurrentlyCollapsed) {
+        target.classList.remove('collapsed');
+        btn.classList.add('active');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    };
+  });
+}
+
+// Salvar em Detalhes do caso e limpar o formulário (preservando as perguntas numeradas pré-preenchidas 1, 2, 3 e 4)
+function saveAndClearQualificationForm() {
+  // 1. Sincronizar respostas preenchidas para 'Detalhes do caso'
+  syncQualificationToDetails(true);
+
+  // 2. Limpar todas as sub-perguntas e campos condicionais, mantendo as perguntas numeradas pré-preenchidas
+  const preservedNumberedIds = [
+    'respJaContribuiu',
+    'respSolicitouBeneficio',
+    'respTipoTrabalho',
+    'respExerceuAtividadeEspecial'
+  ];
+
   const form = document.getElementById('clientAnswersForm');
   if (form) {
+    // Limpar selects que NÃO são perguntas numeradas
     form.querySelectorAll('select').forEach(sel => {
-      sel.value = '';
+      if (!preservedNumberedIds.includes(sel.id)) {
+        sel.value = '';
+      }
     });
+
+    // Limpar todos os textareas
     form.querySelectorAll('textarea').forEach(tx => {
       tx.value = '';
     });
+
+    // Limpar inputs de texto extras (se houver)
     form.querySelectorAll('input:not([type="hidden"])').forEach(inp => {
-      inp.value = '';
+      if (!preservedNumberedIds.includes(inp.id)) {
+        inp.value = '';
+      }
     });
   }
+
+  // 3. Atualizar condicionais (os selects preservados manterão seus blocos abertos se aplicável, sub-condicionais fecharão)
   updateAllConditionals();
+
+  // 4. Atualizar barra de porcentagem e indicadores dos toggles
   updateQualificationProgress();
-  if (typeof showToast === 'function') {
-    showToast('Respostas do formulário limpas.');
+
+  // Recolher todos os contêineres de subperguntas (acordeão fechado por padrão)
+  document.querySelectorAll('.qual-subquestions-container').forEach(c => c.classList.add('collapsed'));
+  document.querySelectorAll('.qual-sub-toggle').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-expanded', 'false'); });
+
+  // 5. Salvar ficha do cliente no banco
+  if (typeof saveClientData === 'function') {
+    saveClientData(true);
   }
+
+  // 6. Feedback visual no botão de reload
+  const btn = document.getElementById('btnReloadForm') || document.getElementById('btnConfirmQual');
+  if (btn) {
+    const icon = btn.querySelector('i');
+    if (icon) {
+      icon.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+      icon.style.transform = 'rotate(360deg)';
+      setTimeout(() => {
+        icon.style.transition = 'none';
+        icon.style.transform = 'none';
+      }, 500);
+    }
+    btn.style.transform = 'scale(0.9)';
+    btn.style.borderColor = 'var(--text-accent)';
+    setTimeout(() => {
+      btn.style.transform = 'none';
+      btn.style.borderColor = 'var(--border)';
+    }, 250);
+  }
+
+  if (typeof showToast === 'function') {
+    showToast('Respostas inseridas em Detalhes do caso e formulário limpo!');
+  }
+}
+
+// Mantido para compatibilidade
+function finalizeQualificationForm() {
+  saveAndClearQualificationForm();
+}
+function resetQualificationFormAnswers() {
+  saveAndClearQualificationForm();
 }
 
 // Configuração dos Event Listeners do formulário de qualificação
 function setupQualificationEventListeners() {
-  const btnFin = document.getElementById('btnFinalizarStep');
-  const btnReload = document.getElementById('btnReloadForm');
+  const btnConfirm = document.getElementById('btnConfirmQual') || document.getElementById('btnReloadForm');
+  const btnFinLegacy = document.getElementById('btnFinalizarStep');
   const form = document.getElementById('clientAnswersForm');
 
-  if (btnFin) {
-    btnFin.onclick = () => {
-      finalizeQualificationForm();
+  if (btnConfirm) {
+    btnConfirm.onclick = () => {
+      saveAndClearQualificationForm();
     };
   }
 
-  if (btnReload) {
-    btnReload.onclick = () => {
-      resetQualificationFormAnswers();
+  if (btnFinLegacy) {
+    btnFinLegacy.onclick = () => {
+      saveAndClearQualificationForm();
     };
   }
+
+  // Inicializar toggles das subperguntas
+  setupSubquestionToggles();
 
   // Atualização em tempo real de progresso e sincronização
   if (form) {
     form.addEventListener('input', () => {
       updateQualificationProgress();
-      syncQualificationToDetails(false);
     });
     form.addEventListener('change', () => {
       updateQualificationProgress();
-      syncQualificationToDetails(false);
     });
   }
 
