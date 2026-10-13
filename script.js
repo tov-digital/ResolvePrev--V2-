@@ -2187,6 +2187,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
       }
 
+      const tr = document.createElement('tr');
+      tr.className = 'list-row';
+      tr.dataset.id = card.id;
+
       tr.innerHTML = `
         <td class="td-check">
           <label class="list-checkbox-label" onclick="event.stopPropagation()">
