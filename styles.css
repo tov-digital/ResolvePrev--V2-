@@ -869,8 +869,86 @@ html, body {
 .filter-active-badge.hidden { display: none; }
 
 /* Wrapper do dropdown — posicionamento relativo */
-.filter-dropdown-wrapper {
+.filter-dropdown-wrapper,
+.sort-dropdown-wrapper {
   position: relative;
+}
+
+/* Painel flutuante de Ordenação */
+.sort-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 300;
+  width: 210px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  padding: 0.5rem;
+  animation: filterPanelIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+.sort-panel.hidden { display: none; }
+
+.sort-panel-header {
+  padding: 0.35rem 0.6rem 0.45rem;
+  border-bottom: 1px solid #F1F5F9;
+  margin-bottom: 0.35rem;
+}
+
+.sort-panel-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.sort-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sort-option-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.65rem;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #334155;
+  font-family: var(--font-family);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.sort-option-item:hover {
+  background: #F8FAFC;
+  color: #0F172A;
+}
+
+.sort-option-item.active {
+  background: #EFF6FF;
+  color: var(--color-primary, #1E5080);
+  font-weight: 600;
+}
+
+.sort-check-icon {
+  display: none;
+  color: var(--color-primary, #1E5080);
+  flex-shrink: 0;
+}
+
+.sort-option-item.active .sort-check-icon {
+  display: block;
 }
 
 /* Painel flutuante de Filtros */
@@ -879,7 +957,7 @@ html, body {
   top: calc(100% + 10px);
   right: 0;
   z-index: 300;
-  width: 360px;
+  width: 440px;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: 14px;
@@ -976,6 +1054,14 @@ html, body {
   color: #0F172A;
 }
 
+/* Layout Lado a Lado (Status e Período) */
+.filter-columns-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
 /* Seções */
 .filter-section {
   display: flex;
@@ -1003,28 +1089,10 @@ html, body {
   margin: 0.75rem 0;
 }
 
-/* Grid de Status (2 Colunas) */
-.filter-options-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  max-height: 240px;
-  overflow-y: auto;
-  padding-right: 2px;
-}
-
-.filter-options-grid::-webkit-scrollbar {
-  width: 4px;
-}
-.filter-options-grid::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 4px;
-}
-
-/* Grid de Período (2 Colunas) */
-.filter-radio-group {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+/* Colunas verticais (uma opção embaixo da outra) */
+.filter-options-column {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
 }
 
@@ -1143,34 +1211,7 @@ html, body {
   text-overflow: ellipsis;
 }
 
-/* Opção Vencidos / Ultrapassado */
-.filter-chip-vencido {
-  grid-column: span 2;
-}
 
-.filter-radio-vencido {
-  color: #DC2626;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.icon-warning {
-  color: #DC2626;
-  flex-shrink: 0;
-}
-
-.filter-radio-chip.filter-chip-vencido:has(input:checked) {
-  background: #FEF2F2;
-  border-color: #FCA5A5;
-  color: #B91C1C;
-}
-
-.filter-radio-chip.filter-chip-vencido:has(input:checked) .filter-chip-custom-radio {
-  border-color: #DC2626;
-  background: #DC2626;
-}
 
 /* Custom Select de Operador */
 .filter-select-wrapper {

@@ -154,6 +154,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
       
+      // Atualiza visibilidade dos chips de status no painel de filtros
+      if (typeof updateFilterStatusOptionsVisibility === 'function') {
+        updateFilterStatusOptionsVisibility();
+      }
+
       // Recarrega os dados para a aba atual
       await loadUserCards();
     });
@@ -312,6 +317,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           opt.classList.add('hidden');
         }
       });
+
+      // Atualiza visibilidade dos chips de status no painel de filtros
+      if (typeof updateFilterStatusOptionsVisibility === 'function') {
+        updateFilterStatusOptionsVisibility();
+      }
     }
   }
 
@@ -1472,6 +1482,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     activeStatusFilters = [];
     activeDateFilter = '';
     updateFilterBadge();
+    if (typeof updateFilterStatusOptionsVisibility === 'function') {
+      updateFilterStatusOptionsVisibility();
+    }
   }
 
   /* ==========================================
@@ -1936,12 +1949,61 @@ document.addEventListener('DOMContentLoaded', async () => {
   let activeStatusFilters = []; // array de strings e.g. ['novo','proposta']
   let activeDateFilter    = ''; // string e.g. 'menos7'
   let activeOperatorFilter = ''; // string, id do operador
+  let activeSortMode      = 'nome'; // 'nome' | 'data_requerimento' | 'created_at' | 'updated_at'
+
+  // Dropdown e lógica de Ordenação
+  const crmSortBtnEl    = document.getElementById('crmSortBtn');
+  const sortPanel       = document.getElementById('sortPanel');
+  const sortDropWrapper = document.getElementById('sortDropdownWrapper');
+
+  if (crmSortBtnEl && sortPanel) {
+    crmSortBtnEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (filterPanel) filterPanel.classList.add('hidden');
+      sortPanel.classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('.sort-option-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const selectedSort = btn.dataset.sort;
+        if (!selectedSort) return;
+        activeSortMode = selectedSort;
+
+        // Atualiza estilo visual active do dropdown
+        document.querySelectorAll('.sort-option-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Fecha o dropdown
+        sortPanel.classList.add('hidden');
+
+        // Re-renderiza cards com a nova ordenação
+        const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
+        filterAndRenderCards(searchTerm);
+      });
+    });
+  }
+
+  // Atualiza as opções de status exibidas no painel de filtros conforme a aba ativa
+  function updateFilterStatusOptionsVisibility() {
+    const tab = window.currentTab || 'comercial';
+    document.querySelectorAll('.filter-chip-status').forEach(chip => {
+      if (chip.dataset.tab === tab) {
+        chip.style.display = '';
+      } else {
+        chip.style.display = 'none';
+        const cb = chip.querySelector('.filter-status-cb');
+        if (cb) cb.checked = false;
+      }
+    });
+  }
+  window.updateFilterStatusOptionsVisibility = updateFilterStatusOptionsVisibility;
 
   // Toggle do painel
   const crmFilterBtnEl = document.getElementById('crmFilterBtn');
   if (crmFilterBtnEl && filterPanel) {
     crmFilterBtnEl.addEventListener('click', (e) => {
       e.stopPropagation();
+      updateFilterStatusOptionsVisibility();
       filterPanel.classList.toggle('hidden');
     });
   }
@@ -1955,11 +2017,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Fechar painel ao clicar fora
+  // Fechar painéis ao clicar fora
   document.addEventListener('click', (e) => {
     if (filterPanel && !filterPanel.classList.contains('hidden')) {
-      if (!filterDropWrapper?.contains(e.target)) {
+      if (!filterDropWrapper?.contains(e.target) && !crmFilterBtnEl?.contains(e.target)) {
         filterPanel.classList.add('hidden');
+      }
+    }
+    if (sortPanel && !sortPanel.classList.contains('hidden')) {
+      if (!sortDropWrapper?.contains(e.target) && !crmSortBtnEl?.contains(e.target)) {
+        sortPanel.classList.add('hidden');
       }
     }
   });
@@ -1993,12 +2060,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Botão "Aplicar Filtros"
   if (filterApplyBtn) {
     filterApplyBtn.addEventListener('click', () => {
-      // Lê checkboxes de status
-      activeStatusFilters = Array.from(document.querySelectorAll('.filter-status-cb'))
+      // Lê checkboxes de status da aba ativa
+      const tab = window.currentTab || 'comercial';
+      activeStatusFilters = Array.from(document.querySelectorAll(`.filter-chip-status[data-tab="${tab}"] .filter-status-cb`))
         .filter(cb => cb.checked)
         .map(cb => cb.value);
 
-      // Lê radio de data
+      // Lê radio de data (requerimento seleção única)
       const checkedRadio = document.querySelector('.filter-date-radio:checked');
       activeDateFilter = checkedRadio ? checkedRadio.value : '';
 
@@ -2054,7 +2122,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const operacaoStages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
         return operacaoStages.includes(cardStatus);
       } else if (window.currentTab === 'judicial') {
-        return cardStatus === 'negado';
+        const judicialStages = ['negado', 'planejamento'];
+        return judicialStages.includes(cardStatus);
       }
     });
 
@@ -2070,7 +2139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // 3. Filtro de data de requerimento
+    // 3. Filtro de data de requerimento (seleção única)
     if (activeDateFilter) {
       filtered = filtered.filter(card => {
         const diff = daysDiff(card.data_requerimento);
@@ -2079,7 +2148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           case 'menos365': return diff >= 0 && diff <= 365; // até 365 dias no futuro
           case 'menos30':  return diff >= 0 && diff <= 30;  // até 30 dias no futuro
           case 'menos7':   return diff >= 0 && diff <= 7;   // até 7 dias no futuro
-          case 'vencidos': return diff < 0;             // data já passou
+          case 'vencidos': return diff < 0;                  // data já passou
           default: return true;
         }
       });
@@ -2114,16 +2183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Ordenação
     const sorted = [...cards].sort((a, b) => {
-      if (window.currentTab === 'operacao') {
-        return sortCardsByDateAndName(a, b);
-      } else {
-        // Comercial: ordenação invertida por status na lista (proposta -> novo)
-        const order = { proposta: 1, reuniao: 2, acompanhamento: 3, qualificacao: 4, novo: 5 };
-        const oA = order[a.status] || 99;
-        const oB = order[b.status] || 99;
-        if (oA !== oB) return oA - oB;
-        return sortCardsByDateAndName(a, b);
-      }
+      return sortCardsByActiveMode(a, b);
     });
 
     if (sorted.length === 0) {
@@ -2510,10 +2570,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       saveDatePickerBtn.textContent = 'Salvando...';
 
       if (supabase) {
+        const nowIso = new Date().toISOString();
         const { error } = await supabase
           .from(getCurrentTable())
-          .update({ data_requerimento: newDate })
+          .update({ 
+            data_requerimento: newDate,
+            atualizado_em: nowIso
+          })
           .eq('id', cardToUpdateDate.id);
+
+        if (!error && cardToUpdateDate) {
+          cardToUpdateDate.atualizado_em = nowIso;
+        }
 
         if (error) {
           showToast('Erro ao atualizar data: ' + error.message);
@@ -2563,6 +2631,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     return diff < 0 ? diff : (100000 + diff);
   }
 
+  // Função de ordenação dinâmica dos cards baseada no activeSortMode
+  function sortCardsByActiveMode(a, b) {
+    if (activeSortMode === 'nome') {
+      const nameA = (a.nome || '').trim();
+      const nameB = (b.nome || '').trim();
+      return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'base' });
+    }
+
+    if (activeSortMode === 'data_requerimento') {
+      const weightA = getCardSortWeight(a);
+      const weightB = getCardSortWeight(b);
+      if (weightA !== weightB) {
+        if (weightA < 0 && weightB < 0) {
+          return weightB - weightA;
+        }
+        return weightA - weightB;
+      }
+      const nameA = (a.nome || '').trim();
+      const nameB = (b.nome || '').trim();
+      return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'base' });
+    }
+
+    if (activeSortMode === 'created_at') {
+      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      if (timeA !== timeB) return timeB - timeA; // mais novos primeiro
+      const nameA = (a.nome || '').trim();
+      const nameB = (b.nome || '').trim();
+      return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'base' });
+    }
+
+    if (activeSortMode === 'updated_at') {
+      const getUpdateTime = (item) => {
+        const val = item.atualizado_em || item.updated_at || item.created_at;
+        return val ? new Date(val).getTime() : 0;
+      };
+      const timeA = getUpdateTime(a);
+      const timeB = getUpdateTime(b);
+      if (timeA !== timeB) return timeB - timeA; // atualizados recentemente primeiro
+      const nameA = (a.nome || '').trim();
+      const nameB = (b.nome || '').trim();
+      return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'base' });
+    }
+
+    return sortCardsByDateAndName(a, b);
+  }
+
   function sortCardsByDateAndName(a, b) {
     const weightA = getCardSortWeight(a);
     const weightB = getCardSortWeight(b);
@@ -2585,7 +2700,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (window.currentTab === 'operacao') {
       stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
     } else if (window.currentTab === 'judicial') {
-      stages = ['negado'];
+      stages = ['negado', 'planejamento'];
     }
 
     stages.forEach(stage => {
@@ -2597,7 +2712,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         container.innerHTML = '';
         
         // Filtrar cards da coluna e ordenar
-        const stageCards = cards.filter(c => c.status === stage).sort(sortCardsByDateAndName);
+        const stageCards = cards.filter(c => c.status === stage).sort(sortCardsByActiveMode);
 
         countSpan.textContent = stageCards.length;
 
@@ -3270,9 +3385,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const newName = sheetClientNameInput.value.trim();
       if (!newName || newName === currentActiveCard.nome) return;
 
+      const nowIso = new Date().toISOString();
       const { error } = await supabase
         .from(getCurrentTable())
-        .update({ nome: newName })
+        .update({ 
+          nome: newName,
+          atualizado_em: nowIso
+        })
         .eq('id', currentActiveCard.id);
 
       if (error) {
@@ -3282,6 +3401,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       currentActiveCard.nome = newName;
+      currentActiveCard.atualizado_em = nowIso;
       loadUserCards();
       showToast('Nome atualizado com sucesso!');
     };
@@ -3546,10 +3666,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       currentActiveCard[docKey] = newStatus;
       updateDocsCounters();
 
+      const nowIso = new Date().toISOString();
+      currentActiveCard.atualizado_em = nowIso;
+
       // Gravar alteração na coluna correspondente da tabela no Supabase
       const { error } = await supabase
         .from(getCurrentTable())
-        .update({ [docKey]: newStatus })
+        .update({ 
+          [docKey]: newStatus,
+          atualizado_em: nowIso
+        })
         .eq('id', currentActiveCard.id);
 
       if (error) {
@@ -3653,9 +3779,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function saveEventualDocsToSupabase(updatedDocsArray) {
     if (!currentActiveCard || !supabase) return;
 
+    const nowIso = new Date().toISOString();
     const { error } = await supabase
       .from(getCurrentTable())
-      .update({ eventuais: updatedDocsArray })
+      .update({ 
+        eventuais: updatedDocsArray,
+        atualizado_em: nowIso
+      })
       .eq('id', currentActiveCard.id);
 
     if (error) {
@@ -3664,6 +3794,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     currentActiveCard.eventuais = updatedDocsArray;
+    currentActiveCard.atualizado_em = nowIso;
     renderEventualDocs(currentActiveCard);
     updateDocsCounters();
   }
@@ -3775,7 +3906,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       detalhes: respDetalhes ? respDetalhes.value.trim() : ''
     };
 
-    const finalData = { ...updatedData, ...updatedAnswers };
+    const finalData = { 
+      ...updatedData, 
+      ...updatedAnswers,
+      atualizado_em: new Date().toISOString()
+    };
 
     const { error } = await supabase
       .from(getCurrentTable())
@@ -4004,9 +4139,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Gravação no Supabase em segundo plano
     if (supabase) {
+      const nowIso = new Date().toISOString();
+      currentActiveCard.atualizado_em = nowIso;
       const { error } = await supabase
         .from(getCurrentTable())
-        .update({ notas_internas: notes })
+        .update({ 
+          notas_internas: notes,
+          atualizado_em: nowIso
+        })
         .eq('id', currentActiveCard.id);
 
       if (error) {
@@ -4174,9 +4314,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Reatribuição Instantânea ao Clicar
     itemDiv.addEventListener('click', async () => {
       if (currentActiveCard && supabase) {
+        const nowIso = new Date().toISOString();
         const { error } = await supabase
           .from(getCurrentTable())
-          .update({ user_id: profile.id })
+          .update({ 
+            user_id: profile.id,
+            atualizado_em: nowIso
+          })
           .eq('id', currentActiveCard.id);
 
         if (error) {
@@ -4184,6 +4328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
+        currentActiveCard.atualizado_em = nowIso;
         closeReassignUserModal();
         closeClientSheet();
         loadUserCards(); // Atualiza o funil
