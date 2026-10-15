@@ -3470,12 +3470,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Sequência de rotação de status das etiquetas ao clicar
-  const docStatusOrder = ['Pendente', 'Solicitado', 'Validar', 'Recebido'];
+  const docStatusOrder = ['Pendente', 'Solicitado', 'Validar', 'Recebido', 'Corrigir'];
   const docStatusClasses = {
     'Pendente': 'badge-pendente',
     'Solicitado': 'badge-solicitado',
     'Validar': 'badge-validar',
-    'Recebido': 'badge-recebido'
+    'Recebido': 'badge-recebido',
+    'Corrigir': 'badge-corrigir'
   };
 
   const obrigatorioKeys = ['doc_procuracoes', 'doc_rg_cnh', 'doc_certidao', 'doc_cnis', 'doc_carteira_trabalho'];
@@ -3535,7 +3536,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const docKey = badge.dataset.docKey;
       const currentStatus = badge.dataset.status || 'Pendente';
       
-      // Encontrar o próximo status no ciclo: Pendente -> Solicitado -> Validar -> Recebido -> Pendente
+      // Encontrar o próximo status no ciclo: Pendente -> Solicitado -> Validar -> Recebido -> Corrigir -> Pendente
       const currentIndex = docStatusOrder.indexOf(currentStatus);
       const nextIndex = (currentIndex + 1) % docStatusOrder.length;
       const newStatus = docStatusOrder[nextIndex];
