@@ -2654,9 +2654,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (activeSortMode === 'created_at') {
-      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
-      if (timeA !== timeB) return timeB - timeA; // mais novos primeiro
+      const getCreatedTime = (item) => {
+        const val = item.criado_em || item.created_at;
+        return val ? new Date(val).getTime() : 0;
+      };
+      const timeA = getCreatedTime(a);
+      const timeB = getCreatedTime(b);
+      if (timeA !== timeB) return timeB - timeA; // mais recentes primeiro (do mais recente para o mais antigo)
       const nameA = (a.nome || '').trim();
       const nameB = (b.nome || '').trim();
       return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'base' });
