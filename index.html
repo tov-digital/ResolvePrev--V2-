@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="styles.css?v=69">
+  <link rel="stylesheet" href="styles.css?v=70">
   <!-- Chart.js para Dashboards e Gráficos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
@@ -1966,100 +1966,245 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
 
       <!-- Conteúdo da Aba 1: Dashboard -->
       <section id="adminTabDashboard" class="admin-tab-content active">
-        <!-- Cards de Resumo Principal -->
-        <div class="admin-stats-grid">
-          
-          <div class="admin-stat-card card-profiles">
-            <div class="stat-icon-wrapper icon-blue">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
+        <!-- ==================== ÁREA 1: MARKETING ==================== -->
+        <div class="admin-dashboard-area admin-area-marketing">
+          <div class="admin-area-header">
+            <div class="admin-area-title-group">
+              <div class="area-badge area-badge-marketing">
+                <i class="ti ti-speakerphone"></i>
+                <span>Marketing</span>
+              </div>
+              <h3 class="admin-area-title">Desempenho de Marketing</h3>
+              <p class="admin-area-subtitle">Geração de oportunidades, conversão de leads e eficiência de aquisição</p>
             </div>
-            <div class="stat-details">
-              <span class="stat-label">Total de Usuários</span>
-              <h3 id="statTotalProfiles" class="stat-value">--</h3>
-              <span class="stat-subtext">Tabela: <code>profiles</code></span>
+
+            <!-- Filtro de Período Customizado (Estilo Calendário do Design System) -->
+            <div class="mkt-datepicker-wrapper" id="mktDatePickerWrapper">
+              <button type="button" class="mkt-datepicker-trigger" id="mktDatePickerTrigger" aria-haspopup="dialog" aria-expanded="false">
+                <div class="mkt-datepicker-trigger-icon">
+                  <i class="ti ti-calendar-event"></i>
+                </div>
+                <div class="mkt-datepicker-trigger-info">
+                  <span class="mkt-datepicker-trigger-label">Período</span>
+                  <span class="mkt-datepicker-trigger-value" id="mktDateRangeDisplay">Carregando...</span>
+                </div>
+                <i class="ti ti-chevron-down mkt-datepicker-chevron"></i>
+              </button>
+
+              <!-- Dropdown do Calendário com Seleção de Intervalo -->
+              <div class="mkt-datepicker-dropdown hidden" id="mktDatePickerDropdown">
+                <div class="mkt-calendar-header">
+                  <button type="button" class="mkt-cal-nav-btn" id="mktCalPrevMonth" title="Mês anterior">
+                    <i class="ti ti-chevron-left"></i>
+                  </button>
+                  <span class="mkt-cal-month-label" id="mktCalMonthYearLabel">Outubro 2026</span>
+                  <button type="button" class="mkt-cal-nav-btn" id="mktCalNextMonth" title="Próximo mês">
+                    <i class="ti ti-chevron-right"></i>
+                  </button>
+                </div>
+
+                <div class="mkt-calendar-weekdays">
+                  <span>Seg</span>
+                  <span>Ter</span>
+                  <span>Qua</span>
+                  <span>Qui</span>
+                  <span>Sex</span>
+                  <span>Sáb</span>
+                  <span>Dom</span>
+                </div>
+
+                <div class="mkt-calendar-grid" id="mktCalendarGrid">
+                  <!-- Dias renderizados dinamicamente via JavaScript -->
+                </div>
+
+                <div class="mkt-calendar-footer">
+                  <div class="mkt-calendar-quick-actions">
+                    <button type="button" class="mkt-cal-quick-btn" data-range="this_month">Este Mês</button>
+                    <button type="button" class="mkt-cal-quick-btn" data-range="last_30">Últimos 30d</button>
+                    <button type="button" class="mkt-cal-quick-btn" data-range="this_year">Este Ano</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="admin-stat-card card-crm">
-            <div class="stat-icon-wrapper icon-green">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-              </svg>
+          <!-- Cards de Indicadores de Marketing -->
+          <div class="admin-stats-grid mkt-stats-grid">
+            <!-- 1. Investimento -->
+            <div class="admin-stat-card card-mkt-invest">
+              <div class="stat-icon-wrapper icon-gold">
+                <i class="ti ti-currency-dollar"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-label">Investimento</span>
+                <h3 id="statMktInvestimento" class="stat-value">R$ XX</h3>
+                <span class="stat-subtext">Total no período</span>
+              </div>
             </div>
-            <div class="stat-details">
-              <span class="stat-label">Oportunidades CRM</span>
-              <h3 id="statTotalComercial" class="stat-value">--</h3>
-              <span class="stat-subtext">Tabela: <code>oportunidades_crm</code></span>
+
+            <!-- 2. Leads -->
+            <div class="admin-stat-card card-mkt-leads">
+              <div class="stat-icon-wrapper icon-blue">
+                <i class="ti ti-users"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-label">Leads</span>
+                <h3 id="statMktLeads" class="stat-value">--</h3>
+                <span class="stat-subtext">Total gerado no período</span>
+              </div>
+            </div>
+
+            <!-- 3. CPL -->
+            <div class="admin-stat-card card-mkt-cpl">
+              <div class="stat-icon-wrapper icon-purple">
+                <i class="ti ti-receipt-2"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-label">CPL</span>
+                <h3 id="statMktCPL" class="stat-value">--</h3>
+                <span class="stat-subtext">Custo por lead</span>
+              </div>
+            </div>
+
+            <!-- 4. Qualificados -->
+            <div class="admin-stat-card card-mkt-qualificados">
+              <div class="stat-icon-wrapper icon-green">
+                <i class="ti ti-user-check"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-label">Qualificados</span>
+                <h3 id="statMktQualificados" class="stat-value">--</h3>
+                <span class="stat-subtext">Leads aptos / validados</span>
+              </div>
+            </div>
+
+            <!-- 5. MQL -->
+            <div class="admin-stat-card card-mkt-mql">
+              <div class="stat-icon-wrapper icon-teal">
+                <i class="ti ti-percentage"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-label">MQL</span>
+                <h3 id="statMktMQL" class="stat-value">--</h3>
+                <span class="stat-subtext">Taxa de qualificação</span>
+              </div>
             </div>
           </div>
 
-          <div class="admin-stat-card card-operacao">
-            <div class="stat-icon-wrapper icon-purple">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
-                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                <path d="M12 11h4"/>
-                <path d="M12 16h4"/>
-              </svg>
+          <!-- Gráfico de Evolução Histórica (Não obedece ao filtro de período dos cards) -->
+          <div class="admin-section-box mkt-chart-section">
+            <div class="admin-chart-header">
+              <div class="chart-header-info">
+                <div class="chart-badge">
+                  <i class="ti ti-chart-line"></i>
+                  <span>Evolução Histórica</span>
+                </div>
+                <h3 id="mktChartTitle">Evolução Mensal: Leads</h3>
+                <p>Acompanhamento dos 12 meses do ano selecionado (Jan a Dez)</p>
+              </div>
+
+              <!-- Controles: Seletor de Ano e Seletor de Métrica -->
+              <div class="chart-header-controls">
+                <div class="chart-control-group">
+                  <label for="mktChartMetricSelect" class="chart-control-label">Métrica:</label>
+                  <div class="chart-select-wrapper">
+                    <select id="mktChartMetricSelect" class="chart-select-input">
+                      <option value="leads" selected>Leads</option>
+                      <option value="investimento">Investimento</option>
+                      <option value="cpl">CPL</option>
+                      <option value="qualificados">Qualificados</option>
+                      <option value="mql">MQL (%)</option>
+                    </select>
+                    <i class="ti ti-chevron-down chart-select-arrow"></i>
+                  </div>
+                </div>
+
+                <div class="chart-control-group">
+                  <label for="mktChartYearSelect" class="chart-control-label">Ano:</label>
+                  <div class="chart-select-wrapper">
+                    <select id="mktChartYearSelect" class="chart-select-input">
+                      <!-- Preenchido via script.js -->
+                    </select>
+                    <i class="ti ti-chevron-down chart-select-arrow"></i>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="stat-details">
-              <span class="stat-label">Casos Operacionais</span>
-              <h3 id="statTotalOperacao" class="stat-value">--</h3>
-              <span class="stat-subtext">Tabela: <code>operacao_crm</code></span>
+
+            <div class="admin-chart-wrapper">
+              <canvas id="marketingEvolucaoChart"></canvas>
+              <div id="mktChartLoadingState" class="chart-loading-overlay">
+                <div class="chart-spinner"></div>
+                <span>Processando dados históricos...</span>
+              </div>
             </div>
           </div>
-
-          <div class="admin-stat-card card-total">
-            <div class="stat-icon-wrapper icon-gold">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <ellipse cx="12" cy="5" rx="9" ry="3"/>
-                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-              </svg>
-            </div>
-            <div class="stat-details">
-              <span class="stat-label">Total de Registros Base</span>
-              <h3 id="statTotalRecords" class="stat-value">--</h3>
-              <span class="stat-subtext">Soma de todas as tabelas</span>
-            </div>
-          </div>
-
         </div>
 
-        <!-- Seção: Gráfico de Requerimentos por Mês (Próximos 12 meses) -->
-        <div class="admin-section-box admin-chart-section">
-          <div class="admin-chart-header">
-            <div class="chart-header-info">
-              <div class="chart-badge">
-                <i class="ti ti-chart-line"></i>
-                <span>Previsão Operacional</span>
+        <!-- ==================== ÁREA 2: COMERCIAL ==================== -->
+        <div class="admin-dashboard-area admin-area-comercial">
+          <div class="admin-area-header">
+            <div class="admin-area-title-group">
+              <div class="area-badge area-badge-comercial">
+                <i class="ti ti-briefcase"></i>
+                <span>Comercial</span>
               </div>
-              <h3>Previsão de Requerimentos por Mês</h3>
-              <p>Distribuição de requerimentos nos próximos 12 meses baseados na coluna <code>data_requerimento</code> da tabela <code>operacao_crm</code></p>
-            </div>
-            <div class="chart-header-stats">
-              <div class="chart-mini-stat">
-                <span class="mini-stat-title">Próximos 12 Meses</span>
-                <span class="mini-stat-val" id="chartStatTotalNext12">--</span>
-              </div>
-              <div class="chart-mini-stat">
-                <span class="mini-stat-title">Pico no Período</span>
-                <span class="mini-stat-val highlight" id="chartStatPeakMonth">--</span>
-              </div>
+              <h3 class="admin-area-title">Desempenho Comercial</h3>
+              <p class="admin-area-subtitle">Gestão do funil de vendas, reuniões, propostas e conversão comercial</p>
             </div>
           </div>
-          
-          <div class="admin-chart-wrapper">
-            <canvas id="operacaoRequerimentosChart"></canvas>
-            <div id="chartLoadingState" class="chart-loading-overlay">
-              <div class="chart-spinner"></div>
-              <span>Processando dados de requerimento...</span>
+
+          <div class="admin-placeholder-box">
+            <div class="admin-placeholder-icon">
+              <i class="ti ti-chart-arrows"></i>
+            </div>
+            <h4>Área Comercial em Preparação</h4>
+            <p>Os indicadores de funil, propostas aceitas e taxas de conversão de vendas serão disponibilizados nesta seção.</p>
+          </div>
+        </div>
+
+        <!-- ==================== ÁREA 3: OPERAÇÃO ==================== -->
+        <div class="admin-dashboard-area admin-area-operacao">
+          <div class="admin-area-header">
+            <div class="admin-area-title-group">
+              <div class="area-badge area-badge-operacao">
+                <i class="ti ti-settings-cog"></i>
+                <span>Operação</span>
+              </div>
+              <h3 class="admin-area-title">Desempenho da Operação</h3>
+              <p class="admin-area-subtitle">Acompanhamento de processos, fluxo de requerimentos e prazos de protocolo</p>
+            </div>
+          </div>
+
+          <!-- Gráfico de Previsão de Requerimentos por Mês (Próximos 12 meses) -->
+          <div class="admin-section-box admin-chart-section">
+            <div class="admin-chart-header">
+              <div class="chart-header-info">
+                <div class="chart-badge">
+                  <i class="ti ti-chart-line"></i>
+                  <span>Previsão Operacional</span>
+                </div>
+                <h3>Previsão de Requerimentos por Mês</h3>
+                <p>Distribuição de requerimentos nos próximos 12 meses baseados na coluna <code>data_requerimento</code> da tabela <code>operacao_crm</code></p>
+              </div>
+              <div class="chart-header-stats">
+                <div class="chart-mini-stat">
+                  <span class="mini-stat-title">Próximos 12 Meses</span>
+                  <span class="mini-stat-val" id="chartStatTotalNext12">--</span>
+                </div>
+                <div class="chart-mini-stat">
+                  <span class="mini-stat-title">Pico no Período</span>
+                  <span class="mini-stat-val highlight" id="chartStatPeakMonth">--</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="admin-chart-wrapper">
+              <canvas id="operacaoRequerimentosChart"></canvas>
+              <div id="chartLoadingState" class="chart-loading-overlay">
+                <div class="chart-spinner"></div>
+                <span>Processando dados de requerimento...</span>
+              </div>
             </div>
           </div>
         </div>

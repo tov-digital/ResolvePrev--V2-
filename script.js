@@ -558,8 +558,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
       }
 
-      // Gráfico de Requerimentos por Mês (Próximos 12 meses)
+      // Gráfico de Requerimentos por Mês (Próximos 12 meses na seção Operação)
       await loadOperacaoRequerimentosChart();
+
+      // Métricas e Gráfico da Seção Marketing
+      await loadMarketingDashboardData();
+      await loadMarketingEvolucaoChart();
     } catch (e) {
       console.error('Erro ao carregar métricas admin:', e);
     }
@@ -769,6 +773,642 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (loadingOverlay) loadingOverlay.classList.add('hidden');
     }
   }
+
+  /* ==========================================================================
+     MÓDULO DE MARKETING - DASHBOARD ADMIN
+     ========================================================================== */
+  
+  // Estado do Filtro de Período de Marketing
+  const nowMkt = new Date();
+  let mktFilterStartDate = new Date(nowMkt.getFullYear(), nowMkt.getMonth(), 1);
+  let mktFilterEndDate = new Date(nowMkt.getFullYear(), nowMkt.getMonth() + 1, 0, 23, 59, 59, 999);
+  
+  let mktCalViewYear = nowMkt.getFullYear();
+  let mktCalViewMonth = nowMkt.getMonth(); // 0-11
+  let mktSelectingStart = null; // Data temporária ao selecionar primeiro clique no calendário
+
+  // Instância do Gráfico Histórico de Marketing
+  let marketingEvolucaoChartInstance = null;
+
+  function formatShortDate(d) {
+    if (!d) return '';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  function formatISODate(d) {
+    if (!d) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // 1. Atualizar display textual do período
+  function updateMarketingDateRangeDisplay() {
+    const displayEl = document.getElementById('mktDateRangeDisplay');
+    if (displayEl) {
+      displayEl.textContent = `${formatShortDate(mktFilterStartDate)} até ${formatShortDate(mktFilterEndDate)}`;
+    }
+  }
+
+  // 2. Renderizar Calendário Visual do Filtro de Período
+  function renderMarketingCalendar() {
+    const gridEl = document.getElementById('mktCalendarGrid');
+    const labelEl = document.getElementById('mktCalMonthYearLabel');
+    if (!gridEl || !labelEl) return;
+
+    const monthNames = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    labelEl.textContent = `${monthNames[mktCalViewMonth]} ${mktCalViewYear}`;
+    gridEl.innerHTML = '';
+
+    // Primeiro dia do mês
+    const firstDayDate = new Date(mktCalViewYear, mktCalViewMonth, 1);
+    // getDay(): 0 = Domingo, 1 = Segunda ... 6 = Sábado
+    // Ajustar para iniciar na Segunda-feira (Seg = 0, Dom = 6)
+    let startDayIndex = firstDayDate.getDay() - 1;
+    if (startDayIndex === -1) startDayIndex = 6;
+
+    const daysInMonth = new Date(mktCalViewYear, mktCalViewMonth + 1, 0).getDate();
+
+    // Células vazias antes do primeiro dia
+    for (let i = 0; i < startDayIndex; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'mkt-cal-day empty';
+      gridEl.appendChild(emptyCell);
+    }
+
+    const startISO = formatISODate(mktFilterStartDate);
+    const endISO = formatISODate(mktFilterEndDate);
+    const selStartISO = mktSelectingStart ? formatISODate(mktSelectingStart) : null;
+
+    // Células com os dias do mês
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cellDate = new Date(mktCalViewYear, mktCalViewMonth, d);
+      const cellISO = formatISODate(cellDate);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mkt-cal-day';
+      btn.textContent = d;
+      btn.dataset.date = cellISO;
+
+      if (!mktSelectingStart) {
+        // Modo intervalo definido
+        const isStart = cellISO === startISO;
+        const isEnd = cellISO === endISO;
+        const inRange = cellISO >= startISO && cellISO <= endISO;
+
+        if (inRange) btn.classList.add('in-range');
+        if (isStart) btn.classList.add('range-start');
+        if (isEnd) btn.classList.add('range-end');
+      } else {
+        // Usuário clicou na primeira data e está escolhendo a segunda
+        if (cellISO === selStartISO) {
+          btn.classList.add('range-start', 'range-end');
+        }
+      }
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleCalendarDayClick(cellDate);
+      });
+
+      gridEl.appendChild(btn);
+    }
+  }
+
+  // Manipulação de clique em dia do calendário
+  async function handleCalendarDayClick(date) {
+    if (!mktSelectingStart) {
+      // Primeiro clique: define data inicial
+      mktSelectingStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      renderMarketingCalendar();
+    } else {
+      // Segundo clique: define fim do intervalo
+      let d1 = mktSelectingStart;
+      let d2 = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+      if (d1 > d2) {
+        const tmp = d1;
+        d1 = d2;
+        d2 = tmp;
+      }
+
+      mktFilterStartDate = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate(), 0, 0, 0, 0);
+      mktFilterEndDate = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate(), 23, 59, 59, 999);
+      mktSelectingStart = null;
+
+      updateMarketingDateRangeDisplay();
+      renderMarketingCalendar();
+
+      // Fechar dropdown
+      const dropdown = document.getElementById('mktDatePickerDropdown');
+      const wrapper = document.getElementById('mktDatePickerWrapper');
+      if (dropdown) dropdown.classList.add('hidden');
+      if (wrapper) wrapper.classList.remove('open');
+
+      // Recalcular métricas
+      await loadMarketingDashboardData();
+    }
+  }
+
+  // Configuração dos eventos do Datepicker
+  function setupMarketingDatePickerEvents() {
+    const trigger = document.getElementById('mktDatePickerTrigger');
+    const dropdown = document.getElementById('mktDatePickerDropdown');
+    const wrapper = document.getElementById('mktDatePickerWrapper');
+    const btnPrev = document.getElementById('mktCalPrevMonth');
+    const btnNext = document.getElementById('mktCalNextMonth');
+
+    if (trigger && dropdown) {
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = dropdown.classList.contains('hidden');
+        if (isHidden) {
+          dropdown.classList.remove('hidden');
+          if (wrapper) wrapper.classList.add('open');
+          mktCalViewYear = mktFilterStartDate.getFullYear();
+          mktCalViewMonth = mktFilterStartDate.getMonth();
+          mktSelectingStart = null;
+          renderMarketingCalendar();
+        } else {
+          dropdown.classList.add('hidden');
+          if (wrapper) wrapper.classList.remove('open');
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (wrapper && !wrapper.contains(e.target)) {
+          dropdown.classList.add('hidden');
+          wrapper.classList.remove('open');
+          mktSelectingStart = null;
+        }
+      });
+    }
+
+    if (btnPrev) {
+      btnPrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mktCalViewMonth--;
+        if (mktCalViewMonth < 0) {
+          mktCalViewMonth = 11;
+          mktCalViewYear--;
+        }
+        renderMarketingCalendar();
+      });
+    }
+
+    if (btnNext) {
+      btnNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mktCalViewMonth++;
+        if (mktCalViewMonth > 11) {
+          mktCalViewMonth = 0;
+          mktCalViewYear++;
+        }
+        renderMarketingCalendar();
+      });
+    }
+
+    // Botões de Ação Rápida
+    const quickBtns = document.querySelectorAll('.mkt-cal-quick-btn');
+    quickBtns.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const type = btn.dataset.range;
+        const now = new Date();
+
+        if (type === 'this_month') {
+          mktFilterStartDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+          mktFilterEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        } else if (type === 'last_30') {
+          mktFilterEndDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+          const past = new Date(now);
+          past.setDate(past.getDate() - 29);
+          past.setHours(0, 0, 0, 0);
+          mktFilterStartDate = past;
+        } else if (type === 'this_year') {
+          mktFilterStartDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+          mktFilterEndDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+        }
+
+        mktSelectingStart = null;
+        mktCalViewYear = mktFilterStartDate.getFullYear();
+        mktCalViewMonth = mktFilterStartDate.getMonth();
+
+        updateMarketingDateRangeDisplay();
+        renderMarketingCalendar();
+
+        if (dropdown) dropdown.classList.add('hidden');
+        if (wrapper) wrapper.classList.remove('open');
+
+        await loadMarketingDashboardData();
+      });
+    });
+  }
+
+  // 3. Buscar Registros de Todas as 3 Tabelas no Período Selecionado
+  async function loadMarketingDashboardData() {
+    if (!supabase) return;
+
+    const statInvestEl = document.getElementById('statMktInvestimento');
+    const statLeadsEl = document.getElementById('statMktLeads');
+    const statCplEl = document.getElementById('statMktCPL');
+    const statQualEl = document.getElementById('statMktQualificados');
+    const statMqlEl = document.getElementById('statMktMQL');
+
+    try {
+      const startISO = mktFilterStartDate.toISOString();
+      const endISO = mktFilterEndDate.toISOString();
+
+      // Consultar as 3 tabelas no período baseado em criado_em
+      const [resOportunidades, resInsucessos, resOperacao] = await Promise.all([
+        supabase
+          .from('oportunidades_crm')
+          .select('id, status, criado_em')
+          .gte('criado_em', startISO)
+          .lte('criado_em', endISO),
+        supabase
+          .from('insucessos_crm')
+          .select('id, status, criado_em')
+          .gte('criado_em', startISO)
+          .lte('criado_em', endISO),
+        supabase
+          .from('operacao_crm')
+          .select('id, status, criado_em')
+          .gte('criado_em', startISO)
+          .lte('criado_em', endISO)
+      ]);
+
+      const rowsOportunidades = resOportunidades.data || [];
+      const rowsInsucessos = resInsucessos.data || [];
+      const rowsOperacao = resOperacao.data || [];
+
+      // Total de Leads = todas as linhas das 3 tabelas no período
+      const allRows = [...rowsOportunidades, ...rowsInsucessos, ...rowsOperacao];
+      const totalLeads = allRows.length;
+
+      // Qualificados = todas as linhas em que status não seja 'desqualificado'
+      const totalQualificados = allRows.filter(r => {
+        const s = (r.status || '').toLowerCase().trim();
+        return s !== 'desqualificado';
+      }).length;
+
+      // 1. Investimento: ainda não conectado a base de dados -> 'R$ XX'
+      if (statInvestEl) statInvestEl.textContent = 'R$ XX';
+
+      // 2. Leads: valor inteiro
+      if (statLeadsEl) statLeadsEl.textContent = totalLeads.toLocaleString('pt-BR');
+
+      // 3. CPL = Investimento / Leads -> Como investimento é 'R$ XX', exibir 'R$ XX'
+      if (statCplEl) statCplEl.textContent = 'R$ XX';
+
+      // 4. Qualificados: valor inteiro
+      if (statQualEl) statQualEl.textContent = totalQualificados.toLocaleString('pt-BR');
+
+      // 5. MQL = (Qualificados / Leads) * 100
+      if (statMqlEl) {
+        if (totalLeads > 0) {
+          const mqlPercent = (totalQualificados / totalLeads) * 100;
+          statMqlEl.textContent = `${mqlPercent.toFixed(1).replace('.', ',')}%`;
+        } else {
+          statMqlEl.textContent = '0%';
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao carregar dados de marketing:', err);
+    }
+  }
+
+  // 4. Gráfico Histórico de Evolução de Marketing (12 meses, não obedece ao filtro de período)
+  let mktAvailableYears = [];
+  let mktSelectedYear = new Date().getFullYear();
+  let mktSelectedMetric = 'leads';
+
+  async function populateMarketingYearSelector() {
+    const yearSelect = document.getElementById('mktChartYearSelect');
+    if (!yearSelect) return;
+
+    const currentYear = new Date().getFullYear();
+    const yearsSet = new Set([currentYear, currentYear - 1]);
+
+    // Buscar anos presentes em criado_em das 3 tabelas
+    try {
+      const [resOp, resIns, resOpr] = await Promise.all([
+        supabase.from('oportunidades_crm').select('criado_em').order('criado_em', { ascending: true }).limit(1),
+        supabase.from('insucessos_crm').select('criado_em').order('criado_em', { ascending: true }).limit(1),
+        supabase.from('operacao_crm').select('criado_em').order('criado_em', { ascending: true }).limit(1)
+      ]);
+
+      [resOp.data, resIns.data, resOpr.data].forEach(rows => {
+        if (rows && rows[0] && rows[0].criado_em) {
+          const y = new Date(rows[0].criado_em).getFullYear();
+          if (!isNaN(y) && y > 2000) yearsSet.add(y);
+        }
+      });
+    } catch (e) {
+      // fallback gracioso
+    }
+
+    mktAvailableYears = Array.from(yearsSet).sort((a, b) => b - a);
+
+    yearSelect.innerHTML = '';
+    mktAvailableYears.forEach(year => {
+      const opt = document.createElement('option');
+      opt.value = year;
+      opt.textContent = year;
+      if (year === mktSelectedYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    });
+
+    yearSelect.addEventListener('change', async () => {
+      mktSelectedYear = parseInt(yearSelect.value, 10);
+      await loadMarketingEvolucaoChart();
+    });
+
+    const metricSelect = document.getElementById('mktChartMetricSelect');
+    if (metricSelect) {
+      metricSelect.addEventListener('change', async () => {
+        mktSelectedMetric = metricSelect.value;
+        await loadMarketingEvolucaoChart();
+      });
+    }
+  }
+
+  async function loadMarketingEvolucaoChart() {
+    const canvas = document.getElementById('marketingEvolucaoChart');
+    const loadingOverlay = document.getElementById('mktChartLoadingState');
+    const chartTitleEl = document.getElementById('mktChartTitle');
+    if (!canvas || !supabase) return;
+
+    if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+
+    try {
+      const year = mktSelectedYear;
+      const startYearISO = new Date(year, 0, 1, 0, 0, 0, 0).toISOString();
+      const endYearISO = new Date(year, 11, 31, 23, 59, 59, 999).toISOString();
+
+      // Consultar registros de todo o ano selecionado nas 3 tabelas
+      const [resOp, resIns, resOpr] = await Promise.all([
+        supabase
+          .from('oportunidades_crm')
+          .select('status, criado_em')
+          .gte('criado_em', startYearISO)
+          .lte('criado_em', endYearISO),
+        supabase
+          .from('insucessos_crm')
+          .select('status, criado_em')
+          .gte('criado_em', startYearISO)
+          .lte('criado_em', endYearISO),
+        supabase
+          .from('operacao_crm')
+          .select('status, criado_em')
+          .gte('criado_em', startYearISO)
+          .lte('criado_em', endYearISO)
+      ]);
+
+      const allYearRows = [
+        ...(resOp.data || []),
+        ...(resIns.data || []),
+        ...(resOpr.data || [])
+      ];
+
+      // Inicializar agregadores dos 12 meses (0 = Janeiro a 11 = Dezembro)
+      const monthlyLeads = new Array(12).fill(0);
+      const monthlyQualificados = new Array(12).fill(0);
+
+      allYearRows.forEach(row => {
+        if (!row.criado_em) return;
+        const d = new Date(row.criado_em);
+        const m = d.getMonth();
+        if (m >= 0 && m < 12) {
+          monthlyLeads[m]++;
+          const s = (row.status || '').toLowerCase().trim();
+          if (s !== 'desqualificado') {
+            monthlyQualificados[m]++;
+          }
+        }
+      });
+
+      const monthNamesPt = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      ];
+      const monthNamesShortPt = [
+        'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+        'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+      ];
+
+      // Determinar valores, labels e formatação conforme a métrica
+      let chartData = [];
+      let yUnitPrefix = '';
+      let yUnitSuffix = '';
+      let chartColor = '#1E5080';
+      let metricName = 'Leads';
+
+      switch (mktSelectedMetric) {
+        case 'leads':
+          chartData = monthlyLeads;
+          yUnitPrefix = '';
+          yUnitSuffix = '';
+          chartColor = '#1E5080';
+          metricName = 'Leads';
+          break;
+        case 'investimento':
+          chartData = new Array(12).fill(0); // R$ XX estático / sem base
+          yUnitPrefix = 'R$ ';
+          yUnitSuffix = '';
+          chartColor = '#D97706';
+          metricName = 'Investimento';
+          break;
+        case 'cpl':
+          chartData = new Array(12).fill(0); // CPL baseado em R$ XX
+          yUnitPrefix = 'R$ ';
+          yUnitSuffix = '';
+          chartColor = '#7C3AED';
+          metricName = 'CPL';
+          break;
+        case 'qualificados':
+          chartData = monthlyQualificados;
+          yUnitPrefix = '';
+          yUnitSuffix = '';
+          chartColor = '#16A34A';
+          metricName = 'Qualificados';
+          break;
+        case 'mql':
+          chartData = monthlyLeads.map((leads, idx) => {
+            if (leads === 0) return 0;
+            return parseFloat(((monthlyQualificados[idx] / leads) * 100).toFixed(1));
+          });
+          yUnitPrefix = '';
+          yUnitSuffix = '%';
+          chartColor = '#0F766E';
+          metricName = 'MQL (%)';
+          break;
+      }
+
+      if (chartTitleEl) {
+        chartTitleEl.textContent = `Evolução Mensal: ${metricName} (${year})`;
+      }
+
+      // Renderizar ou atualizar gráfico Chart.js
+      if (typeof Chart === 'undefined') {
+        console.warn('Chart.js ainda não carregado.');
+        return;
+      }
+
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+      gradient.addColorStop(0, hexToRgba(chartColor, 0.25));
+      gradient.addColorStop(0.7, hexToRgba(chartColor, 0.04));
+      gradient.addColorStop(1, hexToRgba(chartColor, 0));
+
+      if (marketingEvolucaoChartInstance) {
+        marketingEvolucaoChartInstance.destroy();
+      }
+
+      marketingEvolucaoChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: monthNamesShortPt,
+          datasets: [{
+            label: metricName,
+            data: chartData,
+            fill: true,
+            backgroundColor: gradient,
+            borderColor: chartColor,
+            borderWidth: 2.5,
+            pointBackgroundColor: chartColor,
+            pointBorderColor: '#FFFFFF',
+            pointBorderWidth: 2,
+            pointRadius: 4.5,
+            pointHoverRadius: 7,
+            pointHoverBackgroundColor: chartColor,
+            pointHoverBorderColor: '#FFFFFF',
+            pointHoverBorderWidth: 3,
+            tension: 0.35
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: '#0F172A',
+              titleColor: '#F8FAFC',
+              bodyColor: '#94A3B8',
+              titleFont: {
+                family: 'Inter, sans-serif',
+                size: 13,
+                weight: '700'
+              },
+              bodyFont: {
+                family: 'Inter, sans-serif',
+                size: 12,
+                weight: '500'
+              },
+              padding: { top: 10, right: 14, bottom: 10, left: 14 },
+              cornerRadius: 8,
+              displayColors: false,
+              callbacks: {
+                title: function(items) {
+                  const idx = items[0].dataIndex;
+                  return `${monthNamesPt[idx]} de ${year}`;
+                },
+                label: function(item) {
+                  const val = item.raw;
+                  if (mktSelectedMetric === 'investimento' || mktSelectedMetric === 'cpl') {
+                    return `${metricName}: R$ XX`;
+                  }
+                  if (mktSelectedMetric === 'mql') {
+                    return `${metricName}: ${val.toFixed(1).replace('.', ',')}%`;
+                  }
+                  return `${metricName}: ${val.toLocaleString('pt-BR')}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                font: {
+                  family: 'Inter, sans-serif',
+                  size: 11,
+                  weight: '600'
+                },
+                color: '#64748B'
+              }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                font: {
+                  family: 'Inter, sans-serif',
+                  size: 11,
+                  weight: '500'
+                },
+                color: '#94A3B8',
+                callback: function(val) {
+                  if (mktSelectedMetric === 'investimento' || mktSelectedMetric === 'cpl') {
+                    return `${yUnitPrefix}${val}`;
+                  }
+                  if (mktSelectedMetric === 'mql') {
+                    return `${val}${yUnitSuffix}`;
+                  }
+                  return Number.isInteger(val) ? val.toLocaleString('pt-BR') : '';
+                }
+              },
+              grid: {
+                color: '#F1F5F9',
+                borderDash: [4, 4]
+              },
+              border: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    } catch (err) {
+      console.error('Erro ao renderizar gráfico de evolução de marketing:', err);
+    } finally {
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    }
+  }
+
+  // Utilitário simples para cor RGBA
+  function hexToRgba(hex, alpha) {
+    let c = hex.replace('#', '');
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    const num = parseInt(c, 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  // Inicializar Datepicker e Seletores de Marketing ao carregar
+  updateMarketingDateRangeDisplay();
+  renderMarketingCalendar();
+  setupMarketingDatePickerEvents();
+  populateMarketingYearSelector();
 
   // 2. Aba Usuários - Tabela de Usuários e Ações
   async function loadAdminUsersTable(query = '') {
