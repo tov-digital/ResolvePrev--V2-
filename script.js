@@ -1705,6 +1705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const addCardForm = document.getElementById('addCardForm');
   const cardStageInput = document.getElementById('cardStageInput');
   let currentUserId = null;
+  let currentUserEmail = null;
 
   // Clique no '+' cria o card instantaneamente com dados padrão (Sem Pop-up)
   const crmKanbanBoard = document.getElementById('crmKanbanView');
@@ -1722,11 +1723,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           telefone: '(11) 99999-9999',
           data_requerimento: new Date().toISOString().split('T')[0],
           status: stage,
-          doc_procuracoes: 'Pendente',
           doc_rg_cnh: 'Pendente',
           doc_certidao: 'Pendente',
           doc_cnis: 'Pendente',
-          doc_carteira_trabalho: 'Pendente'
+          doc_carteira_trabalho: 'Pendente',
+          doc_carteira_digital: 'Pendente'
         };
 
         if (supabase) {
@@ -1834,6 +1835,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !session.user) return;
     currentUserId = session.user.id;
+    currentUserEmail = session.user.email || null;
 
     subscribeRealtimeUpdates();
 
@@ -3463,6 +3465,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (driveUrl) {
+          // Se for link do Google e tivermos o email do usuário logado no CRM,
+          // anexamos authuser=<email> para o Google abrir diretamente com a conta correta
+          if (currentUserEmail && driveUrl.includes('google.com')) {
+            try {
+              const urlObj = new URL(driveUrl);
+              urlObj.searchParams.set('authuser', currentUserEmail);
+              driveUrl = urlObj.toString();
+            } catch (e) {
+              const separator = driveUrl.includes('?') ? '&' : '?';
+              driveUrl = `${driveUrl}${separator}authuser=${encodeURIComponent(currentUserEmail)}`;
+            }
+          }
+
           docsCardCodeBtn.href = driveUrl;
           docsCardCodeBtn.target = '_blank';
           docsCardCodeBtn.title = `Abrir Google Drive (${card.codigo || 'Pasta'})`;
@@ -3625,7 +3640,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'Corrigir': 'badge-corrigir'
   };
 
-  const obrigatorioKeys = ['doc_procuracoes', 'doc_rg_cnh', 'doc_certidao', 'doc_cnis', 'doc_carteira_trabalho'];
+  const obrigatorioKeys = ['doc_rg_cnh', 'doc_certidao', 'doc_cnis', 'doc_carteira_trabalho', 'doc_carteira_digital'];
 
   function updateDocsCounters() {
     if (!currentActiveCard) return;
