@@ -16,6 +16,8 @@
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
   <link rel="stylesheet" href="styles.css?v=69">
+  <!-- Chart.js para Dashboards e Gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
       .browser-tab {
         color: var(--text-secondary) !important;
@@ -2028,6 +2030,38 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
             </div>
           </div>
 
+        </div>
+
+        <!-- Seção: Gráfico de Requerimentos por Mês (Próximos 12 meses) -->
+        <div class="admin-section-box admin-chart-section">
+          <div class="admin-chart-header">
+            <div class="chart-header-info">
+              <div class="chart-badge">
+                <i class="ti ti-chart-line"></i>
+                <span>Previsão Operacional</span>
+              </div>
+              <h3>Previsão de Requerimentos por Mês</h3>
+              <p>Distribuição de requerimentos nos próximos 12 meses baseados na coluna <code>data_requerimento</code> da tabela <code>operacao_crm</code></p>
+            </div>
+            <div class="chart-header-stats">
+              <div class="chart-mini-stat">
+                <span class="mini-stat-title">Próximos 12 Meses</span>
+                <span class="mini-stat-val" id="chartStatTotalNext12">--</span>
+              </div>
+              <div class="chart-mini-stat">
+                <span class="mini-stat-title">Pico no Período</span>
+                <span class="mini-stat-val highlight" id="chartStatPeakMonth">--</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="admin-chart-wrapper">
+            <canvas id="operacaoRequerimentosChart"></canvas>
+            <div id="chartLoadingState" class="chart-loading-overlay">
+              <div class="chart-spinner"></div>
+              <span>Processando dados de requerimento...</span>
+            </div>
+          </div>
         </div>
 
         <!-- Tabela Detalhada de Visão Geral do Banco de Dados -->

@@ -4164,6 +4164,152 @@ select.qual-select,
   gap: 1.25rem;
 }
 
+/* Gráfico de Previsão de Requerimentos */
+.admin-chart-section {
+  position: relative;
+  background: #FFFFFF;
+}
+
+.admin-chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.chart-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.chart-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  padding: 0.25rem 0.65rem;
+  background-color: #EBF3FA;
+  color: var(--color-primary);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.chart-badge i {
+  font-size: 0.95rem;
+}
+
+.chart-header-info h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-neutral);
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+
+.chart-header-info p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.chart-header-info p code {
+  background-color: var(--bg-page);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.chart-header-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chart-mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background: #F8FAFC;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  min-width: 120px;
+}
+
+.mini-stat-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.mini-stat-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.mini-stat-val.highlight {
+  color: var(--color-primary);
+}
+
+.admin-chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  margin-top: 0.5rem;
+}
+
+.chart-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(3px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  z-index: 10;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-radius: 8px;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.chart-loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.chart-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(30, 80, 128, 0.15);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: chartSpin 0.8s linear infinite;
+}
+
+@keyframes chartSpin {
+  to { transform: rotate(360deg); }
+}
+
 .section-box-header h3 {
   font-size: 1.15rem;
   font-weight: 800;

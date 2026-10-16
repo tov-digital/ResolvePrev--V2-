@@ -557,8 +557,216 @@ document.addEventListener('DOMContentLoaded', async () => {
           </tr>
         `;
       }
+
+      // Gráfico de Requerimentos por Mês (Próximos 12 meses)
+      await loadOperacaoRequerimentosChart();
     } catch (e) {
       console.error('Erro ao carregar métricas admin:', e);
+    }
+  }
+
+  // Variável para guardar a instância do gráfico do Chart.js
+  let operacaoRequerimentosChartInstance = null;
+
+  async function loadOperacaoRequerimentosChart() {
+    const canvas = document.getElementById('operacaoRequerimentosChart');
+    const loadingOverlay = document.getElementById('chartLoadingState');
+    const statTotalEl = document.getElementById('chartStatTotalNext12');
+    const statPeakEl = document.getElementById('chartStatPeakMonth');
+    if (!canvas || !supabase) return;
+
+    if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+
+    try {
+      // 1. Gerar os próximos 12 meses (incluindo o mês atual)
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth(); // 0 a 11
+
+      const monthNamesPt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const monthNamesFullPt = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+      const months = []; // [{ key: 'YYYY-MM', label: 'Mês/AA', fullLabel: 'Mês YYYY', count: 0 }]
+      for (let i = 0; i < 12; i++) {
+        const d = new Date(currentYear, currentMonth + i, 1);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const key = `${y}-${m}`;
+        const label = `${monthNamesPt[d.getMonth()]}/${String(y).slice(-2)}`;
+        const fullLabel = `${monthNamesFullPt[d.getMonth()]} de ${y}`;
+        months.push({ key, label, fullLabel, count: 0 });
+      }
+
+      const minDateStr = `${months[0].key}-01`;
+      // Fim do 12º mês
+      const lastMonthObj = new Date(currentYear, currentMonth + 12, 0); // Último dia do 12º mês
+      const maxDateStr = `${lastMonthObj.getFullYear()}-${String(lastMonthObj.getMonth() + 1).padStart(2, '0')}-${String(lastMonthObj.getDate()).padStart(2, '0')}`;
+
+      // 2. Buscar linhas da tabela operacao_crm com data_requerimento no intervalo
+      const { data: rows, error } = await supabase
+        .from('operacao_crm')
+        .select('data_requerimento')
+        .not('data_requerimento', 'is', null)
+        .gte('data_requerimento', minDateStr)
+        .lte('data_requerimento', maxDateStr);
+
+      if (error) {
+        console.warn('Erro ao consultar datas de requerimento:', error);
+      }
+
+      // Mapear contagem por mês
+      const monthMap = new Map();
+      months.forEach(m => monthMap.set(m.key, m));
+
+      let totalNext12 = 0;
+      if (rows && rows.length > 0) {
+        rows.forEach(r => {
+          if (!r.data_requerimento) return;
+          // Formato esperado YYYY-MM-DD
+          const ym = r.data_requerimento.slice(0, 7);
+          if (monthMap.has(ym)) {
+            monthMap.get(ym).count += 1;
+            totalNext12 += 1;
+          }
+        });
+      }
+
+      // Encontrar mês com pico
+      let maxMonth = months[0];
+      months.forEach(m => {
+        if (m.count > maxMonth.count) {
+          maxMonth = m;
+        }
+      });
+
+      if (statTotalEl) statTotalEl.textContent = totalNext12.toLocaleString('pt-BR');
+      if (statPeakEl) {
+        statPeakEl.textContent = maxMonth.count > 0 ? `${maxMonth.label} (${maxMonth.count})` : '—';
+      }
+
+      // 3. Renderizar com Chart.js
+      if (typeof Chart === 'undefined') {
+        console.warn('Chart.js ainda não carregado.');
+        return;
+      }
+
+      const labels = months.map(m => m.label);
+      const values = months.map(m => m.count);
+
+      // Obter cores do sistema ou gradiente moderno
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+      gradient.addColorStop(0, 'rgba(30, 80, 128, 0.28)');
+      gradient.addColorStop(0.7, 'rgba(30, 80, 128, 0.04)');
+      gradient.addColorStop(1, 'rgba(30, 80, 128, 0)');
+
+      if (operacaoRequerimentosChartInstance) {
+        operacaoRequerimentosChartInstance.destroy();
+      }
+
+      operacaoRequerimentosChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Requerimentos Agendados',
+            data: values,
+            fill: true,
+            backgroundColor: gradient,
+            borderColor: '#1E5080',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#1E5080',
+            pointBorderColor: '#FFFFFF',
+            pointBorderWidth: 2,
+            pointRadius: 4.5,
+            pointHoverRadius: 7,
+            pointHoverBackgroundColor: '#1E5080',
+            pointHoverBorderColor: '#FFFFFF',
+            pointHoverBorderWidth: 3,
+            tension: 0.35
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: '#0F172A',
+              titleColor: '#F8FAFC',
+              bodyColor: '#94A3B8',
+              titleFont: {
+                family: 'Inter, sans-serif',
+                size: 13,
+                weight: '700'
+              },
+              bodyFont: {
+                family: 'Inter, sans-serif',
+                size: 12,
+                weight: '500'
+              },
+              padding: { top: 10, right: 14, bottom: 10, left: 14 },
+              cornerRadius: 8,
+              displayColors: false,
+              callbacks: {
+                title: function(items) {
+                  const idx = items[0].dataIndex;
+                  return months[idx].fullLabel;
+                },
+                label: function(item) {
+                  const count = item.raw;
+                  return `${count} ${count === 1 ? 'requerimento' : 'requerimentos'}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                font: {
+                  family: 'Inter, sans-serif',
+                  size: 11,
+                  weight: '600'
+                },
+                color: '#64748B'
+              }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0,
+                font: {
+                  family: 'Inter, sans-serif',
+                  size: 11,
+                  weight: '500'
+                },
+                color: '#94A3B8',
+                stepSize: 1
+              },
+              grid: {
+                color: '#F1F5F9',
+                borderDash: [4, 4]
+              },
+              border: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    } catch (err) {
+      console.error('Erro ao renderizar gráfico de requerimentos:', err);
+    } finally {
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
     }
   }
 
