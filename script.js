@@ -3426,6 +3426,28 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Preencher Nome (Título editável)
       const inputName = document.getElementById('sheetClientNameInput');
       if (inputName) inputName.value = card.nome || '';
+
+      // Atualizar Responsável no botão de Atribuição
+      const sheetAssigneeName = document.getElementById('sheetAssigneeName');
+      const sheetAssigneeAvatar = document.getElementById('sheetAssigneeAvatar');
+      const sheetReassignBtnEl = document.getElementById('sheetReassignBtn');
+      if (sheetAssigneeName) {
+        if (card.user_id) {
+          const profile = (window.crmProfilesCache || []).find(p => p.id === card.user_id);
+          const opName = profile ? getUserDisplayName(profile) : 'Atribuído';
+          sheetAssigneeName.textContent = opName;
+          if (sheetAssigneeAvatar) {
+            sheetAssigneeAvatar.textContent = opName.charAt(0).toUpperCase();
+          }
+          if (sheetReassignBtnEl) sheetReassignBtnEl.title = `Atribuído a: ${opName} (Clique para alterar)`;
+        } else {
+          sheetAssigneeName.textContent = 'Não atribuído';
+          if (sheetAssigneeAvatar) {
+            sheetAssigneeAvatar.textContent = '+';
+          }
+          if (sheetReassignBtnEl) sheetReassignBtnEl.title = 'Clique para atribuir a um usuário';
+        }
+      }
       
       // Preencher etiqueta e botão de código / Google Drive (Guia Documentos)
       const docsCardCodeTag = document.getElementById('docsCardCodeTag');
@@ -4332,7 +4354,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
+        currentActiveCard.user_id = profile.id;
         currentActiveCard.atualizado_em = nowIso;
+
+        const sheetAssigneeName = document.getElementById('sheetAssigneeName');
+        const sheetAssigneeAvatar = document.getElementById('sheetAssigneeAvatar');
+        const sheetReassignBtnEl = document.getElementById('sheetReassignBtn');
+        if (sheetAssigneeName) {
+          sheetAssigneeName.textContent = displayName;
+          if (sheetAssigneeAvatar) {
+            sheetAssigneeAvatar.textContent = displayName.charAt(0).toUpperCase();
+          }
+          if (sheetReassignBtnEl) sheetReassignBtnEl.title = `Atribuído a: ${displayName} (Clique para alterar)`;
+        }
+
         closeReassignUserModal();
         closeClientSheet();
         loadUserCards(); // Atualiza o funil

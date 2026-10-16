@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="styles.css?v=67">
+  <link rel="stylesheet" href="styles.css?v=69">
     <style>
       .browser-tab {
         color: var(--text-secondary) !important;
@@ -814,15 +814,9 @@ var(--border); flex-shrink: 0;">
         <div style="flex:1"></div>
         
      
-   <div style="display:flex; gap:4px; height:40px; align-items:center; color:var(--text-secondary); 
-font-size:18px;">
-          <i class="ti ti-user-check header-action-icon" id="sheetReassignBtn" aria-label="Responsável" 
-style="cursor: pointer;" title="Atribuir a outro usuário"></i>
-          <i class="ti ti-trash danger-action header-action-icon" 
-id="sheetDeleteBtn" aria-label="Excluir" style="cursor: pointer;" title="Excluir Oportunidade"></i>
-          
-<i class="ti ti-x header-action-icon" id="closeClientSheetModal" aria-label="Fechar" style="cursor: pointer;" title="Fechar 
-Ficha"></i>
+        <div style="display:flex; gap:4px; height:40px; align-items:center; color:var(--text-secondary); font-size:18px;">
+          <i class="ti ti-trash danger-action header-action-icon" id="sheetDeleteBtn" aria-label="Excluir" style="cursor: pointer;" title="Excluir Oportunidade"></i>
+          <i class="ti ti-x header-action-icon" id="closeClientSheetModal" aria-label="Fechar" style="cursor: pointer;" title="Fechar Ficha"></i>
         </div>
       </div>
 
@@ -1405,7 +1399,10 @@ width:100%; color:var(--text-primary);">
             </div>
             
             <div style="border-top:0.5px solid var(--border); padding:12px 20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--surface-2); flex-shrink: 0;">
-              <span id="nextStepLabel" style="font-size:12px; color:var(--text-secondary); margin-right:auto;">Próxima etapa:</span>
+              <button type="button" id="sheetReassignBtn" class="sheet-assignee-btn" style="margin-right:auto;" aria-label="Responsável" title="Atribuir a outro usuário">
+                <span id="sheetAssigneeAvatar" class="sheet-assignee-avatar">U</span>
+                <span id="sheetAssigneeName" class="sheet-assignee-name">Atribuir</span>
+              </button>
              
  <button id="modalBtnEnviarMensagem" class="btn-whatsapp" style="border:1px solid var(--border); background:var(--surface-1); border-radius:8px; padding:8px 14px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--color-primary);">
                 <i class="ti ti-brand-whatsapp" style="font-size:16px" aria-hidden="true"></i>Enviar mensagem</button>

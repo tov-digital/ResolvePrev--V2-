@@ -4580,6 +4580,53 @@ a:hover,
   filter: none !important;
 }
 
+/* Botão de Responsável / Reatribuição na Ficha */
+.sheet-assignee-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border-light, #E2E8F0);
+  background-color: var(--surface-1, #FFFFFF);
+  color: var(--text-secondary, #475569);
+  font-family: var(--font-family);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sheet-assignee-btn:hover {
+  background-color: var(--surface-hover, #F8FAFC);
+  color: var(--color-primary, #1E5080);
+  border-color: var(--color-primary-light, #CBD5E1);
+}
+
+.sheet-assignee-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary, #1E5080) 0%, var(--color-tertiary, #2A6F97) 100%);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.sheet-assignee-name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Hover Customizado WhatsApp */
 .btn-whatsapp {
   transition: all 0.2s ease !important;
