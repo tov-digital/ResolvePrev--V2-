@@ -3640,7 +3640,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'Corrigir': 'badge-corrigir'
   };
 
-  const obrigatorioKeys = ['doc_rg_cnh', 'doc_certidao', 'doc_cnis', 'doc_carteira_trabalho', 'doc_carteira_digital'];
+  const obrigatorioKeys = ['doc_cnis', 'doc_rg_cnh', 'doc_carteira_trabalho', 'doc_carteira_digital', 'doc_certidao'];
 
   function updateDocsCounters() {
     if (!currentActiveCard) return;
