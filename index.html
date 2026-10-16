@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="styles.css?v=65">
+  <link rel="stylesheet" href="styles.css?v=67">
     <style>
       .browser-tab {
         color: var(--text-secondary) !important;
@@ -597,7 +597,7 @@
         <div class="kanban-column" data-stage="novo" data-tab="comercial">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-novo"></span>
+              <span class="column-status-dot dot-novo" data-tooltip="Leads novos que ainda não receberam nenhuma tentativa de contato." title="Leads novos que ainda não receberam nenhuma tentativa de contato."></span>
               <h4 class="column-title">Novo</h4>
               <span class="column-count">0</span>
             </div>
@@ -609,7 +609,7 @@
         <div class="kanban-column" data-stage="qualificacao" data-tab="comercial">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-qualificacao"></span>
+              <span class="column-status-dot dot-qualificacao" data-tooltip="Leads em triagem para entender perfil, direito previdenciário e viabilidade." title="Leads em triagem para entender perfil, direito previdenciário e viabilidade."></span>
               <h4 class="column-title">Qualificação</h4>
               <span class="column-count">0</span>
             </div>
@@ -621,7 +621,7 @@
         <div class="kanban-column" data-stage="acompanhamento" data-tab="comercial">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-acompanhamento"></span>
+              <span class="column-status-dot dot-acompanhamento" data-tooltip="Contatos em andamento, aguardando resposta ou com follow-ups periódicos agendados." title="Contatos em andamento, aguardando resposta ou com follow-ups periódicos agendados."></span>
               <h4 class="column-title">Acompanhamento</h4>
               <span class="column-count">0</span>
             </div>
@@ -633,7 +633,7 @@
         <div class="kanban-column" data-stage="reuniao" data-tab="comercial">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-reuniao"></span>
+              <span class="column-status-dot dot-reuniao" data-tooltip="Reunião ou consulta de fechamento agendada com o cliente." title="Reunião ou consulta de fechamento agendada com o cliente."></span>
               <h4 class="column-title">Reunião</h4>
               <span class="column-count">0</span>
             </div>
@@ -645,7 +645,7 @@
         <div class="kanban-column" data-stage="proposta" data-tab="comercial">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-proposta"></span>
+              <span class="column-status-dot dot-proposta" data-tooltip="Proposta de honorários e contrato enviada, aguardando assinatura do cliente." title="Proposta de honorários e contrato enviada, aguardando assinatura do cliente."></span>
               <h4 class="column-title">Proposta</h4>
               <span class="column-count">0</span>
             </div>
@@ -658,7 +658,7 @@
         <div class="kanban-column hidden" data-stage="documentacao" data-tab="operacao">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-documentacao"></span>
+              <span class="column-status-dot dot-documentacao" data-tooltip="Coleta, conferência e organização de documentos e procurações do segurado." title="Coleta, conferência e organização de documentos e procurações do segurado."></span>
               <h4 class="column-title">Documentação</h4>
               <span class="column-count">0</span>
             </div>
@@ -669,7 +669,7 @@
         <div class="kanban-column hidden" data-stage="na_fila" data-tab="operacao">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-na_fila"></span>
+              <span class="column-status-dot dot-na_fila" data-tooltip="Documentação pronta na fila operacional para protocolo no Meu INSS / órgãos." title="Documentação pronta na fila operacional para protocolo no Meu INSS / órgãos."></span>
               <h4 class="column-title">Na Fila</h4>
               <span class="column-count">0</span>
             </div>
@@ -680,7 +680,7 @@
         <div class="kanban-column hidden" data-stage="requerido" data-tab="operacao">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-requerido"></span>
+              <span class="column-status-dot dot-requerido" data-tooltip="Benefício ou serviço formalmente protocolado, em análise pelo órgão." title="Benefício ou serviço formalmente protocolado, em análise pelo órgão."></span>
               <h4 class="column-title">Requerido</h4>
               <span class="column-count">0</span>
             </div>
@@ -691,7 +691,7 @@
         <div class="kanban-column hidden" data-stage="exigencia" data-tab="operacao">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-exigencia"></span>
+              <span class="column-status-dot dot-exigencia" data-tooltip="Pendência ou exigência emitida pelo INSS aguardando cumprimento no prazo." title="Pendência ou exigência emitida pelo INSS aguardando cumprimento no prazo."></span>
               <h4 class="column-title">Exigência</h4>
               <span class="column-count">0</span>
             </div>
@@ -702,7 +702,7 @@
         <div class="kanban-column hidden" data-stage="concedido" data-tab="operacao">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-concedido"></span>
+              <span class="column-status-dot dot-concedido" data-tooltip="Benefício deferido e concedido com sucesso para o cliente." title="Benefício deferido e concedido com sucesso para o cliente."></span>
               <h4 class="column-title">Concedido</h4>
               <span class="column-count">0</span>
             </div>
@@ -714,7 +714,7 @@
         <div class="kanban-column hidden" data-stage="negado" data-tab="judicial">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-negado"></span>
+              <span class="column-status-dot dot-negado" data-tooltip="Pedido administrativo indeferido pelo INSS, elegível para ação judicial." title="Pedido administrativo indeferido pelo INSS, elegível para ação judicial."></span>
               <h4 class="column-title">Negado</h4>
               <span class="column-count">0</span>
             </div>
@@ -725,7 +725,7 @@
         <div class="kanban-column hidden" data-stage="planejamento" data-tab="judicial">
           <div class="kanban-column-header">
             <div class="column-title-group">
-              <span class="column-status-dot dot-planejamento"></span>
+              <span class="column-status-dot dot-planejamento" data-tooltip="Elaboração de cálculos, estratégia jurídica e redação da petição inicial." title="Elaboração de cálculos, estratégia jurídica e redação da petição inicial."></span>
               <h4 class="column-title">Planejamento</h4>
               <span class="column-count">0</span>
             </div>

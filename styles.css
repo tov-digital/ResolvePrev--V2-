@@ -1405,6 +1405,13 @@ html, body {
   width: 9px;
   height: 9px;
   border-radius: 50%;
+  cursor: pointer;
+  display: inline-block;
+  transition: transform var(--transition-fast);
+}
+
+.column-status-dot:hover {
+  transform: scale(1.3);
 }
 
 .dot-novo { background-color: #94A3B8 !important; }         /* 1. Cinza */
@@ -1422,6 +1429,7 @@ html, body {
 
 /* Dots - Judicial */
 .dot-negado { background-color: #F87171 !important; }       /* Red */
+.dot-planejamento { background-color: #A855F7 !important; } /* Roxo */
 
 .column-title {
   font-size: 0.92rem;
