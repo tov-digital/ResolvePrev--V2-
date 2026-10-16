@@ -2145,10 +2145,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const diff = daysDiff(card.data_requerimento);
         if (diff === null) return false;
         switch (activeDateFilter) {
-          case 'menos365': return diff >= 0 && diff <= 365; // até 365 dias no futuro
-          case 'menos30':  return diff >= 0 && diff <= 30;  // até 30 dias no futuro
-          case 'menos7':   return diff >= 0 && diff <= 7;   // até 7 dias no futuro
-          case 'vencidos': return diff < 0;                  // data já passou
+          case 'vencidos': return diff < 0;                  // data já passou (Roxo)
+          case 'menos7':   return diff >= 0 && diff <= 7;   // em até uma semana (Vermelho)
+          case 'menos30':  return diff > 7 && diff <= 30;   // entre 8 e 30 dias (Amarelo)
+          case 'menos365': return diff > 30 && diff <= 365; // entre 31 e 365 dias (Azul)
           default: return true;
         }
       });
