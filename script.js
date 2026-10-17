@@ -988,15 +988,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (type === 'this_month') {
           mktFilterStartDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
           mktFilterEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-        } else if (type === 'last_30') {
-          mktFilterEndDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-          const past = new Date(now);
-          past.setDate(past.getDate() - 29);
-          past.setHours(0, 0, 0, 0);
-          mktFilterStartDate = past;
         } else if (type === 'this_year') {
           mktFilterStartDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
           mktFilterEndDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+        } else if (type === 'all_time') {
+          mktFilterStartDate = new Date(2020, 0, 1, 0, 0, 0, 0);
+          mktFilterEndDate = new Date(now.getFullYear() + 1, 11, 31, 23, 59, 59, 999);
         }
 
         mktSelectingStart = null;
@@ -1014,6 +1011,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Helper para buscar todos os registros superando o limite padrão de 1000 linhas do PostgREST/Supabase
+  async function fetchAllCrmRows(tableName, selectCols, startISO, endISO) {
+    if (!supabase) return [];
+    const PAGE_SIZE = 1000;
+    let from = 0;
+    let allRows = [];
+    while (true) {
+      let query = supabase
+        .from(tableName)
+        .select(selectCols)
+        .order('criado_em', { ascending: true })
+        .range(from, from + PAGE_SIZE - 1);
+
+      if (startISO) query = query.gte('criado_em', startISO);
+      if (endISO) query = query.lte('criado_em', endISO);
+
+      const { data, error } = await query;
+      if (error) {
+        console.warn(`Erro ao carregar linhas da tabela ${tableName}:`, error.message);
+        break;
+      }
+      if (!data || data.length === 0) break;
+      allRows.push(...data);
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    }
+    return allRows;
+  }
+
   // 3. Buscar Registros de Todas as 3 Tabelas no Período Selecionado
   async function loadMarketingDashboardData() {
     if (!supabase) return;
@@ -1028,37 +1054,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       const startISO = mktFilterStartDate.toISOString();
       const endISO = mktFilterEndDate.toISOString();
 
-      // Consultar as 3 tabelas no período baseado em criado_em
-      const [resOportunidades, resInsucessos, resOperacao] = await Promise.all([
-        supabase
-          .from('oportunidades_crm')
-          .select('id, status, criado_em')
-          .gte('criado_em', startISO)
-          .lte('criado_em', endISO),
-        supabase
-          .from('insucessos_crm')
-          .select('id, status, criado_em')
-          .gte('criado_em', startISO)
-          .lte('criado_em', endISO),
-        supabase
-          .from('operacao_crm')
-          .select('id, status, criado_em')
-          .gte('criado_em', startISO)
-          .lte('criado_em', endISO)
+      // Consultar as 3 tabelas no período baseado em criado_em com paginação completa
+      const [rowsOportunidades, rowsInsucessos, rowsOperacao] = await Promise.all([
+        fetchAllCrmRows('oportunidades_crm', 'id, status, criado_em', startISO, endISO),
+        fetchAllCrmRows('insucessos_crm', 'id, status, criado_em', startISO, endISO),
+        fetchAllCrmRows('operacao_crm', 'id, status, criado_em', startISO, endISO)
       ]);
-
-      const rowsOportunidades = resOportunidades.data || [];
-      const rowsInsucessos = resInsucessos.data || [];
-      const rowsOperacao = resOperacao.data || [];
 
       // Total de Leads = todas as linhas das 3 tabelas no período
       const allRows = [...rowsOportunidades, ...rowsInsucessos, ...rowsOperacao];
       const totalLeads = allRows.length;
 
-      // Qualificados = todas as linhas em que status não seja 'desqualificado'
+      // Qualificados = todas as linhas das 3 tabelas, exceto status 'planejamento' e 'desqualificado'
       const totalQualificados = allRows.filter(r => {
         const s = (r.status || '').toLowerCase().trim();
-        return s !== 'desqualificado';
+        return s !== 'desqualificado' && s !== 'planejamento';
       }).length;
 
       // 1. Investimento: ainda não conectado a base de dados -> 'R$ XX'
@@ -1155,29 +1165,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       const startYearISO = new Date(year, 0, 1, 0, 0, 0, 0).toISOString();
       const endYearISO = new Date(year, 11, 31, 23, 59, 59, 999).toISOString();
 
-      // Consultar registros de todo o ano selecionado nas 3 tabelas
-      const [resOp, resIns, resOpr] = await Promise.all([
-        supabase
-          .from('oportunidades_crm')
-          .select('status, criado_em')
-          .gte('criado_em', startYearISO)
-          .lte('criado_em', endYearISO),
-        supabase
-          .from('insucessos_crm')
-          .select('status, criado_em')
-          .gte('criado_em', startYearISO)
-          .lte('criado_em', endYearISO),
-        supabase
-          .from('operacao_crm')
-          .select('status, criado_em')
-          .gte('criado_em', startYearISO)
-          .lte('criado_em', endYearISO)
+      // Consultar registros de todo o ano selecionado nas 3 tabelas com paginação completa
+      const [rowsOp, rowsIns, rowsOpr] = await Promise.all([
+        fetchAllCrmRows('oportunidades_crm', 'status, criado_em', startYearISO, endYearISO),
+        fetchAllCrmRows('insucessos_crm', 'status, criado_em', startYearISO, endYearISO),
+        fetchAllCrmRows('operacao_crm', 'status, criado_em', startYearISO, endYearISO)
       ]);
 
       const allYearRows = [
-        ...(resOp.data || []),
-        ...(resIns.data || []),
-        ...(resOpr.data || [])
+        ...rowsOp,
+        ...rowsIns,
+        ...rowsOpr
       ];
 
       // Inicializar agregadores dos 12 meses (0 = Janeiro a 11 = Dezembro)
@@ -1191,7 +1189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (m >= 0 && m < 12) {
           monthlyLeads[m]++;
           const s = (row.status || '').toLowerCase().trim();
-          if (s !== 'desqualificado') {
+          if (s !== 'desqualificado' && s !== 'planejamento') {
             monthlyQualificados[m]++;
           }
         }
@@ -2723,11 +2721,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       query = query.eq('user_id', currentUserId);
     }
 
-    const { data: cards, error } = await query.order('criado_em', { ascending: false });
-
-    if (error) {
-      console.warn('Erro ao carregar oportunidades:', error.message);
-      return;
+    // Carrega todos os registros paginados (superando o limite de 1000 do Supabase)
+    const PAGE_SIZE = 1000;
+    let from = 0;
+    let cards = [];
+    while (true) {
+      let pageQuery = query.order('criado_em', { ascending: false }).range(from, from + PAGE_SIZE - 1);
+      const { data, error } = await pageQuery;
+      if (error) {
+        console.warn('Erro ao carregar oportunidades:', error.message);
+        break;
+      }
+      if (!data || data.length === 0) break;
+      cards.push(...data);
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
     }
 
     allUserCards = cards || [];
