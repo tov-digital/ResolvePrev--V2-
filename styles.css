@@ -5347,3 +5347,215 @@ a:hover,
   line-height: 1.45;
 }
 
+/* ==================== FUNIL DE PERFORMANCE COMERCIAL ==================== */
+.com-funnel-section {
+  background: #FFFFFF;
+  border: 1px solid #EDF2F7;
+  border-radius: 14px;
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+}
+
+.com-funnel-summary-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.85rem;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.com-funnel-summary-badge strong {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.com-funnel-container {
+  position: relative;
+  width: 100%;
+}
+
+.com-funnel-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  width: 100%;
+}
+
+.com-funnel-row {
+  display: grid;
+  grid-template-columns: 240px 1fr 140px;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.85rem 1rem;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  transition: all var(--transition-fast);
+}
+
+.com-funnel-row:hover {
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  transform: translateX(2px);
+}
+
+.com-funnel-label-col {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.com-funnel-sigla-tag {
+  width: 46px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.tag-car {
+  background-color: #EBF3FA;
+  color: #1E5080;
+  border: 1px solid rgba(30, 80, 128, 0.2);
+}
+
+.tag-cr {
+  background-color: #E0F2FE;
+  color: #0369A1;
+  border: 1px solid rgba(3, 105, 161, 0.2);
+}
+
+.tag-mbr {
+  background-color: #EDE9FE;
+  color: #6D28D9;
+  border: 1px solid rgba(109, 40, 217, 0.2);
+}
+
+.tag-sr {
+  background-color: #FEF3C7;
+  color: #B45309;
+  border: 1px solid rgba(180, 83, 9, 0.2);
+}
+
+.tag-clr {
+  background-color: #DCFCE7;
+  color: #15803D;
+  border: 1px solid rgba(21, 128, 61, 0.2);
+}
+
+.com-funnel-label-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.com-funnel-step-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-neutral);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.com-funnel-step-desc {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.com-funnel-bar-col {
+  width: 100%;
+}
+
+.com-funnel-track {
+  width: 100%;
+  height: 22px;
+  background-color: #E2E8F0;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.com-funnel-fill {
+  height: 100%;
+  border-radius: 12px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  min-width: 2px;
+}
+
+.fill-car {
+  background: linear-gradient(90deg, #1E5080, #2563EB);
+}
+
+.fill-cr {
+  background: linear-gradient(90deg, #0284C7, #38BDF8);
+}
+
+.fill-mbr {
+  background: linear-gradient(90deg, #7C3AED, #A78BFA);
+}
+
+.fill-sr {
+  background: linear-gradient(90deg, #D97706, #FBBF24);
+}
+
+.fill-clr {
+  background: linear-gradient(90deg, #059669, #34D399);
+}
+
+.com-funnel-metric-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 0.1rem;
+}
+
+.com-funnel-percent {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-neutral);
+  letter-spacing: -0.3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.com-funnel-ratio {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+  .com-funnel-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .com-funnel-metric-col {
+    align-items: flex-start;
+    text-align: left;
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+}
+

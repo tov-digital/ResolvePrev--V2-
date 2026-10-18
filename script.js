@@ -564,6 +564,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Métricas e Gráfico da Seção Marketing
       await loadMarketingDashboardData();
       await loadMarketingEvolucaoChart();
+
+      // Métricas e Funil da Seção Comercial
+      await loadCommercialDashboardData();
     } catch (e) {
       console.error('Erro ao carregar métricas admin:', e);
     }
@@ -1508,6 +1511,448 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderMarketingCalendar();
   setupMarketingDatePickerEvents();
   populateMarketingYearSelector();
+
+  /* ==========================================================================
+     MÓDULO COMERCIAL - DASHBOARD ADMIN (FUNIL DE PERFORMANCE)
+     ========================================================================== */
+
+  // Estado do Filtro de Período Comercial (Idêntico ao de Marketing)
+  const nowCom = new Date();
+  let comFilterStartDate = new Date(nowCom.getFullYear(), nowCom.getMonth(), 1);
+  let comFilterEndDate = new Date(nowCom.getFullYear(), nowCom.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  let comCalViewYear = nowCom.getFullYear();
+  let comCalViewMonth = nowCom.getMonth(); // 0-11
+  let comSelectingStart = null;
+  let comCalCurrentView = 'days'; // 'days' | 'months' | 'years'
+
+  function updateCommercialDateRangeDisplay() {
+    const displayEl = document.getElementById('comDateRangeDisplay');
+    if (displayEl) {
+      displayEl.textContent = `${formatShortDate(comFilterStartDate)} até ${formatShortDate(comFilterEndDate)}`;
+    }
+  }
+
+  function renderCommercialCalendar() {
+    const monthLabelEl = document.getElementById('comCalMonthLabel');
+    const yearLabelEl = document.getElementById('comCalYearLabel');
+    const monthBtn = document.getElementById('comCalMonthBtn');
+    const yearBtn = document.getElementById('comCalYearBtn');
+    const daysView = document.getElementById('comCalDaysView');
+    const monthsView = document.getElementById('comCalMonthsView');
+    const yearsView = document.getElementById('comCalYearsView');
+    const gridEl = document.getElementById('comCalendarGrid');
+
+    const monthNames = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    const monthShortNames = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+    ];
+
+    if (monthLabelEl) monthLabelEl.textContent = monthNames[comCalViewMonth];
+    if (yearLabelEl) yearLabelEl.textContent = comCalViewYear;
+
+    if (monthBtn) monthBtn.classList.toggle('active', comCalCurrentView === 'months');
+    if (yearBtn) yearBtn.classList.toggle('active', comCalCurrentView === 'years');
+
+    if (daysView) daysView.classList.toggle('hidden', comCalCurrentView !== 'days');
+    if (monthsView) monthsView.classList.toggle('hidden', comCalCurrentView !== 'months');
+    if (yearsView) yearsView.classList.toggle('hidden', comCalCurrentView !== 'years');
+
+    // Visão de Meses
+    if (comCalCurrentView === 'months' && monthsView) {
+      monthsView.innerHTML = '';
+      monthShortNames.forEach((shortName, idx) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'mkt-cal-picker-item';
+        if (idx === comCalViewMonth) item.classList.add('active');
+        item.textContent = shortName;
+        item.title = monthNames[idx];
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          comCalViewMonth = idx;
+          comCalCurrentView = 'days';
+          renderCommercialCalendar();
+        });
+        monthsView.appendChild(item);
+      });
+      return;
+    }
+
+    // Visão de Anos
+    if (comCalCurrentView === 'years' && yearsView) {
+      yearsView.innerHTML = '';
+      const currentYear = new Date().getFullYear();
+      const startYear = Math.min(2020, comCalViewYear - 4);
+      const endYear = Math.max(currentYear + 2, comCalViewYear + 4);
+
+      for (let y = startYear; y <= endYear; y++) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'mkt-cal-picker-item';
+        if (y === comCalViewYear) item.classList.add('active');
+        item.textContent = y;
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          comCalViewYear = y;
+          comCalCurrentView = 'days';
+          renderCommercialCalendar();
+        });
+        yearsView.appendChild(item);
+      }
+      return;
+    }
+
+    // Visão de Dias
+    if (!gridEl) return;
+    gridEl.innerHTML = '';
+
+    const firstDayDate = new Date(comCalViewYear, comCalViewMonth, 1);
+    let startDayIndex = firstDayDate.getDay() - 1;
+    if (startDayIndex === -1) startDayIndex = 6;
+
+    const daysInMonth = new Date(comCalViewYear, comCalViewMonth + 1, 0).getDate();
+
+    for (let i = 0; i < startDayIndex; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'mkt-cal-day empty';
+      gridEl.appendChild(emptyCell);
+    }
+
+    const startISO = formatISODate(comFilterStartDate);
+    const endISO = formatISODate(comFilterEndDate);
+    const selStartISO = comSelectingStart ? formatISODate(comSelectingStart) : null;
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cellDate = new Date(comCalViewYear, comCalViewMonth, d);
+      const cellISO = formatISODate(cellDate);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mkt-cal-day';
+      btn.textContent = d;
+      btn.dataset.date = cellISO;
+
+      if (!comSelectingStart) {
+        const isStart = cellISO === startISO;
+        const isEnd = cellISO === endISO;
+        const inRange = cellISO >= startISO && cellISO <= endISO;
+
+        if (inRange) btn.classList.add('in-range');
+        if (isStart) btn.classList.add('range-start');
+        if (isEnd) btn.classList.add('range-end');
+      } else {
+        if (cellISO === selStartISO) {
+          btn.classList.add('range-start', 'range-end');
+        }
+      }
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleCommercialCalendarDayClick(cellDate);
+      });
+
+      gridEl.appendChild(btn);
+    }
+  }
+
+  async function handleCommercialCalendarDayClick(date) {
+    if (!comSelectingStart) {
+      comSelectingStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      renderCommercialCalendar();
+    } else {
+      let d1 = comSelectingStart;
+      let d2 = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+      if (d1 > d2) {
+        const tmp = d1;
+        d1 = d2;
+        d2 = tmp;
+      }
+
+      comFilterStartDate = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate(), 0, 0, 0, 0);
+      comFilterEndDate = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate(), 23, 59, 59, 999);
+      comSelectingStart = null;
+      comCalCurrentView = 'days';
+
+      updateCommercialDateRangeDisplay();
+      renderCommercialCalendar();
+
+      const dropdown = document.getElementById('comDatePickerDropdown');
+      const wrapper = document.getElementById('comDatePickerWrapper');
+      if (dropdown) dropdown.classList.add('hidden');
+      if (wrapper) wrapper.classList.remove('open');
+
+      await loadCommercialDashboardData();
+    }
+  }
+
+  function setupCommercialDatePickerEvents() {
+    const trigger = document.getElementById('comDatePickerTrigger');
+    const dropdown = document.getElementById('comDatePickerDropdown');
+    const wrapper = document.getElementById('comDatePickerWrapper');
+    const btnPrev = document.getElementById('comCalPrevMonth');
+    const btnNext = document.getElementById('comCalNextMonth');
+    const monthBtn = document.getElementById('comCalMonthBtn');
+    const yearBtn = document.getElementById('comCalYearBtn');
+
+    if (monthBtn) {
+      monthBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        comCalCurrentView = (comCalCurrentView === 'months') ? 'days' : 'months';
+        renderCommercialCalendar();
+      });
+    }
+
+    if (yearBtn) {
+      yearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        comCalCurrentView = (comCalCurrentView === 'years') ? 'days' : 'years';
+        renderCommercialCalendar();
+      });
+    }
+
+    if (trigger && dropdown) {
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = dropdown.classList.contains('hidden');
+        if (isHidden) {
+          dropdown.classList.remove('hidden');
+          if (wrapper) wrapper.classList.add('open');
+          comCalViewYear = comFilterStartDate.getFullYear();
+          comCalViewMonth = comFilterStartDate.getMonth();
+          comSelectingStart = null;
+          comCalCurrentView = 'days';
+          renderCommercialCalendar();
+        } else {
+          dropdown.classList.add('hidden');
+          if (wrapper) wrapper.classList.remove('open');
+          comCalCurrentView = 'days';
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (wrapper && !wrapper.contains(e.target)) {
+          dropdown.classList.add('hidden');
+          wrapper.classList.remove('open');
+          comSelectingStart = null;
+          comCalCurrentView = 'days';
+        }
+      });
+    }
+
+    if (btnPrev) {
+      btnPrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (comCalCurrentView === 'years') {
+          comCalViewYear -= 9;
+        } else if (comCalCurrentView === 'months') {
+          comCalViewYear--;
+        } else {
+          comCalViewMonth--;
+          if (comCalViewMonth < 0) {
+            comCalViewMonth = 11;
+            comCalViewYear--;
+          }
+        }
+        renderCommercialCalendar();
+      });
+    }
+
+    if (btnNext) {
+      btnNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (comCalCurrentView === 'years') {
+          comCalViewYear += 9;
+        } else if (comCalCurrentView === 'months') {
+          comCalViewYear++;
+        } else {
+          comCalViewMonth++;
+          if (comCalViewMonth > 11) {
+            comCalViewMonth = 0;
+            comCalViewYear++;
+          }
+        }
+        renderCommercialCalendar();
+      });
+    }
+
+    const quickBtns = document.querySelectorAll('.com-cal-quick-btn');
+    quickBtns.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const type = btn.dataset.range;
+        const now = new Date();
+
+        if (type === 'this_month') {
+          comFilterStartDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+          comFilterEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        } else if (type === 'this_year') {
+          comFilterStartDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+          comFilterEndDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+        } else if (type === 'all_time') {
+          comFilterStartDate = new Date(2020, 0, 1, 0, 0, 0, 0);
+          comFilterEndDate = new Date(now.getFullYear() + 1, 11, 31, 23, 59, 59, 999);
+        }
+
+        comSelectingStart = null;
+        comCalViewYear = comFilterStartDate.getFullYear();
+        comCalViewMonth = comFilterStartDate.getMonth();
+        comCalCurrentView = 'days';
+
+        updateCommercialDateRangeDisplay();
+        renderCommercialCalendar();
+
+        if (dropdown) dropdown.classList.add('hidden');
+        if (wrapper) wrapper.classList.remove('open');
+
+        await loadCommercialDashboardData();
+      });
+    });
+  }
+
+  // Carregar e calcular métricas do Funil de Performance Comercial
+  async function loadCommercialDashboardData() {
+    if (!supabase) return;
+
+    const loadingOverlay = document.getElementById('comFunnelLoadingState');
+    const totalLeadsBadge = document.getElementById('comFunnelLeadsCount');
+
+    const fillCAR = document.getElementById('funnelFillCAR');
+    const valCAR = document.getElementById('funnelValCAR');
+    const ratioCAR = document.getElementById('funnelRatioCAR');
+
+    const fillCR = document.getElementById('funnelFillCR');
+    const valCR = document.getElementById('funnelValCR');
+    const ratioCR = document.getElementById('funnelRatioCR');
+
+    const fillMBR = document.getElementById('funnelFillMBR');
+    const valMBR = document.getElementById('funnelValMBR');
+    const ratioMBR = document.getElementById('funnelRatioMBR');
+
+    const fillSR = document.getElementById('funnelFillSR');
+    const valSR = document.getElementById('funnelValSR');
+    const ratioSR = document.getElementById('funnelRatioSR');
+
+    const fillCLR = document.getElementById('funnelFillCLR');
+    const valCLR = document.getElementById('funnelValCLR');
+    const ratioCLR = document.getElementById('funnelRatioCLR');
+
+    if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+
+    try {
+      const startISO = comFilterStartDate.toISOString();
+      const endISO = comFilterEndDate.toISOString();
+
+      // Buscar registros das 3 tabelas no período selecionado (baseado estritamente em criado_em)
+      const [rowsOp, rowsIns, rowsOpr] = await Promise.all([
+        fetchAllCrmRows('oportunidades_crm', 'id, status, criado_em', startISO, endISO),
+        fetchAllCrmRows('insucessos_crm', 'id, status, criado_em', startISO, endISO),
+        fetchAllCrmRows('operacao_crm', 'id, status, criado_em', startISO, endISO)
+      ]);
+
+      // Unir todas as linhas das 3 tabelas
+      const rawRows = [...rowsOp, ...rowsIns, ...rowsOpr];
+
+      // Regra obrigatória: 'desqualificado' e 'planejamento' devem ser totalmente desconsiderados de qualquer cálculo
+      const validRows = rawRows.filter(r => {
+        const s = (r.status || '').toLowerCase().trim();
+        return s !== 'desqualificado' && s !== 'planejamento';
+      });
+
+      // Total de leads válidos no período
+      const totalLeads = validRows.length;
+      if (totalLeadsBadge) totalLeadsBadge.textContent = totalLeads.toLocaleString('pt-BR');
+
+      // Helper para checar status
+      const getStatus = (r) => (r.status || '').toLowerCase().trim();
+
+      // 1. CAR (Contact Attempt Rate):
+      // Numerador: leads com qualquer status diferente de "novo"
+      // Denominador: total de leads
+      const leadsNotNovo = validRows.filter(r => getStatus(r) !== 'novo');
+      const numCAR = leadsNotNovo.length;
+      const denCAR = totalLeads;
+      const pctCAR = denCAR > 0 ? (numCAR / denCAR) * 100 : 0;
+
+      // 2. CR (Contact Rate):
+      // Numerador: leads com status diferente de "novo" e "qualificacao"
+      // Denominador: leads com status diferente de "novo" (leadsNotNovo)
+      const leadsEffectiveContact = validRows.filter(r => {
+        const s = getStatus(r);
+        return s !== 'novo' && s !== 'qualificacao';
+      });
+      const numCR = leadsEffectiveContact.length;
+      const denCR = numCAR;
+      const pctCR = denCR > 0 ? (numCR / denCR) * 100 : 0;
+
+      // 3. MBR (Meeting Booking Rate):
+      // Numerador: leads com status diferente de "novo", "qualificacao", "acompanhamento" e "recuperacao"
+      // Denominador: leads com status diferente de "novo" e "qualificacao" (leadsEffectiveContact)
+      const excludeMBR = ['novo', 'qualificacao', 'acompanhamento', 'recuperacao'];
+      const leadsBookedMeeting = validRows.filter(r => !excludeMBR.includes(getStatus(r)));
+      const numMBR = leadsBookedMeeting.length;
+      const denMBR = numCR;
+      const pctMBR = denMBR > 0 ? (numMBR / denMBR) * 100 : 0;
+
+      // 4. SR (Show Rate):
+      // Numerador: ((leads com status diferente de "novo", "qualificacao", "acompanhamento" e "recuperacao") - leads com status "no_show")
+      // Denominador: leads com status diferente de "novo", "qualificacao", "acompanhamento" e "recuperacao" (leadsBookedMeeting)
+      const leadsNoShow = validRows.filter(r => getStatus(r) === 'no_show');
+      const numNoShow = leadsNoShow.length;
+      const denSR = numMBR; // leads com status diferente de "novo", "qualificacao", "acompanhamento" e "recuperacao"
+      const numSR = Math.max(0, denSR - numNoShow);
+      const pctSR = denSR > 0 ? (numSR / denSR) * 100 : 0;
+
+      // 5. CLR (Close Rate):
+      // Numerador: total de registros em "operacao_crm"
+      // Denominador: total de SR (leads que compareceram: numSR)
+      const validOperacaoRows = rowsOpr.filter(r => {
+        const s = (r.status || '').toLowerCase().trim();
+        return s !== 'desqualificado' && s !== 'planejamento';
+      });
+      const numCLR = validOperacaoRows.length;
+      const denCLR = numSR; // Total de comparecimentos (SR)
+      const pctCLR = denCLR > 0 ? (numCLR / denCLR) * 100 : 0;
+
+      // Formatação e Renderização no DOM
+      const formatPct = (val) => `${val.toFixed(1).replace('.', ',')}%`;
+
+      if (valCAR) valCAR.textContent = formatPct(pctCAR);
+      if (ratioCAR) ratioCAR.textContent = `${numCAR.toLocaleString('pt-BR')} / ${denCAR.toLocaleString('pt-BR')}`;
+      if (fillCAR) fillCAR.style.width = `${Math.min(100, Math.max(0, pctCAR))}%`;
+
+      if (valCR) valCR.textContent = formatPct(pctCR);
+      if (ratioCR) ratioCR.textContent = `${numCR.toLocaleString('pt-BR')} / ${denCR.toLocaleString('pt-BR')}`;
+      if (fillCR) fillCR.style.width = `${Math.min(100, Math.max(0, pctCR))}%`;
+
+      if (valMBR) valMBR.textContent = formatPct(pctMBR);
+      if (ratioMBR) ratioMBR.textContent = `${numMBR.toLocaleString('pt-BR')} / ${denMBR.toLocaleString('pt-BR')}`;
+      if (fillMBR) fillMBR.style.width = `${Math.min(100, Math.max(0, pctMBR))}%`;
+
+      if (valSR) valSR.textContent = formatPct(pctSR);
+      if (ratioSR) ratioSR.textContent = `${numSR.toLocaleString('pt-BR')} / ${denSR.toLocaleString('pt-BR')}`;
+      if (fillSR) fillSR.style.width = `${Math.min(100, Math.max(0, pctSR))}%`;
+
+      if (valCLR) valCLR.textContent = formatPct(pctCLR);
+      if (ratioCLR) ratioCLR.textContent = `${numCLR.toLocaleString('pt-BR')} / ${denCLR.toLocaleString('pt-BR')}`;
+      if (fillCLR) fillCLR.style.width = `${Math.min(100, Math.max(0, pctCLR))}%`;
+
+    } catch (err) {
+      console.error('Erro ao carregar dados do funil comercial:', err);
+    } finally {
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    }
+  }
+
+  // Inicializar Datepicker e Funil Comercial ao carregar
+  updateCommercialDateRangeDisplay();
+  renderCommercialCalendar();
+  setupCommercialDatePickerEvents();
 
   // 2. Aba Usuários - Tabela de Usuários e Ações
   async function loadAdminUsersTable(query = '') {

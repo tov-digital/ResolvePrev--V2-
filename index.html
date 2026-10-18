@@ -2174,14 +2174,201 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
               <h3 class="admin-area-title">Desempenho Comercial</h3>
               <p class="admin-area-subtitle">Gestão do funil de vendas, reuniões, propostas e conversão comercial</p>
             </div>
+
+            <!-- Filtro de Período Comercial (Idêntico ao de Marketing) -->
+            <div class="mkt-datepicker-wrapper" id="comDatePickerWrapper">
+              <button type="button" class="mkt-datepicker-trigger" id="comDatePickerTrigger" aria-haspopup="dialog" aria-expanded="false">
+                <div class="mkt-datepicker-trigger-icon">
+                  <i class="ti ti-calendar-event"></i>
+                </div>
+                <div class="mkt-datepicker-trigger-info">
+                  <span class="mkt-datepicker-trigger-label">Período</span>
+                  <span class="mkt-datepicker-trigger-value" id="comDateRangeDisplay">Carregando...</span>
+                </div>
+                <i class="ti ti-chevron-down mkt-datepicker-chevron"></i>
+              </button>
+
+              <!-- Dropdown do Calendário com Seleção de Intervalo -->
+              <div class="mkt-datepicker-dropdown hidden" id="comDatePickerDropdown">
+                <div class="mkt-calendar-header">
+                  <button type="button" class="mkt-cal-nav-btn" id="comCalPrevMonth" title="Anterior">
+                    <i class="ti ti-chevron-left"></i>
+                  </button>
+                  <div class="mkt-cal-header-selectors">
+                    <button type="button" class="mkt-cal-title-btn" id="comCalMonthBtn" title="Escolher mês">
+                      <span id="comCalMonthLabel">Outubro</span>
+                      <i class="ti ti-chevron-down mkt-cal-title-icon"></i>
+                    </button>
+                    <button type="button" class="mkt-cal-title-btn" id="comCalYearBtn" title="Escolher ano">
+                      <span id="comCalYearLabel">2026</span>
+                      <i class="ti ti-chevron-down mkt-cal-title-icon"></i>
+                    </button>
+                  </div>
+                  <button type="button" class="mkt-cal-nav-btn" id="comCalNextMonth" title="Próximo">
+                    <i class="ti ti-chevron-right"></i>
+                  </button>
+                </div>
+
+                <!-- Visão Principal: Dias do Mês -->
+                <div class="mkt-cal-view-days" id="comCalDaysView">
+                  <div class="mkt-calendar-weekdays">
+                    <span>Seg</span>
+                    <span>Ter</span>
+                    <span>Qua</span>
+                    <span>Qui</span>
+                    <span>Sex</span>
+                    <span>Sáb</span>
+                    <span>Dom</span>
+                  </div>
+                  <div class="mkt-calendar-grid" id="comCalendarGrid">
+                    <!-- Dias renderizados via JS -->
+                  </div>
+                </div>
+
+                <!-- Visão Alternativa: Seleção de Mês -->
+                <div class="mkt-cal-view-months hidden" id="comCalMonthsView"></div>
+
+                <!-- Visão Alternativa: Seleção de Ano -->
+                <div class="mkt-cal-view-years hidden" id="comCalYearsView"></div>
+
+                <div class="mkt-calendar-footer">
+                  <div class="mkt-calendar-quick-actions">
+                    <button type="button" class="com-cal-quick-btn mkt-cal-quick-btn" data-range="this_month">Este Mês</button>
+                    <button type="button" class="com-cal-quick-btn mkt-cal-quick-btn" data-range="this_year">Este Ano</button>
+                    <button type="button" class="com-cal-quick-btn mkt-cal-quick-btn" data-range="all_time">Sempre</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="admin-placeholder-box">
-            <div class="admin-placeholder-icon">
-              <i class="ti ti-chart-arrows"></i>
+          <!-- Card do Funil de Performance Comercial -->
+          <div class="admin-section-box com-funnel-section">
+            <div class="admin-chart-header">
+              <div class="chart-header-info">
+                <div class="chart-badge">
+                  <i class="ti ti-filter"></i>
+                  <span>Funil de Vendas</span>
+                </div>
+                <h3>Funil de Performance Comercial</h3>
+                <p>Taxas de conversão progressivas calculadas estritamente no período selecionado</p>
+              </div>
+              <div class="com-funnel-summary-badge" id="comFunnelTotalLeadsBadge">
+                <i class="ti ti-users"></i>
+                <span>Total no Período: <strong id="comFunnelLeadsCount">0</strong> leads</span>
+              </div>
             </div>
-            <h4>Área Comercial em Preparação</h4>
-            <p>Os indicadores de funil, propostas aceitas e taxas de conversão de vendas serão disponibilizados nesta seção.</p>
+
+            <div class="com-funnel-container" id="comFunnelContainer">
+              <!-- Loading overlay -->
+              <div id="comFunnelLoadingState" class="chart-loading-overlay hidden">
+                <div class="chart-spinner"></div>
+                <span>Calculando métricas do funil...</span>
+              </div>
+
+              <!-- Etapas do Funil -->
+              <div class="com-funnel-stages">
+                <!-- 1. CAR -->
+                <div class="com-funnel-row">
+                  <div class="com-funnel-label-col">
+                    <div class="com-funnel-sigla-tag tag-car">CAR</div>
+                    <div class="com-funnel-label-info">
+                      <span class="com-funnel-step-name">Contact Attempt Rate</span>
+                      <span class="com-funnel-step-desc">Tentativa de contato realizada</span>
+                    </div>
+                  </div>
+                  <div class="com-funnel-bar-col">
+                    <div class="com-funnel-track">
+                      <div class="com-funnel-fill fill-car" id="funnelFillCAR" style="width: 0%;"></div>
+                    </div>
+                  </div>
+                  <div class="com-funnel-metric-col">
+                    <span class="com-funnel-percent" id="funnelValCAR">0,0%</span>
+                    <span class="com-funnel-ratio" id="funnelRatioCAR">0 / 0</span>
+                  </div>
+                </div>
+
+                <!-- 2. CR -->
+                <div class="com-funnel-row">
+                  <div class="com-funnel-label-col">
+                    <div class="com-funnel-sigla-tag tag-cr">CR</div>
+                    <div class="com-funnel-label-info">
+                      <span class="com-funnel-step-name">Contact Rate</span>
+                      <span class="com-funnel-step-desc">Contato efetivo estabelecido</span>
+                    </div>
+                  </div>
+                  <div class="com-funnel-bar-col">
+                    <div class="com-funnel-track">
+                      <div class="com-funnel-fill fill-cr" id="funnelFillCR" style="width: 0%;"></div>
+                    </div>
+                  </div>
+                  <div class="com-funnel-metric-col">
+                    <span class="com-funnel-percent" id="funnelValCR">0,0%</span>
+                    <span class="com-funnel-ratio" id="funnelRatioCR">0 / 0</span>
+                  </div>
+                </div>
+
+                <!-- 3. MBR -->
+                <div class="com-funnel-row">
+                  <div class="com-funnel-label-col">
+                    <div class="com-funnel-sigla-tag tag-mbr">MBR</div>
+                    <div class="com-funnel-label-info">
+                      <span class="com-funnel-step-name">Meeting Booking Rate</span>
+                      <span class="com-funnel-step-desc">Reuniões agendadas com sucesso</span>
+                    </div>
+                  </div>
+                  <div class="com-funnel-bar-col">
+                    <div class="com-funnel-track">
+                      <div class="com-funnel-fill fill-mbr" id="funnelFillMBR" style="width: 0%;"></div>
+                    </div>
+                  </div>
+                  <div class="com-funnel-metric-col">
+                    <span class="com-funnel-percent" id="funnelValMBR">0,0%</span>
+                    <span class="com-funnel-ratio" id="funnelRatioMBR">0 / 0</span>
+                  </div>
+                </div>
+
+                <!-- 4. SR -->
+                <div class="com-funnel-row">
+                  <div class="com-funnel-label-col">
+                    <div class="com-funnel-sigla-tag tag-sr">SR</div>
+                    <div class="com-funnel-label-info">
+                      <span class="com-funnel-step-name">Show Rate</span>
+                      <span class="com-funnel-step-desc">Comparecimento em reuniões agendadas</span>
+                    </div>
+                  </div>
+                  <div class="com-funnel-bar-col">
+                    <div class="com-funnel-track">
+                      <div class="com-funnel-fill fill-sr" id="funnelFillSR" style="width: 0%;"></div>
+                    </div>
+                  </div>
+                  <div class="com-funnel-metric-col">
+                    <span class="com-funnel-percent" id="funnelValSR">0,0%</span>
+                    <span class="com-funnel-ratio" id="funnelRatioSR">0 / 0</span>
+                  </div>
+                </div>
+
+                <!-- 5. CLR -->
+                <div class="com-funnel-row">
+                  <div class="com-funnel-label-col">
+                    <div class="com-funnel-sigla-tag tag-clr">CLR</div>
+                    <div class="com-funnel-label-info">
+                      <span class="com-funnel-step-name">Close Rate</span>
+                      <span class="com-funnel-step-desc">Convertidos na Operação</span>
+                    </div>
+                  </div>
+                  <div class="com-funnel-bar-col">
+                    <div class="com-funnel-track">
+                      <div class="com-funnel-fill fill-clr" id="funnelFillCLR" style="width: 0%;"></div>
+                    </div>
+                  </div>
+                  <div class="com-funnel-metric-col">
+                    <span class="com-funnel-percent" id="funnelValCLR">0,0%</span>
+                    <span class="com-funnel-ratio" id="funnelRatioCLR">0 / 0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
