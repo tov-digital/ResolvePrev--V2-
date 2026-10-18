@@ -5274,13 +5274,10 @@ a:hover,
 }
 
 .chart-select-input {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
   background: #F8FAFC;
   border: 1px solid #CBD5E1;
   border-radius: 8px;
-  padding: 0.4rem 2rem 0.4rem 0.75rem;
+  padding: 0.4rem 0.85rem 0.4rem 0.75rem;
   font-family: var(--font-family);
   font-size: 0.82rem;
   font-weight: 600;
