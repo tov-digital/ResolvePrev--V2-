@@ -817,7 +817,6 @@ var(--border); flex-shrink: 0;">
         
      
         <div style="display:flex; gap:4px; height:40px; align-items:center; color:var(--text-secondary); font-size:18px;">
-          <i class="ti ti-trash danger-action header-action-icon" id="sheetDeleteBtn" aria-label="Excluir" style="cursor: pointer;" title="Excluir Oportunidade"></i>
           <i class="ti ti-x header-action-icon" id="closeClientSheetModal" aria-label="Fechar" style="cursor: pointer;" title="Fechar Ficha"></i>
         </div>
       </div>
@@ -831,6 +830,58 @@ var(--border); flex-shrink: 0;">
             <input type="text" id="sheetClientNameInput" value="Antônio José Real" style="margin:0; font-size:20px; font-weight:bold; color:var(--text-accent); line-height:1.2; width: 100%; border: none; background: transparent; outline: none; padding: 0;" placeholder="Nome completo do cliente">
           </div>
           
+          <!-- Botão e Dropdown Encerrar / Insucesso -->
+          <div class="close-lead-dropdown-wrapper" id="closeLeadDropdownWrapper">
+            <button type="button" class="close-lead-btn" id="sheetCloseLeadBtn" title="Encerrar lead" aria-label="Encerrar lead">
+              <i class="ti ti-circle-x"></i>
+            </button>
+            <div class="close-lead-menu hidden" id="closeLeadMenu">
+              <div class="close-lead-header">Marcar como insucesso</div>
+              
+              <button type="button" class="close-lead-option" data-action-label="Recuperação" data-action-value="recuperacao">
+                <div class="close-lead-info">
+                  <span class="close-lead-title">Recuperação</span>
+                  <span class="close-lead-desc">Nunca nos atendeu</span>
+                </div>
+              </button>
+
+              <button type="button" class="close-lead-option" data-action-label="No-Show" data-action-value="no_show">
+                <div class="close-lead-info">
+                  <span class="close-lead-title">No-Show</span>
+                  <span class="close-lead-desc">Faltou à reunião</span>
+                </div>
+              </button>
+
+              <button type="button" class="close-lead-option" data-action-label="Recusado" data-action-value="recusado">
+                <div class="close-lead-info">
+                  <span class="close-lead-title">Recusado</span>
+                  <span class="close-lead-desc">Lead não quis seguir</span>
+                </div>
+              </button>
+
+              <button type="button" class="close-lead-option" data-action-label="Triagem" data-action-value="negado">
+                <div class="close-lead-info">
+                  <span class="close-lead-title">Triagem</span>
+                  <span class="close-lead-desc">Validar demanda judicial</span>
+                </div>
+              </button>
+
+              <button type="button" class="close-lead-option" data-action-label="Desqualificado" data-action-value="desqualificado">
+                <div class="close-lead-info">
+                  <span class="close-lead-title">Desqualificado</span>
+                  <span class="close-lead-desc">Não atende aos critérios</span>
+                </div>
+              </button>
+
+              <div class="close-lead-divider"></div>
+
+              <button type="button" class="close-lead-delete-option" id="closeLeadDeleteBtn">
+                <i class="ti ti-trash"></i>
+                <span>Deletar card</span>
+              </button>
+            </div>
+          </div>
+
           <div class="status-dropdown-wrapper" style="position: relative;">
             <button id="sheetStatusDropdownBtn" style="display:flex; align-items:center; gap:6px; background:var(--surface-1); color:var(--color-primary); height:36px; padding:6px 12px; border-radius:var(--radius); font-size:13px; font-weight:500; border: 1px solid var(--border); cursor: pointer;">
               <span class="status-tag-dot" id="sheetStatusDot" style="display:inline-block; margin-right:2px;"></span>
@@ -1813,12 +1864,12 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
             <line x1="14" y1="11" x2="14" y2="17"/>
           </svg>
         </div>
-        <h3>Excluir Oportunidade?</h3>
-        <p>Esta ação não poderá ser desfeita.</p>
+        <h3>Deletar card?</h3>
+        <p>Deseja realmente deletar o card de <strong id="deleteCardName">este cliente</strong>? Esta ação não poderá ser desfeita.</p>
       </div>
       <div class="modal-actions-row">
-        <button id="cancelDeleteBtn" class="btn-modal-cancel">Cancelar</button>
-        <button id="confirmDeleteBtn" class="btn-modal-danger">Excluir</button>
+        <button id="cancelDeleteBtn" class="btn-modal-cancel">Não</button>
+        <button id="confirmDeleteBtn" class="btn-modal-danger">Sim</button>
       </div>
     </div>
   </div>

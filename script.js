@@ -4803,8 +4803,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   function openDeleteModal(card, cardElement) {
     cardToDelete = card;
     cardElementToDelete = cardElement;
-    if (deleteOptionsCardName) deleteOptionsCardName.textContent = card.nome ? `"${card.nome}"` : 'este cliente';
-    if (modalDeleteOptions) modalDeleteOptions.classList.remove('hidden');
+    if (deleteCardName) deleteCardName.textContent = card.nome ? `"${card.nome}"` : 'este cliente';
+    if (modalDeleteConfirm) modalDeleteConfirm.classList.remove('hidden');
   }
 
   function closeDeleteOptionsModalFn() {
@@ -6792,17 +6792,62 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Ação de Lixeira dentro da Ficha do Cliente
-  if (sheetDeleteBtn) {
-    sheetDeleteBtn.addEventListener('click', () => {
-      if (currentActiveCard) {
-        const cardToDel = currentActiveCard;
-        const cardEl = document.querySelector(`.kanban-card[data-id="${cardToDel.id}"]`);
-        closeClientSheet();
-        openDeleteModal(cardToDel, cardEl);
-      }
+  // Botão e Dropdown Encerrar (Insucesso / Deletar Card)
+  const sheetCloseLeadBtn = document.getElementById('sheetCloseLeadBtn');
+  const closeLeadMenu = document.getElementById('closeLeadMenu');
+  const closeLeadDropdownWrapper = document.getElementById('closeLeadDropdownWrapper');
+  const closeLeadDeleteBtn = document.getElementById('closeLeadDeleteBtn');
+
+  if (sheetCloseLeadBtn && closeLeadMenu) {
+    sheetCloseLeadBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeLeadMenu.classList.toggle('hidden');
     });
   }
+
+  // Opções de insucesso (Desqualificado, Recusado, Recuperação, No-Show, Negado)
+  document.querySelectorAll('.close-lead-option').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (closeLeadMenu) closeLeadMenu.classList.add('hidden');
+      if (!currentActiveCard) return;
+
+      const actionLabel = btn.dataset.actionLabel;
+      const actionValue = btn.dataset.actionValue;
+      const targetCard = currentActiveCard;
+      const cardEl = document.querySelector(`.kanban-card[data-id="${targetCard.id}"]`);
+
+      closeClientSheet();
+      cardToDelete = targetCard;
+      cardElementToDelete = cardEl;
+      requestStatusChangeConfirmation(actionLabel, actionValue);
+    });
+  });
+
+  // Opção de Deletar card direto do dropdown Encerrar
+  if (closeLeadDeleteBtn) {
+    closeLeadDeleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (closeLeadMenu) closeLeadMenu.classList.add('hidden');
+      if (!currentActiveCard) return;
+
+      const targetCard = currentActiveCard;
+      const cardEl = document.querySelector(`.kanban-card[data-id="${targetCard.id}"]`);
+
+      closeClientSheet();
+      cardToDelete = targetCard;
+      cardElementToDelete = cardEl;
+      if (deleteCardName) deleteCardName.textContent = `"${targetCard.nome}"`;
+      if (modalDeleteConfirm) modalDeleteConfirm.classList.remove('hidden');
+    });
+  }
+
+  // Fechar dropdown de Encerrar ao clicar fora
+  window.addEventListener('click', (e) => {
+    if (closeLeadMenu && !e.target.closest('#closeLeadDropdownWrapper')) {
+      closeLeadMenu.classList.add('hidden');
+    }
+  });
 
   // Ação de Atribuição a Outro Usuário (Dropdown estilo Print)
   const modalReassignUser = document.getElementById('modalReassignUser');
