@@ -2963,58 +2963,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await fetchFinancialRecords();
       }
 
-      // Regra: Mudar automaticamente para 'Atrasado' qualquer linha que estiver como 'Pendente' quando ultrapassar a 'data'
-      // Atenção: Apenas se o status ainda for 'Pendente' e o usuário não tiver acabado de alterar
-      const hojeISO = new Date().toISOString().split('T')[0];
-      const itensParaAtualizarAtrasado = [];
-
-      financialItems.forEach(item => {
-        let st = item.status || 'Pendente';
-        if (st === 'A Pagar') st = 'Pendente';
-
-        // Só converte automaticamente para Atrasado se estiver Pendente e a data for anterior a hoje,
-        // a não ser que tenha sido marcado como Pendente manualmente (item._manualStatus)
-        if (st === 'Pendente' && item.data && !item._manualPending) {
-          const itemDateISO = item.data.includes('T') ? item.data.split('T')[0] : item.data;
-          if (itemDateISO < hojeISO) {
-            item.status = 'Atrasado';
-            itensParaAtualizarAtrasado.push(item);
-          }
-        }
-      });
-
-      // Se houver itens alterados para Atrasado, persistir no Supabase e localStorage
-      if (itensParaAtualizarAtrasado.length > 0) {
-        itensParaAtualizarAtrasado.forEach(async (it) => {
-          if (supabase && !it.id.startsWith('rec_') && !it.id.startsWith('desp_')) {
-            try {
-              await supabase.from('financeiro').update({ status: 'Atrasado' }).eq('id', it.id);
-            } catch (err) {
-              console.warn('Erro ao atualizar status atrasado no Supabase:', err);
-            }
-          }
-        });
-
-        // Persistir no localStorage
-        try {
-          const rawRec = localStorage.getItem(STORAGE_KEY_RECEITAS);
-          if (rawRec) {
-            const listRec = JSON.parse(rawRec);
-            listRec.forEach(r => {
-              if (itensParaAtualizarAtrasado.some(a => a.id === r.id)) r.status = 'Atrasado';
-            });
-            localStorage.setItem(STORAGE_KEY_RECEITAS, JSON.stringify(listRec));
-          }
-          const rawDesp = localStorage.getItem(STORAGE_KEY_DESPESAS);
-          if (rawDesp) {
-            const listDesp = JSON.parse(rawDesp);
-            listDesp.forEach(d => {
-              if (itensParaAtualizarAtrasado.some(a => a.id === d.id)) d.status = 'Atrasado';
-            });
-            localStorage.setItem(STORAGE_KEY_DESPESAS, JSON.stringify(listDesp));
-          }
-        } catch (e) {}
-      }
+      // Observação: O status definido (Pendente, Pago ou Atrasado) é respeitado conforme registrado no banco/localStorage
 
       // Filtrar pelo período selecionado no calendário
       const startISO = formatISODate(finFilterStartDate);
@@ -3442,11 +3391,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (item) {
           const nextStatus = getNextStatus(item.status);
           item.status = nextStatus;
-          if (nextStatus === 'Pendente') {
-            item._manualPending = true;
-          } else {
-            delete item._manualPending;
-          }
 
           // Atualizar no Supabase
           if (supabase && !String(id).startsWith('rec_') && !String(id).startsWith('desp_')) {
