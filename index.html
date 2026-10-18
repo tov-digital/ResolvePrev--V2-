@@ -2625,7 +2625,7 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
                     <th>Categoria</th>
                     <th>Data</th>
                     <th>Valor</th>
-                    <th>Status</th>
+                    <th class="fin-table-status-th">Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -2665,7 +2665,7 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
                     <th>Categoria</th>
                     <th>Data</th>
                     <th>Valor</th>
-                    <th>Status</th>
+                    <th class="fin-table-status-th">Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -2892,11 +2892,9 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
           <div class="input-field-wrapper">
             <i class="ti ti-tag input-icon-tabler"></i>
             <select id="recCategoria" class="form-control" required>
-              <option value="Honorários Iniciais">Honorários Iniciais</option>
-              <option value="Êxito / Sucumbência">Êxito / Sucumbência</option>
-              <option value="Consultoria Previdenciária">Consultoria Previdenciária</option>
-              <option value="Planejamento Previdenciário">Planejamento Previdenciário</option>
-              <option value="Outras Receitas">Outras Receitas</option>
+              <option value="Requerimento">Requerimento</option>
+              <option value="Planejamento">Planejamento</option>
+              <option value="Cálculo">Cálculo</option>
             </select>
           </div>
         </div>
@@ -2924,14 +2922,85 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
           <div class="input-field-wrapper">
             <i class="ti ti-circle-check input-icon-tabler"></i>
             <select id="recStatus" class="form-control" required>
-              <option value="Recebido">Recebido</option>
               <option value="Pendente">Pendente</option>
+              <option value="Pago">Pago</option>
+              <option value="Atrasado">Atrasado</option>
             </select>
           </div>
         </div>
 
         <button type="submit" id="submitReceitaBtn" class="btn-submit btn-submit-receita">
           <span class="btn-text">Salvar Receita</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: EDITAR LANÇAMENTO FINANCEIRO ==================== -->
+  <div id="modalEditFinanceiro" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" id="closeEditFinanceiroModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge" id="editFinIconBadge" style="background-color: #EBF3FA; color: var(--color-primary);">
+          <i class="ti ti-edit" style="font-size: 1.6rem;"></i>
+        </div>
+        <h3 id="editFinModalTitle">Editar Lançamento</h3>
+        <p>Atualize as informações do registro financeiro selecionado.</p>
+      </div>
+      <form id="editFinanceiroForm" class="modal-form">
+        <input type="hidden" id="editFinId">
+        <input type="hidden" id="editFinTipo">
+
+        <div class="input-group">
+          <label for="editFinDescricao" class="input-label">Descrição</label>
+          <div class="input-field-wrapper">
+            <i class="ti ti-file-text input-icon-tabler"></i>
+            <input type="text" id="editFinDescricao" class="form-control" placeholder="Descrição do lançamento" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="editFinCategoria" class="input-label">Categoria</label>
+          <div class="input-field-wrapper">
+            <i class="ti ti-tag input-icon-tabler"></i>
+            <select id="editFinCategoria" class="form-control" required>
+              <!-- Opções preenchidas dinamicamente conforme o tipo (receita / despesa) -->
+            </select>
+          </div>
+        </div>
+
+        <div class="fin-modal-row">
+          <div class="input-group" style="flex: 1;">
+            <label for="editFinData" class="input-label">Data</label>
+            <div class="input-field-wrapper">
+              <i class="ti ti-calendar input-icon-tabler"></i>
+              <input type="date" id="editFinData" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="input-group" style="flex: 1;">
+            <label for="editFinValor" class="input-label">Valor (R$)</label>
+            <div class="input-field-wrapper">
+              <i class="ti ti-currency-real input-icon-tabler"></i>
+              <input type="text" id="editFinValor" class="form-control" placeholder="0,00" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="editFinStatus" class="input-label">Status</label>
+          <div class="input-field-wrapper">
+            <i class="ti ti-circle-check input-icon-tabler"></i>
+            <select id="editFinStatus" class="form-control" required>
+              <option value="Pendente">Pendente</option>
+              <option value="Pago">Pago</option>
+              <option value="Atrasado">Atrasado</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="submitEditFinanceiroBtn" class="btn-submit">
+          <span class="btn-text">Salvar Alterações</span>
         </button>
       </form>
     </div>
@@ -2962,12 +3031,9 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
           <div class="input-field-wrapper">
             <i class="ti ti-tag input-icon-tabler"></i>
             <select id="despCategoria" class="form-control" required>
-              <option value="Software & Ferramentas">Software & Ferramentas</option>
-              <option value="Marketing & Tráfego">Marketing & Tráfego</option>
-              <option value="Infraestrutura & Escritório">Infraestrutura & Escritório</option>
-              <option value="Impostos & Taxas">Impostos & Taxas</option>
-              <option value="Equipe & Serviços">Equipe & Serviços</option>
-              <option value="Outras Despesas">Outras Despesas</option>
+              <option value="Tráfego">Tráfego</option>
+              <option value="Ferramentas">Ferramentas</option>
+              <option value="Impostos">Impostos</option>
             </select>
           </div>
         </div>
@@ -2995,8 +3061,9 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
           <div class="input-field-wrapper">
             <i class="ti ti-circle-check input-icon-tabler"></i>
             <select id="despStatus" class="form-control" required>
+              <option value="Pendente">Pendente</option>
               <option value="Pago">Pago</option>
-              <option value="A Pagar">A Pagar</option>
+              <option value="Atrasado">Atrasado</option>
             </select>
           </div>
         </div>

@@ -2497,9 +2497,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function formatDateBR(dateStr) {
       if (!dateStr) return '--';
-      const parts = dateStr.split('-');
+      // Tratar caso venha formato ISO ou YYYY-MM-DD
+      const cleanDate = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+      const parts = cleanDate.split('-');
       if (parts.length === 3) {
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        const anoCurto = parts[0].slice(-2);
+        return `${parts[2]}/${parts[1]}/${anoCurto}`;
       }
       return dateStr;
     }
@@ -2838,10 +2841,104 @@ document.addEventListener('DOMContentLoaded', async () => {
       return financialItems;
     }
 
+    // Ordem dos status para alternância cíclica
+    const STATUS_CYCLE = ['Pendente', 'Pago', 'Atrasado'];
+
+    function getNextStatus(currentStatus) {
+      let st = currentStatus || 'Pendente';
+      if (st === 'Recebido') st = 'Pago';
+      if (st === 'A Pagar') st = 'Pendente';
+
+      const idx = STATUS_CYCLE.indexOf(st);
+      if (idx === -1 || idx === STATUS_CYCLE.length - 1) {
+        return STATUS_CYCLE[0];
+      }
+      return STATUS_CYCLE[idx + 1];
+    }
+
+    // Helper para gerar o botão de status somente com ícone
+    function renderStatusBadge(item) {
+      let status = item.status || 'Pendente';
+      
+      // Normalização de nomes legados
+      if (status === 'Recebido') status = 'Pago';
+      if (status === 'A Pagar') status = 'Pendente';
+
+      let iconClass = 'ti ti-clock';
+      let badgeClass = 'fin-badge-pendente';
+      let titleText = 'Pendente (Clique para alterar)';
+
+      if (status === 'Pago') {
+        iconClass = 'ti ti-check';
+        badgeClass = 'fin-badge-pago';
+        titleText = 'Pago (Clique para alterar)';
+      } else if (status === 'Atrasado') {
+        iconClass = 'ti ti-alert-triangle';
+        badgeClass = 'fin-badge-atrasado';
+        titleText = 'Atrasado (Clique para alterar)';
+      }
+
+      return `
+        <button type="button" class="fin-badge-status ${badgeClass} btn-toggle-fin-status" data-id="${item.id}" title="${titleText}">
+          <i class="${iconClass}"></i>
+        </button>
+      `;
+    }
+
     // Renderizar Tabelas e Atualizar Indicadores
     async function renderFinancialData(skipFetch = false) {
       if (!skipFetch) {
         await fetchFinancialRecords();
+      }
+
+      // Regra: Mudar automaticamente para 'Atrasado' qualquer linha que estiver como 'Pendente' quando ultrapassar a 'data'
+      const hojeISO = new Date().toISOString().split('T')[0];
+      const itensParaAtualizarAtrasado = [];
+
+      financialItems.forEach(item => {
+        let st = item.status || 'Pendente';
+        if (st === 'A Pagar') st = 'Pendente';
+
+        if (st === 'Pendente' && item.data) {
+          const itemDateISO = item.data.includes('T') ? item.data.split('T')[0] : item.data;
+          if (itemDateISO < hojeISO) {
+            item.status = 'Atrasado';
+            itensParaAtualizarAtrasado.push(item);
+          }
+        }
+      });
+
+      // Se houver itens alterados para Atrasado, persistir no Supabase e localStorage
+      if (itensParaAtualizarAtrasado.length > 0) {
+        itensParaAtualizarAtrasado.forEach(async (it) => {
+          if (supabase && !it.id.startsWith('rec_') && !it.id.startsWith('desp_')) {
+            try {
+              await supabase.from('financeiro').update({ status: 'Atrasado' }).eq('id', it.id);
+            } catch (err) {
+              console.warn('Erro ao atualizar status atrasado no Supabase:', err);
+            }
+          }
+        });
+
+        // Persistir no localStorage
+        try {
+          const rawRec = localStorage.getItem(STORAGE_KEY_RECEITAS);
+          if (rawRec) {
+            const listRec = JSON.parse(rawRec);
+            listRec.forEach(r => {
+              if (itensParaAtualizarAtrasado.some(a => a.id === r.id)) r.status = 'Atrasado';
+            });
+            localStorage.setItem(STORAGE_KEY_RECEITAS, JSON.stringify(listRec));
+          }
+          const rawDesp = localStorage.getItem(STORAGE_KEY_DESPESAS);
+          if (rawDesp) {
+            const listDesp = JSON.parse(rawDesp);
+            listDesp.forEach(d => {
+              if (itensParaAtualizarAtrasado.some(a => a.id === d.id)) d.status = 'Atrasado';
+            });
+            localStorage.setItem(STORAGE_KEY_DESPESAS, JSON.stringify(listDesp));
+          }
+        } catch (e) {}
       }
 
       // Filtrar pelo período selecionado no calendário
@@ -2872,24 +2969,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             </tr>
           `;
         } else {
-          finReceitasTableBody.innerHTML = receitas.map(item => `
+          finReceitasTableBody.innerHTML = receitas.map(item => {
+            const desc = item.descricao || '';
+            const safeDesc = desc.replace(/"/g, '&quot;');
+            return `
             <tr>
-              <td><strong>${item.descricao || ''}</strong></td>
+              <td><span class="fin-desc-text" title="${safeDesc}">${desc}</span></td>
               <td><span style="color: var(--text-secondary);">${item.categoria || ''}</span></td>
               <td>${formatDateBR(item.data)}</td>
-              <td><span class="fin-val-receita">+ ${formatBRL(parseFloat(item.valor) || 0)}</span></td>
-              <td>
-                <span class="fin-badge-status ${item.status === 'Recebido' ? 'fin-badge-recebido' : 'fin-badge-pendente'}">
-                  ● ${item.status || 'Pendente'}
-                </span>
+              <td><span class="fin-val-receita">${formatBRL(parseFloat(item.valor) || 0)}</span></td>
+              <td class="fin-status-cell">
+                ${renderStatusBadge(item)}
               </td>
               <td>
-                <button type="button" class="btn-delete-fin-row" data-id="${item.id}" title="Excluir Receita">
-                  <i class="ti ti-trash"></i>
-                </button>
+                <div class="fin-actions-cell">
+                  <button type="button" class="btn-edit-fin-row" data-id="${item.id}" title="Editar Receita">
+                    <i class="ti ti-pencil"></i>
+                  </button>
+                  <button type="button" class="btn-delete-fin-row" data-id="${item.id}" title="Excluir Receita">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </div>
               </td>
             </tr>
-          `).join('');
+          `;
+          }).join('');
         }
       }
 
@@ -2908,24 +3012,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             </tr>
           `;
         } else {
-          finDespesasTableBody.innerHTML = despesas.map(item => `
+          finDespesasTableBody.innerHTML = despesas.map(item => {
+            const desc = item.descricao || '';
+            const safeDesc = desc.replace(/"/g, '&quot;');
+            return `
             <tr>
-              <td><strong>${item.descricao || ''}</strong></td>
+              <td><span class="fin-desc-text" title="${safeDesc}">${desc}</span></td>
               <td><span style="color: var(--text-secondary);">${item.categoria || ''}</span></td>
               <td>${formatDateBR(item.data)}</td>
-              <td><span class="fin-val-despesa">- ${formatBRL(parseFloat(item.valor) || 0)}</span></td>
-              <td>
-                <span class="fin-badge-status ${item.status === 'Pago' ? 'fin-badge-pago' : 'fin-badge-a-pagar'}">
-                  ● ${item.status || 'A Pagar'}
-                </span>
+              <td><span class="fin-val-despesa">${formatBRL(parseFloat(item.valor) || 0)}</span></td>
+              <td class="fin-status-cell">
+                ${renderStatusBadge(item)}
               </td>
               <td>
-                <button type="button" class="btn-delete-fin-row" data-id="${item.id}" title="Excluir Despesa">
-                  <i class="ti ti-trash"></i>
-                </button>
+                <div class="fin-actions-cell">
+                  <button type="button" class="btn-edit-fin-row" data-id="${item.id}" title="Editar Despesa">
+                    <i class="ti ti-pencil"></i>
+                  </button>
+                  <button type="button" class="btn-delete-fin-row" data-id="${item.id}" title="Excluir Despesa">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </div>
               </td>
             </tr>
-          `).join('');
+          `;
+          }).join('');
         }
       }
 
@@ -2952,7 +3063,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // Abertura dos Modais
+    // Abertura dos Modais de Criação
     if (btnNovaReceita && modalAddReceita) {
       btnNovaReceita.addEventListener('click', () => {
         if (addReceitaForm) addReceitaForm.reset();
@@ -3107,8 +3218,207 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // Deleção de itens com clique
+    // Modal de Edição de Lançamento Financeiro
+    const modalEditFinanceiro = document.getElementById('modalEditFinanceiro');
+    const closeEditFinanceiroModal = document.getElementById('closeEditFinanceiroModal');
+    const editFinanceiroForm = document.getElementById('editFinanceiroForm');
+    const editFinValorInput = document.getElementById('editFinValor');
+    const editFinModalTitle = document.getElementById('editFinModalTitle');
+    const submitEditFinanceiroBtn = document.getElementById('submitEditFinanceiroBtn');
+
+    setupCurrencyInput(editFinValorInput);
+
+    if (closeEditFinanceiroModal && modalEditFinanceiro) {
+      closeEditFinanceiroModal.addEventListener('click', () => modalEditFinanceiro.classList.add('hidden'));
+    }
+
+    if (modalEditFinanceiro) {
+      modalEditFinanceiro.addEventListener('click', (e) => {
+        if (e.target === modalEditFinanceiro) modalEditFinanceiro.classList.add('hidden');
+      });
+    }
+
+    function openEditFinanceiroModal(item) {
+      if (!modalEditFinanceiro || !item) return;
+      document.getElementById('editFinId').value = item.id;
+      document.getElementById('editFinTipo').value = item.tipo || 'receita';
+      const catSelect = document.getElementById('editFinCategoria');
+      if (catSelect) {
+        catSelect.innerHTML = '';
+        const isDespesa = item.tipo === 'despesa';
+        const optionsList = isDespesa
+          ? ['Tráfego', 'Ferramentas', 'Impostos']
+          : ['Requerimento', 'Planejamento', 'Cálculo'];
+
+        // Se o item já tiver uma categoria legada/diferente (ex: 'Honorários'), adiciona ela também para não perder
+        if (item.categoria && !optionsList.includes(item.categoria)) {
+          optionsList.unshift(item.categoria);
+        }
+
+        optionsList.forEach(opt => {
+          const optEl = document.createElement('option');
+          optEl.value = opt;
+          optEl.textContent = opt;
+          catSelect.appendChild(optEl);
+        });
+
+        catSelect.value = item.categoria || optionsList[0];
+      }
+      
+      const dateVal = item.data ? (item.data.includes('T') ? item.data.split('T')[0] : item.data) : '';
+      document.getElementById('editFinData').value = dateVal;
+
+      const numVal = parseFloat(item.valor) || 0;
+      if (editFinValorInput) {
+        editFinValorInput.value = numVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      const statusSelect = document.getElementById('editFinStatus');
+      if (statusSelect) {
+        statusSelect.value = item.status || (item.tipo === 'despesa' ? 'A Pagar' : 'Pendente');
+      }
+
+      if (editFinModalTitle) {
+        editFinModalTitle.textContent = item.tipo === 'despesa' ? 'Editar Despesa' : 'Editar Receita';
+      }
+
+      modalEditFinanceiro.classList.remove('hidden');
+    }
+
+    if (editFinanceiroForm) {
+      editFinanceiroForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('editFinId').value;
+        const tipo = document.getElementById('editFinTipo').value;
+        const desc = document.getElementById('editFinDescricao').value.trim();
+        const cat = document.getElementById('editFinCategoria').value.trim();
+        const dt = document.getElementById('editFinData').value;
+        const val = parseCurrencyValue(document.getElementById('editFinValor').value);
+        const st = document.getElementById('editFinStatus').value;
+
+        if (!desc || isNaN(val) || val <= 0) {
+          showToast('Preencha uma descrição e um valor válido.');
+          return;
+        }
+
+        if (submitEditFinanceiroBtn) submitEditFinanceiroBtn.disabled = true;
+
+        const updatePayload = {
+          descricao: desc,
+          categoria: cat,
+          data: dt,
+          valor: val,
+          status: st
+        };
+
+        let salvo = false;
+        if (supabase && !id.startsWith('rec_') && !id.startsWith('desp_')) {
+          try {
+            const { error } = await supabase
+              .from('financeiro')
+              .update(updatePayload)
+              .eq('id', id);
+
+            if (!error) salvo = true;
+            else console.error('Erro ao atualizar no Supabase:', error);
+          } catch (err) {
+            console.error('Falha de conexão com Supabase:', err);
+          }
+        }
+
+        // Atualizar no localStorage caso esteja lá
+        try {
+          const rawRec = localStorage.getItem(STORAGE_KEY_RECEITAS);
+          if (rawRec) {
+            const listRec = JSON.parse(rawRec);
+            const idx = listRec.findIndex(item => item.id === id);
+            if (idx !== -1) {
+              listRec[idx] = { ...listRec[idx], ...updatePayload };
+              localStorage.setItem(STORAGE_KEY_RECEITAS, JSON.stringify(listRec));
+              salvo = true;
+            }
+          }
+          const rawDesp = localStorage.getItem(STORAGE_KEY_DESPESAS);
+          if (rawDesp) {
+            const listDesp = JSON.parse(rawDesp);
+            const idx = listDesp.findIndex(item => item.id === id);
+            if (idx !== -1) {
+              listDesp[idx] = { ...listDesp[idx], ...updatePayload };
+              localStorage.setItem(STORAGE_KEY_DESPESAS, JSON.stringify(listDesp));
+              salvo = true;
+            }
+          }
+        } catch (err) {}
+
+        if (submitEditFinanceiroBtn) submitEditFinanceiroBtn.disabled = false;
+        modalEditFinanceiro.classList.add('hidden');
+        await renderFinancialData();
+        showToast('Lançamento atualizado com sucesso!');
+      });
+    }
+
+    // Ações de clique nas tabelas (Alterar Status, Editar e Deletar)
     document.addEventListener('click', async (e) => {
+      // 0. Botão de Alterar Status (Cicla entre Pendente -> Pago -> Atrasado)
+      const statusBtn = e.target.closest('.btn-toggle-fin-status');
+      if (statusBtn) {
+        const id = statusBtn.dataset.id;
+        const item = financialItems.find(it => String(it.id) === String(id));
+        if (item) {
+          const nextStatus = getNextStatus(item.status);
+          item.status = nextStatus;
+
+          // Atualizar no Supabase
+          if (supabase && !String(id).startsWith('rec_') && !String(id).startsWith('desp_')) {
+            try {
+              await supabase
+                .from('financeiro')
+                .update({ status: nextStatus })
+                .eq('id', id);
+            } catch (err) {
+              console.error('Erro ao atualizar status no Supabase:', err);
+            }
+          }
+
+          // Atualizar no localStorage
+          try {
+            const rawRec = localStorage.getItem(STORAGE_KEY_RECEITAS);
+            if (rawRec) {
+              const listRec = JSON.parse(rawRec);
+              const idx = listRec.findIndex(r => String(r.id) === String(id));
+              if (idx !== -1) {
+                listRec[idx].status = nextStatus;
+                localStorage.setItem(STORAGE_KEY_RECEITAS, JSON.stringify(listRec));
+              }
+            }
+            const rawDesp = localStorage.getItem(STORAGE_KEY_DESPESAS);
+            if (rawDesp) {
+              const listDesp = JSON.parse(rawDesp);
+              const idx = listDesp.findIndex(d => String(d.id) === String(id));
+              if (idx !== -1) {
+                listDesp[idx].status = nextStatus;
+                localStorage.setItem(STORAGE_KEY_DESPESAS, JSON.stringify(listDesp));
+              }
+            }
+          } catch (err) {}
+
+          await renderFinancialData(true);
+        }
+        return;
+      }
+
+      // 1. Botão de Editar
+      const editBtn = e.target.closest('.btn-edit-fin-row');
+      if (editBtn) {
+        const id = editBtn.dataset.id;
+        const item = financialItems.find(it => String(it.id) === String(id));
+        if (item) {
+          openEditFinanceiroModal(item);
+        }
+        return;
+      }
+
+      // 2. Botão de Deletar
       const deleteBtn = e.target.closest('.btn-delete-fin-row');
       if (!deleteBtn) return;
       const id = deleteBtn.dataset.id;

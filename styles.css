@@ -5693,6 +5693,17 @@ a:hover,
   padding: 0.85rem 1rem;
 }
 
+.fin-desc-text {
+  display: block;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 700;
+  color: var(--color-neutral);
+  cursor: default;
+}
+
 .fin-empty-cell {
   padding: 3.5rem 1.5rem !important;
   text-align: center;
@@ -5777,27 +5788,58 @@ a:hover,
   background-color: #B91C1C !important;
 }
 
-/* Pills de Status das Tabelas Financeiras */
+.fin-table-status-th {
+  text-align: center !important;
+}
+
+.fin-status-cell {
+  text-align: center !important;
+}
+
+/* Pills/Botões de Status das Tabelas Financeiras (Somente Ícone) */
 .fin-badge-status {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.6rem;
-  border-radius: 20px;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  justify-content: center;
+  margin: 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  border: none;
+  cursor: pointer;
+  transition: transform var(--transition-fast), filter var(--transition-fast), background-color var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-.fin-badge-recebido,
-.fin-badge-pago {
-  background-color: #F0FDF4;
-  color: #16A34A;
+.fin-badge-status:hover {
+  transform: scale(1.12);
+  filter: brightness(0.96);
 }
 
-.fin-badge-pendente,
-.fin-badge-a-pagar {
+.fin-badge-status:active {
+  transform: scale(0.95);
+}
+
+/* Pendente - Relógio (Amarelo) */
+.fin-badge-pendente {
   background-color: #FEF3C7;
-  color: #B45309;
+  color: #D97706;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+/* Pago - Check (Verde) */
+.fin-badge-pago {
+  background-color: #DCFCE7;
+  color: #16A34A;
+  border: 1px solid rgba(22, 163, 74, 0.25);
+}
+
+/* Atrasado - Triângulo com Exclamação (Vermelho) */
+.fin-badge-atrasado {
+  background-color: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid rgba(220, 38, 38, 0.25);
 }
 
 .fin-val-receita {
@@ -5810,6 +5852,13 @@ a:hover,
   color: #DC2626;
 }
 
+.fin-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.btn-edit-fin-row,
 .btn-delete-fin-row {
   background: transparent;
   border: none;
@@ -5821,6 +5870,11 @@ a:hover,
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
+}
+
+.btn-edit-fin-row:hover {
+  background-color: #EBF3FA;
+  color: var(--color-primary);
 }
 
 .btn-delete-fin-row:hover {
