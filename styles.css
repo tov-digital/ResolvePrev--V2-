@@ -5895,9 +5895,9 @@ a:hover,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: #FFF5F5;
-  color: #C53030;
-  border: 1px solid #FED7D7;
+  background-color: var(--surface-1);
+  color: var(--color-primary);
+  border: 1px solid var(--border);
   width: 36px;
   height: 36px;
   padding: 0;
@@ -5909,9 +5909,9 @@ a:hover,
 }
 
 .close-lead-btn:hover {
-  background-color: #FEE2E2;
-  border-color: #FEB2B2;
-  color: #9B2C2C;
+  background-color: #FFF5F5;
+  border-color: #FED7D7;
+  color: #C53030;
 }
 
 .close-lead-menu {
@@ -6021,6 +6021,106 @@ a:hover,
 
 .close-lead-delete-option i {
   font-size: 1.05rem;
+}
+
+/* ==========================================================================
+   BOTÃO DE COMISSÃO DE SDR COM SWITCH (FICHA DO CLIENTE)
+   ========================================================================== */
+
+.sdr-commission-container {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sdr-commission-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--surface-1, #FFFFFF);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-primary);
+  height: 36px;
+  box-sizing: border-box;
+  transition: all var(--transition-fast);
+}
+
+.sdr-commission-label {
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.sdr-commission-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.sdr-commission-slider {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+  background-color: #CBD5E1;
+  border-radius: 20px;
+  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.sdr-commission-slider::before {
+  content: "";
+  position: absolute;
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.sdr-commission-checkbox:checked + .sdr-commission-slider {
+  background-color: var(--color-secondary, #A3CA5C);
+}
+
+.sdr-commission-checkbox:checked + .sdr-commission-slider::before {
+  transform: translateX(14px);
+}
+
+.sdr-commission-state {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748B;
+  min-width: 22px;
+  letter-spacing: 0.5px;
+}
+
+.sdr-commission-checkbox:checked ~ .sdr-commission-state {
+  color: #2E7D32;
+}
+
+/* Estado desabilitado (fora da aba Operação) */
+.sdr-commission-btn.disabled,
+.sdr-commission-btn[data-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background-color: var(--surface-2, #F8FAFC);
+  border-color: var(--border-light, #E2E8F0);
+}
+
+.sdr-commission-btn.disabled .sdr-commission-slider,
+.sdr-commission-btn[data-disabled="true"] .sdr-commission-slider {
+  background-color: #E2E8F0;
+  cursor: not-allowed;
 }
 
 

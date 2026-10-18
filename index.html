@@ -1456,12 +1456,11 @@ width:100%; color:var(--text-primary);">
                 <span id="sheetAssigneeAvatar" class="sheet-assignee-avatar">U</span>
                 <span id="sheetAssigneeName" class="sheet-assignee-name">Atribuir</span>
               </button>
-             
- <button id="modalBtnEnviarMensagem" class="btn-whatsapp" style="border:1px solid var(--border); background:var(--surface-1); border-radius:8px; padding:8px 14px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--color-primary);">
+
+              <button id="modalBtnEnviarMensagem" class="btn-whatsapp" style="border:1px solid var(--border); background:var(--surface-1); border-radius:8px; padding:8px 14px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--color-primary);">
                 <i class="ti ti-brand-whatsapp" style="font-size:16px" aria-hidden="true"></i>Enviar mensagem</button>
               <button id="modalBtnAgendarReuniao" class="btn-gmail" style="border:1px solid var(--border); background:var(--surface-1); border-radius:8px; padding:8px 14px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--color-primary);">
                 <i class="ti ti-calendar-plus" style="font-size:16px" aria-hidden="true"></i>Agendar reunião</button>
-
             </div>
           
 </div>
@@ -1606,6 +1605,17 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
                       <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
                     </select>
                   </div>
+                </div>
+              </div>
+
+              <!-- Comissão de SDR -->
+              <div style="margin-top: 10px; display: flex; justify-content: flex-start;">
+                <div class="sdr-commission-container" id="sdrCommissionContainer">
+                  <label class="sdr-commission-btn" id="sdrCommissionBtn" title="Comissão de SDR">
+                    <span class="sdr-commission-label">Comissão de SDR:</span>
+                    <input type="checkbox" id="sdrCommissionSwitch" class="sdr-commission-checkbox">
+                    <span class="sdr-commission-slider"></span>
+                  </label>
                 </div>
               </div>
             </form>

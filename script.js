@@ -6139,6 +6139,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Atualizar estado visual do botão Etiqueta (Status)
       updateStatusTagUI(card.status || 'novo');
 
+      // Atualizar estado do botão de Comissão de SDR (apenas clicável em Operação)
+      updateSdrCommissionUI(card);
+
       // Resetar para a aba 'Documentos' se estiver em Operação, caso contrário 'Respostas'
       switchTab(window.currentTab === 'operacao' ? 'documentos' : 'respostas');
 
@@ -6437,7 +6440,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       complemento: sheetComplemento ? sheetComplemento.value.trim() : '',
       uf: sheetUf ? sheetUf.value : '',
       cidade: sheetCidade ? sheetCidade.value.trim() : '',
-      bairro: sheetBairro ? sheetBairro.value.trim() : ''
+      bairro: sheetBairro ? sheetBairro.value.trim() : '',
+      comissao_sdr: document.getElementById('sdrCommissionSwitch') ? document.getElementById('sdrCommissionSwitch').checked : (currentActiveCard.comissao_sdr || false)
     };
 
     if (rawDataNascimento && rawDataNascimento.length === 10) {
@@ -6848,6 +6852,51 @@ document.addEventListener('DOMContentLoaded', async () => {
       closeLeadMenu.classList.add('hidden');
     }
   });
+
+  // Controle de Comissão de SDR com Switch (Off/On)
+  const sdrCommissionBtn = document.getElementById('sdrCommissionBtn');
+  const sdrCommissionSwitch = document.getElementById('sdrCommissionSwitch');
+
+  function updateSdrCommissionUI(card) {
+    if (!sdrCommissionBtn || !sdrCommissionSwitch) return;
+
+    // Desbloqueado para uso na aba Comercial e Operação
+    sdrCommissionSwitch.disabled = false;
+    sdrCommissionBtn.dataset.disabled = 'false';
+    sdrCommissionBtn.classList.remove('disabled');
+    sdrCommissionBtn.title = 'Clique para alternar a Comissão de SDR';
+
+    // Padrão OFF (false), a não ser que card.comissao_sdr seja explicitamente true
+    const isChecked = card ? Boolean(card.comissao_sdr) : false;
+    sdrCommissionSwitch.checked = isChecked;
+  }
+
+  if (sdrCommissionSwitch) {
+    sdrCommissionSwitch.addEventListener('change', async (e) => {
+      const isChecked = sdrCommissionSwitch.checked;
+
+      if (currentActiveCard) {
+        currentActiveCard.comissao_sdr = isChecked;
+        if (supabase) {
+          try {
+            const { error } = await supabase
+              .from(getCurrentTable())
+              .update({ comissao_sdr: isChecked, atualizado_em: new Date().toISOString() })
+              .eq('id', currentActiveCard.id);
+
+            if (error) {
+              console.error('Erro ao salvar comissao_sdr no banco:', error);
+              showToast('Erro ao salvar comissão no banco: ' + error.message);
+            } else {
+              showToast(`Comissão de SDR ${isChecked ? 'ativada' : 'desativada'} com sucesso!`);
+            }
+          } catch (err) {
+            console.warn('Erro ao atualizar comissao_sdr:', err);
+          }
+        }
+      }
+    });
+  }
 
   // Ação de Atribuição a Outro Usuário (Dropdown estilo Print)
   const modalReassignUser = document.getElementById('modalReassignUser');
