@@ -531,32 +531,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (statTotalOperacao) statTotalOperacao.textContent = operacaoTotal.toLocaleString('pt-BR');
       if (statTotalRecords) statTotalRecords.textContent = grandTotal.toLocaleString('pt-BR');
 
-      const summaryBody = document.getElementById('dbTablesSummaryBody');
-      if (summaryBody) {
-        summaryBody.innerHTML = `
-          <tr>
-            <td><strong>profiles</strong></td>
-            <td>Contas de Usuários, perfis e permissões do sistema</td>
-            <td><strong>${profilesTotal.toLocaleString('pt-BR')}</strong></td>
-            <td><span class="status-pill status-online">● Operacional</span></td>
-            <td><button class="btn-secondary" onclick="window.switchAdminTab('users')">Gerenciar</button></td>
-          </tr>
-          <tr>
-            <td><strong>oportunidades_crm</strong></td>
-            <td>Funil de Vendas CRM - Oportunidades Comerciais</td>
-            <td><strong>${comercialTotal.toLocaleString('pt-BR')}</strong></td>
-            <td><span class="status-pill status-online">● Operacional</span></td>
-            <td><button class="btn-secondary" onclick="window.switchAdminTab('crm')">Visualizar CRM</button></td>
-          </tr>
-          <tr>
-            <td><strong>operacao_crm</strong></td>
-            <td>Gestão e Acompanhamento de Casos Operacionais</td>
-            <td><strong>${operacaoTotal.toLocaleString('pt-BR')}</strong></td>
-            <td><span class="status-pill status-online">● Operacional</span></td>
-            <td><button class="btn-secondary" onclick="window.switchAdminTab('crm')">Visualizar Operação</button></td>
-          </tr>
-        `;
-      }
 
       // Gráfico de Requerimentos por Mês (Próximos 12 meses na seção Operação)
       await loadOperacaoRequerimentosChart();
