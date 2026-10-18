@@ -438,8 +438,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Alternância de Abas Admin
   const adminNavItems = document.querySelectorAll('[data-admin-tab]');
-  const adminHeaderTitle = document.getElementById('adminHeaderTitle');
-  const adminHeaderSubtitle = document.getElementById('adminHeaderSubtitle');
   const adminTabDashboard = document.getElementById('adminTabDashboard');
   const adminTabUsers = document.getElementById('adminTabUsers');
   const adminTabFinancial = document.getElementById('adminTabFinancial');
@@ -456,20 +454,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (adminTabDashboard) adminTabDashboard.classList.remove('hidden');
         if (adminTabUsers) adminTabUsers.classList.add('hidden');
         if (adminTabFinancial) adminTabFinancial.classList.add('hidden');
-        if (adminHeaderTitle) adminHeaderTitle.textContent = 'Dashboard de Administração';
-        if (adminHeaderSubtitle) adminHeaderSubtitle.textContent = 'Visão geral do banco de dados e métricas do sistema';
       } else if (targetTab === 'users') {
         if (adminTabDashboard) adminTabDashboard.classList.add('hidden');
         if (adminTabUsers) adminTabUsers.classList.remove('hidden');
         if (adminTabFinancial) adminTabFinancial.classList.add('hidden');
-        if (adminHeaderTitle) adminHeaderTitle.textContent = 'Gerenciamento de Usuários';
-        if (adminHeaderSubtitle) adminHeaderSubtitle.textContent = 'Cadastre, edite e gerencie o acesso dos usuários';
       } else if (targetTab === 'financial') {
         if (adminTabDashboard) adminTabDashboard.classList.add('hidden');
         if (adminTabUsers) adminTabUsers.classList.add('hidden');
         if (adminTabFinancial) adminTabFinancial.classList.remove('hidden');
-        if (adminHeaderTitle) adminHeaderTitle.textContent = 'Gestão Financeira';
-        if (adminHeaderSubtitle) adminHeaderSubtitle.textContent = 'Controle de receitas, despesas e indicadores econômicos';
         if (typeof window.renderFinancialData === 'function') {
           window.renderFinancialData();
         }
