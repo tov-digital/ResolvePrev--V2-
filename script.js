@@ -470,6 +470,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (adminTabFinancial) adminTabFinancial.classList.remove('hidden');
         if (adminHeaderTitle) adminHeaderTitle.textContent = 'Gestão Financeira';
         if (adminHeaderSubtitle) adminHeaderSubtitle.textContent = 'Controle de receitas, despesas e indicadores econômicos';
+        if (typeof window.renderFinancialData === 'function') {
+          window.renderFinancialData();
+        }
       }
     });
   });
@@ -2428,7 +2431,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /* ==========================================================================
-     MÓDULO FINANCEIRO (RECEITAS, DESPESAS E INDICADORES)
+     MÓDULO FINANCEIRO (RECEITAS, DESPESAS E INDICADORES - SUPABASE)
      ========================================================================== */
   function initFinancialModule() {
     const STORAGE_KEY_RECEITAS = 'resolveprev_fin_receitas';
@@ -2461,6 +2464,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const despValorInput = document.getElementById('despValor');
     const recDataInput = document.getElementById('recData');
     const despDataInput = document.getElementById('despData');
+    const submitReceitaBtn = document.getElementById('submitReceitaBtn');
+    const submitDespesaBtn = document.getElementById('submitDespesaBtn');
 
     // Formatador de Moeda para Inputs
     function setupCurrencyInput(input) {
@@ -2499,36 +2504,358 @@ document.addEventListener('DOMContentLoaded', async () => {
       return dateStr;
     }
 
-    function getReceitas() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY_RECEITAS);
-        return raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        return [];
+    // Cache local de itens
+    let financialItems = [];
+
+    // Estado do Filtro de Data do Financeiro (Padrão: Este Mês)
+    const nowFin = new Date();
+    let finFilterStartDate = new Date(nowFin.getFullYear(), nowFin.getMonth(), 1, 0, 0, 0, 0);
+    let finFilterEndDate = new Date(nowFin.getFullYear(), nowFin.getMonth() + 1, 0, 23, 59, 59, 999);
+    let finCalViewYear = nowFin.getFullYear();
+    let finCalViewMonth = nowFin.getMonth();
+    let finSelectingStart = null;
+    let finCalCurrentView = 'days'; // 'days' | 'months' | 'years'
+
+    function updateFinancialDateRangeDisplay() {
+      const displayEl = document.getElementById('finDateRangeDisplay');
+      if (displayEl) {
+        displayEl.textContent = `${formatShortDate(finFilterStartDate)} até ${formatShortDate(finFilterEndDate)}`;
       }
     }
 
-    function setReceitas(list) {
-      localStorage.setItem(STORAGE_KEY_RECEITAS, JSON.stringify(list));
-    }
+    function renderFinancialCalendar() {
+      const monthLabelEl = document.getElementById('finCalMonthLabel');
+      const yearLabelEl = document.getElementById('finCalYearLabel');
+      const monthBtn = document.getElementById('finCalMonthBtn');
+      const yearBtn = document.getElementById('finCalYearBtn');
+      const daysView = document.getElementById('finCalDaysView');
+      const monthsView = document.getElementById('finCalMonthsView');
+      const yearsView = document.getElementById('finCalYearsView');
+      const gridEl = document.getElementById('finCalendarGrid');
 
-    function getDespesas() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY_DESPESAS);
-        return raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        return [];
+      const monthNames = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      ];
+      const monthShortNames = [
+        'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+        'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+      ];
+
+      if (monthLabelEl) monthLabelEl.textContent = monthNames[finCalViewMonth];
+      if (yearLabelEl) yearLabelEl.textContent = finCalViewYear;
+
+      if (monthBtn) monthBtn.classList.toggle('active', finCalCurrentView === 'months');
+      if (yearBtn) yearBtn.classList.toggle('active', finCalCurrentView === 'years');
+
+      if (daysView) daysView.classList.toggle('hidden', finCalCurrentView !== 'days');
+      if (monthsView) monthsView.classList.toggle('hidden', finCalCurrentView !== 'months');
+      if (yearsView) yearsView.classList.toggle('hidden', finCalCurrentView !== 'years');
+
+      // Visão de Meses
+      if (finCalCurrentView === 'months' && monthsView) {
+        monthsView.innerHTML = '';
+        monthShortNames.forEach((shortName, idx) => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'mkt-cal-picker-item';
+          if (idx === finCalViewMonth) item.classList.add('active');
+          item.textContent = shortName;
+          item.title = monthNames[idx];
+          item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            finCalViewMonth = idx;
+            finCalCurrentView = 'days';
+            renderFinancialCalendar();
+          });
+          monthsView.appendChild(item);
+        });
+        return;
+      }
+
+      // Visão de Anos
+      if (finCalCurrentView === 'years' && yearsView) {
+        yearsView.innerHTML = '';
+        const currentYear = new Date().getFullYear();
+        const startYear = Math.min(2020, finCalViewYear - 4);
+        const endYear = Math.max(currentYear + 2, finCalViewYear + 4);
+
+        for (let y = startYear; y <= endYear; y++) {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'mkt-cal-picker-item';
+          if (y === finCalViewYear) item.classList.add('active');
+          item.textContent = y;
+          item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            finCalViewYear = y;
+            finCalCurrentView = 'days';
+            renderFinancialCalendar();
+          });
+          yearsView.appendChild(item);
+        }
+        return;
+      }
+
+      // Visão de Dias
+      if (!gridEl) return;
+      gridEl.innerHTML = '';
+
+      const firstDayDate = new Date(finCalViewYear, finCalViewMonth, 1);
+      let startDayIndex = firstDayDate.getDay() - 1;
+      if (startDayIndex === -1) startDayIndex = 6;
+
+      const daysInMonth = new Date(finCalViewYear, finCalViewMonth + 1, 0).getDate();
+
+      for (let i = 0; i < startDayIndex; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'mkt-cal-day empty';
+        gridEl.appendChild(emptyCell);
+      }
+
+      const startISO = formatISODate(finFilterStartDate);
+      const endISO = formatISODate(finFilterEndDate);
+      const selStartISO = finSelectingStart ? formatISODate(finSelectingStart) : null;
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const cellDate = new Date(finCalViewYear, finCalViewMonth, d);
+        const cellISO = formatISODate(cellDate);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mkt-cal-day';
+        btn.textContent = d;
+        btn.dataset.date = cellISO;
+
+        if (!finSelectingStart) {
+          const isStart = cellISO === startISO;
+          const isEnd = cellISO === endISO;
+          const inRange = cellISO >= startISO && cellISO <= endISO;
+
+          if (inRange) btn.classList.add('in-range');
+          if (isStart) btn.classList.add('range-start');
+          if (isEnd) btn.classList.add('range-end');
+        } else {
+          if (cellISO === selStartISO) {
+            btn.classList.add('range-start', 'range-end');
+          }
+        }
+
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          handleFinancialCalendarDayClick(cellDate);
+        });
+
+        gridEl.appendChild(btn);
       }
     }
 
-    function setDespesas(list) {
-      localStorage.setItem(STORAGE_KEY_DESPESAS, JSON.stringify(list));
+    async function handleFinancialCalendarDayClick(date) {
+      if (!finSelectingStart) {
+        finSelectingStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        renderFinancialCalendar();
+      } else {
+        let d1 = finSelectingStart;
+        let d2 = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+        if (d1 > d2) {
+          const tmp = d1;
+          d1 = d2;
+          d2 = tmp;
+        }
+
+        finFilterStartDate = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate(), 0, 0, 0, 0);
+        finFilterEndDate = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate(), 23, 59, 59, 999);
+        finSelectingStart = null;
+        finCalCurrentView = 'days';
+
+        updateFinancialDateRangeDisplay();
+        renderFinancialCalendar();
+
+        const dropdown = document.getElementById('finDatePickerDropdown');
+        const wrapper = document.getElementById('finDatePickerWrapper');
+        if (dropdown) dropdown.classList.add('hidden');
+        if (wrapper) wrapper.classList.remove('open');
+
+        await renderFinancialData(true);
+      }
+    }
+
+    function setupFinancialDatePickerEvents() {
+      const trigger = document.getElementById('finDatePickerTrigger');
+      const dropdown = document.getElementById('finDatePickerDropdown');
+      const wrapper = document.getElementById('finDatePickerWrapper');
+      const btnPrev = document.getElementById('finCalPrevMonth');
+      const btnNext = document.getElementById('finCalNextMonth');
+      const monthBtn = document.getElementById('finCalMonthBtn');
+      const yearBtn = document.getElementById('finCalYearBtn');
+
+      if (monthBtn) {
+        monthBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          finCalCurrentView = (finCalCurrentView === 'months') ? 'days' : 'months';
+          renderFinancialCalendar();
+        });
+      }
+
+      if (yearBtn) {
+        yearBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          finCalCurrentView = (finCalCurrentView === 'years') ? 'days' : 'years';
+          renderFinancialCalendar();
+        });
+      }
+
+      if (trigger && dropdown) {
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isHidden = dropdown.classList.contains('hidden');
+          if (isHidden) {
+            dropdown.classList.remove('hidden');
+            if (wrapper) wrapper.classList.add('open');
+            finCalViewYear = finFilterStartDate.getFullYear();
+            finCalViewMonth = finFilterStartDate.getMonth();
+            finSelectingStart = null;
+            finCalCurrentView = 'days';
+            renderFinancialCalendar();
+          } else {
+            dropdown.classList.add('hidden');
+            if (wrapper) wrapper.classList.remove('open');
+            finCalCurrentView = 'days';
+          }
+        });
+
+        document.addEventListener('click', (e) => {
+          if (wrapper && !wrapper.contains(e.target)) {
+            dropdown.classList.add('hidden');
+            wrapper.classList.remove('open');
+            finSelectingStart = null;
+            finCalCurrentView = 'days';
+          }
+        });
+      }
+
+      if (btnPrev) {
+        btnPrev.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (finCalCurrentView === 'years') {
+            finCalViewYear -= 9;
+          } else if (finCalCurrentView === 'months') {
+            finCalViewYear--;
+          } else {
+            finCalViewMonth--;
+            if (finCalViewMonth < 0) {
+              finCalViewMonth = 11;
+              finCalViewYear--;
+            }
+          }
+          renderFinancialCalendar();
+        });
+      }
+
+      if (btnNext) {
+        btnNext.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (finCalCurrentView === 'years') {
+            finCalViewYear += 9;
+          } else if (finCalCurrentView === 'months') {
+            finCalViewYear++;
+          } else {
+            finCalViewMonth++;
+            if (finCalViewMonth > 11) {
+              finCalViewMonth = 0;
+              finCalViewYear++;
+            }
+          }
+          renderFinancialCalendar();
+        });
+      }
+
+      const quickBtns = document.querySelectorAll('.fin-cal-quick-btn');
+      quickBtns.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const type = btn.dataset.range;
+          const now = new Date();
+
+          if (type === 'this_month') {
+            finFilterStartDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+            finFilterEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+          } else if (type === 'this_year') {
+            finFilterStartDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+            finFilterEndDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+          } else if (type === 'all_time') {
+            finFilterStartDate = new Date(2020, 0, 1, 0, 0, 0, 0);
+            finFilterEndDate = new Date(now.getFullYear() + 1, 11, 31, 23, 59, 59, 999);
+          }
+
+          finSelectingStart = null;
+          finCalCurrentView = 'days';
+          finCalViewYear = finFilterStartDate.getFullYear();
+          finCalViewMonth = finFilterStartDate.getMonth();
+
+          updateFinancialDateRangeDisplay();
+          renderFinancialCalendar();
+
+          if (dropdown) dropdown.classList.add('hidden');
+          if (wrapper) wrapper.classList.remove('open');
+
+          await renderFinancialData(true);
+        });
+      });
+    }
+
+    // Buscar dados do Supabase (com fallback no localStorage)
+    async function fetchFinancialRecords() {
+      if (supabase) {
+        try {
+          const { data, error } = await supabase
+            .from('financeiro')
+            .select('*')
+            .order('data', { ascending: false });
+
+          if (!error && Array.isArray(data)) {
+            financialItems = data;
+            return financialItems;
+          } else if (error) {
+            console.warn('Aviso ao consultar Supabase financeiro:', error);
+          }
+        } catch (err) {
+          console.error('Erro na conexão Supabase financeiro:', err);
+        }
+      }
+
+      // Fallback para localStorage
+      try {
+        const rawRec = localStorage.getItem(STORAGE_KEY_RECEITAS);
+        const rawDesp = localStorage.getItem(STORAGE_KEY_DESPESAS);
+        const recs = rawRec ? JSON.parse(rawRec).map(r => ({ ...r, tipo: 'receita' })) : [];
+        const desps = rawDesp ? JSON.parse(rawDesp).map(d => ({ ...d, tipo: 'despesa' })) : [];
+        financialItems = [...recs, ...desps];
+      } catch (e) {
+        financialItems = [];
+      }
+      return financialItems;
     }
 
     // Renderizar Tabelas e Atualizar Indicadores
-    function renderFinancialData() {
-      const receitas = getReceitas();
-      const despesas = getDespesas();
+    async function renderFinancialData(skipFetch = false) {
+      if (!skipFetch) {
+        await fetchFinancialRecords();
+      }
+
+      // Filtrar pelo período selecionado no calendário
+      const startISO = formatISODate(finFilterStartDate);
+      const endISO = formatISODate(finFilterEndDate);
+
+      const filteredItems = financialItems.filter(item => {
+        if (!item.data) return true;
+        const itemISO = item.data.substring(0, 10);
+        return itemISO >= startISO && itemISO <= endISO;
+      });
+
+      const receitas = filteredItems.filter(item => item.tipo === 'receita');
+      const despesas = filteredItems.filter(item => item.tipo === 'despesa');
 
       // 1. Renderizar Tabela de Receitas
       if (finReceitasTableBody) {
@@ -2538,8 +2865,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               <td colspan="6" class="fin-empty-cell">
                 <div class="fin-empty-state">
                   <i class="ti ti-receipt-2 fin-empty-icon"></i>
-                  <p class="fin-empty-text">Nenhuma receita registrada ainda</p>
-                  <span class="fin-empty-subtext">Clique em "Nova Receita" para registrar uma entrada financeira</span>
+                  <p class="fin-empty-text">Nenhuma receita registrada no período</p>
+                  <span class="fin-empty-subtext">Clique em "Nova Receita" ou amplie o filtro de datas</span>
                 </div>
               </td>
             </tr>
@@ -2547,17 +2874,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
           finReceitasTableBody.innerHTML = receitas.map(item => `
             <tr>
-              <td><strong>${item.descricao}</strong></td>
-              <td><span style="color: var(--text-secondary);">${item.categoria}</span></td>
+              <td><strong>${item.descricao || ''}</strong></td>
+              <td><span style="color: var(--text-secondary);">${item.categoria || ''}</span></td>
               <td>${formatDateBR(item.data)}</td>
-              <td><span class="fin-val-receita">+ ${formatBRL(item.valor)}</span></td>
+              <td><span class="fin-val-receita">+ ${formatBRL(parseFloat(item.valor) || 0)}</span></td>
               <td>
                 <span class="fin-badge-status ${item.status === 'Recebido' ? 'fin-badge-recebido' : 'fin-badge-pendente'}">
-                  ● ${item.status}
+                  ● ${item.status || 'Pendente'}
                 </span>
               </td>
               <td>
-                <button type="button" class="btn-delete-fin-row" data-type="receita" data-id="${item.id}" title="Excluir Receita">
+                <button type="button" class="btn-delete-fin-row" data-id="${item.id}" title="Excluir Receita">
                   <i class="ti ti-trash"></i>
                 </button>
               </td>
@@ -2574,8 +2901,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               <td colspan="6" class="fin-empty-cell">
                 <div class="fin-empty-state">
                   <i class="ti ti-receipt-off fin-empty-icon"></i>
-                  <p class="fin-empty-text">Nenhuma despesa registrada ainda</p>
-                  <span class="fin-empty-subtext">Clique em "Nova Despesa" para registrar uma saída financeira</span>
+                  <p class="fin-empty-text">Nenhuma despesa registrada no período</p>
+                  <span class="fin-empty-subtext">Clique em "Nova Despesa" ou amplie o filtro de datas</span>
                 </div>
               </td>
             </tr>
@@ -2583,17 +2910,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
           finDespesasTableBody.innerHTML = despesas.map(item => `
             <tr>
-              <td><strong>${item.descricao}</strong></td>
-              <td><span style="color: var(--text-secondary);">${item.categoria}</span></td>
+              <td><strong>${item.descricao || ''}</strong></td>
+              <td><span style="color: var(--text-secondary);">${item.categoria || ''}</span></td>
               <td>${formatDateBR(item.data)}</td>
-              <td><span class="fin-val-despesa">- ${formatBRL(item.valor)}</span></td>
+              <td><span class="fin-val-despesa">- ${formatBRL(parseFloat(item.valor) || 0)}</span></td>
               <td>
                 <span class="fin-badge-status ${item.status === 'Pago' ? 'fin-badge-pago' : 'fin-badge-a-pagar'}">
-                  ● ${item.status}
+                  ● ${item.status || 'A Pagar'}
                 </span>
               </td>
               <td>
-                <button type="button" class="btn-delete-fin-row" data-type="despesa" data-id="${item.id}" title="Excluir Despesa">
+                <button type="button" class="btn-delete-fin-row" data-id="${item.id}" title="Excluir Despesa">
                   <i class="ti ti-trash"></i>
                 </button>
               </td>
@@ -2603,8 +2930,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // 3. Calcular e Atualizar Indicadores
-      const totalReceitas = receitas.reduce((acc, cur) => acc + (cur.valor || 0), 0);
-      const totalDespesas = despesas.reduce((acc, cur) => acc + (cur.valor || 0), 0);
+      const totalReceitas = receitas.reduce((acc, cur) => acc + (parseFloat(cur.valor) || 0), 0);
+      const totalDespesas = despesas.reduce((acc, cur) => acc + (parseFloat(cur.valor) || 0), 0);
       const lucroLiquido = totalReceitas - totalDespesas;
       const margemLiquida = totalReceitas > 0 ? ((lucroLiquido / totalReceitas) * 100) : 0;
 
@@ -2660,7 +2987,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Salvar Nova Receita
     if (addReceitaForm) {
-      addReceitaForm.addEventListener('submit', (e) => {
+      addReceitaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const desc = document.getElementById('recDescricao').value.trim();
         const cat = document.getElementById('recCategoria').value;
@@ -2673,29 +3000,55 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        const novaReceita = {
-          id: 'rec_' + Date.now(),
+        const registro = {
+          tipo: 'receita',
           descricao: desc,
           categoria: cat,
-          data: dt,
+          data: dt || new Date().toISOString().split('T')[0],
           valor: val,
-          status: st
+          status: st || 'Recebido'
         };
 
-        const lista = getReceitas();
-        lista.unshift(novaReceita);
-        setReceitas(lista);
+        if (submitReceitaBtn) submitReceitaBtn.disabled = true;
 
-        renderFinancialData();
+        let salvo = false;
+        if (supabase) {
+          try {
+            const { data, error } = await supabase
+              .from('financeiro')
+              .insert([registro])
+              .select();
+
+            if (!error && data && data.length > 0) {
+              salvo = true;
+            } else if (error) {
+              console.error('Erro ao salvar receita no Supabase:', error);
+            }
+          } catch (err) {
+            console.error('Falha de conexão com Supabase:', err);
+          }
+        }
+
+        // Se falhar no Supabase ou offline, salva localmente
+        if (!salvo) {
+          registro.id = 'rec_' + Date.now();
+          const raw = localStorage.getItem(STORAGE_KEY_RECEITAS);
+          const list = raw ? JSON.parse(raw) : [];
+          list.unshift(registro);
+          localStorage.setItem(STORAGE_KEY_RECEITAS, JSON.stringify(list));
+        }
+
+        if (submitReceitaBtn) submitReceitaBtn.disabled = false;
         modalAddReceita.classList.add('hidden');
         addReceitaForm.reset();
-        showToast('Receita adicionada com sucesso!');
+        await renderFinancialData();
+        showToast('Receita cadastrada com sucesso!');
       });
     }
 
     // Salvar Nova Despesa
     if (addDespesaForm) {
-      addDespesaForm.addEventListener('submit', (e) => {
+      addDespesaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const desc = document.getElementById('despDescricao').value.trim();
         const cat = document.getElementById('despCategoria').value;
@@ -2708,49 +3061,105 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        const novaDespesa = {
-          id: 'desp_' + Date.now(),
+        const registro = {
+          tipo: 'despesa',
           descricao: desc,
           categoria: cat,
-          data: dt,
+          data: dt || new Date().toISOString().split('T')[0],
           valor: val,
-          status: st
+          status: st || 'A Pagar'
         };
 
-        const lista = getDespesas();
-        lista.unshift(novaDespesa);
-        setDespesas(lista);
+        if (submitDespesaBtn) submitDespesaBtn.disabled = true;
 
-        renderFinancialData();
+        let salvo = false;
+        if (supabase) {
+          try {
+            const { data, error } = await supabase
+              .from('financeiro')
+              .insert([registro])
+              .select();
+
+            if (!error && data && data.length > 0) {
+              salvo = true;
+            } else if (error) {
+              console.error('Erro ao salvar despesa no Supabase:', error);
+            }
+          } catch (err) {
+            console.error('Falha de conexão com Supabase:', err);
+          }
+        }
+
+        // Se falhar no Supabase ou offline, salva localmente
+        if (!salvo) {
+          registro.id = 'desp_' + Date.now();
+          const raw = localStorage.getItem(STORAGE_KEY_DESPESAS);
+          const list = raw ? JSON.parse(raw) : [];
+          list.unshift(registro);
+          localStorage.setItem(STORAGE_KEY_DESPESAS, JSON.stringify(list));
+        }
+
+        if (submitDespesaBtn) submitDespesaBtn.disabled = false;
         modalAddDespesa.classList.add('hidden');
         addDespesaForm.reset();
-        showToast('Despesa adicionada com sucesso!');
+        await renderFinancialData();
+        showToast('Despesa cadastrada com sucesso!');
       });
     }
 
     // Deleção de itens com clique
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', async (e) => {
       const deleteBtn = e.target.closest('.btn-delete-fin-row');
       if (!deleteBtn) return;
-      const type = deleteBtn.dataset.type;
       const id = deleteBtn.dataset.id;
+      if (!id) return;
 
-      if (!id || !type) return;
-
-      if (type === 'receita') {
-        const list = getReceitas().filter(item => item.id !== id);
-        setReceitas(list);
-        renderFinancialData();
-        showToast('Receita removida.');
-      } else if (type === 'despesa') {
-        const list = getDespesas().filter(item => item.id !== id);
-        setDespesas(list);
-        renderFinancialData();
-        showToast('Despesa removida.');
+      if (!confirm('Deseja realmente remover este lançamento financeiro?')) {
+        return;
       }
+
+      deleteBtn.disabled = true;
+
+      let removido = false;
+      if (supabase && !id.startsWith('rec_') && !id.startsWith('desp_')) {
+        try {
+          const { error } = await supabase
+            .from('financeiro')
+            .delete()
+            .eq('id', id);
+
+          if (!error) {
+            removido = true;
+          } else {
+            console.error('Erro ao remover no Supabase:', error);
+          }
+        } catch (err) {
+          console.error('Falha ao excluir no Supabase:', err);
+        }
+      }
+
+      // Remover do localStorage caso esteja lá
+      try {
+        const rawRec = localStorage.getItem(STORAGE_KEY_RECEITAS);
+        if (rawRec) {
+          const listRec = JSON.parse(rawRec).filter(item => item.id !== id);
+          localStorage.setItem(STORAGE_KEY_RECEITAS, JSON.stringify(listRec));
+        }
+        const rawDesp = localStorage.getItem(STORAGE_KEY_DESPESAS);
+        if (rawDesp) {
+          const listDesp = JSON.parse(rawDesp).filter(item => item.id !== id);
+          localStorage.setItem(STORAGE_KEY_DESPESAS, JSON.stringify(listDesp));
+        }
+      } catch (err) {}
+
+      await renderFinancialData();
+      showToast('Lançamento removido com sucesso!');
     });
 
-    // Render inicial
+    // Inicializar Datepicker e Render Inicial
+    setupFinancialDatePickerEvents();
+    updateFinancialDateRangeDisplay();
+    renderFinancialCalendar();
     renderFinancialData();
     window.renderFinancialData = renderFinancialData;
   }
@@ -4767,34 +5176,74 @@ document.addEventListener('DOMContentLoaded', async () => {
   const closeConcedidoModal = document.getElementById('closeConcedidoModal');
   const cancelConcedidoBtn = document.getElementById('cancelConcedidoBtn');
   const confirmConcedidoBtn = document.getElementById('confirmConcedidoBtn');
-  const concedidoClientName = document.getElementById('concedidoClientName');
+  const concedidoClienteInput = document.getElementById('concedidoCliente');
+  const concedidoCategoriaInput = document.getElementById('concedidoCategoria');
+  const concedidoRMIInput = document.getElementById('concedidoRMI');
+  const concedidoParcelasInput = document.getElementById('concedidoParcelas');
+  const concedidoAtrasoDiasInput = document.getElementById('concedidoAtrasoDias');
+  const concedidoRetroativoInput = document.getElementById('concedidoRetroativo');
+  const concedidoPrimeiroPagamentoInput = document.getElementById('concedidoPrimeiroPagamento');
   
   let concedidoCardTarget = null;
   let concedidoNewStatusTarget = null;
 
-  function formatCurrencyBRL(value) {
-    let clean = String(value || '').replace(/\D/g, '');
-    if (!clean) return '';
-    const numberVal = parseFloat(clean) / 100;
-    return numberVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  function parseBRLValue(val) {
+    if (!val) return 0;
+    const clean = String(val).replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '');
+    const num = parseFloat(clean);
+    return isNaN(num) ? 0 : num;
   }
 
-  const concedidoValorRendaInput = document.getElementById('concedidoValorRenda');
-  if (concedidoValorRendaInput) {
-    concedidoValorRendaInput.addEventListener('input', (e) => {
-      e.target.value = formatCurrencyBRL(e.target.value);
+  function formatBRLValue(num) {
+    return (num || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  // Recalcular retroativo automaticamente: (((RMI / 30) * atraso em dias) * 30%)
+  function calculateConcedidoRetroativo() {
+    if (!concedidoRetroativoInput) return 0;
+    const rmi = parseBRLValue(concedidoRMIInput ? concedidoRMIInput.value : 0);
+    const dias = parseInt(concedidoAtrasoDiasInput ? concedidoAtrasoDiasInput.value : 0, 10) || 0;
+
+    let retroativo = 0;
+    if (rmi > 0 && dias > 0) {
+      retroativo = ((rmi / 30) * dias) * 0.30;
+    }
+    concedidoRetroativoInput.value = formatBRLValue(retroativo);
+    return retroativo;
+  }
+
+  if (concedidoRMIInput) {
+    concedidoRMIInput.addEventListener('input', (e) => {
+      let clean = String(e.target.value || '').replace(/\D/g, '');
+      if (!clean) {
+        e.target.value = '';
+      } else {
+        const numberVal = parseFloat(clean) / 100;
+        e.target.value = numberVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      }
+      calculateConcedidoRetroativo();
+    });
+  }
+
+  if (concedidoAtrasoDiasInput) {
+    concedidoAtrasoDiasInput.addEventListener('input', () => {
+      calculateConcedidoRetroativo();
     });
   }
 
   function openConcedidoModal(card, newStatus) {
     concedidoCardTarget = card;
     concedidoNewStatusTarget = newStatus;
-    if (concedidoClientName) concedidoClientName.textContent = `"${card.nome}"`;
     
-    if (concedidoValorRendaInput) concedidoValorRendaInput.value = '';
-    document.getElementById('concedidoMesesAtraso').value = '';
-    document.getElementById('concedidoDataCobranca').value = '';
-    document.getElementById('concedidoNumeroParcelas').value = '';
+    if (concedidoClienteInput) concedidoClienteInput.value = card.nome || '';
+    if (concedidoCategoriaInput) concedidoCategoriaInput.value = 'Honorários';
+    if (concedidoRMIInput) concedidoRMIInput.value = '';
+    if (concedidoParcelasInput) concedidoParcelasInput.value = '';
+    if (concedidoAtrasoDiasInput) concedidoAtrasoDiasInput.value = '';
+    if (concedidoRetroativoInput) concedidoRetroativoInput.value = formatBRLValue(0);
+    if (concedidoPrimeiroPagamentoInput) {
+      concedidoPrimeiroPagamentoInput.value = new Date().toISOString().split('T')[0];
+    }
 
     if (modalConcedido) modalConcedido.classList.remove('hidden');
   }
@@ -4816,66 +5265,110 @@ document.addEventListener('DOMContentLoaded', async () => {
     confirmConcedidoBtn.addEventListener('click', async () => {
       if (!concedidoCardTarget || !concedidoNewStatusTarget) return;
 
-      const valorRenda = document.getElementById('concedidoValorRenda').value;
-      const mesesAtraso = document.getElementById('concedidoMesesAtraso').value;
-      const dataCobranca = document.getElementById('concedidoDataCobranca').value;
-      const numeroParcelas = document.getElementById('concedidoNumeroParcelas').value;
+      const clienteNome = concedidoClienteInput ? concedidoClienteInput.value.trim() : (concedidoCardTarget.nome || '');
+      const categoria = concedidoCategoriaInput ? concedidoCategoriaInput.value.trim() : 'Honorários';
+      const rmi = parseBRLValue(concedidoRMIInput ? concedidoRMIInput.value : 0);
+      const parcelas = parseInt(concedidoParcelasInput ? concedidoParcelasInput.value : 0, 10);
+      const atrasoDias = parseInt(concedidoAtrasoDiasInput ? concedidoAtrasoDiasInput.value : 0, 10) || 0;
+      const retroativo = calculateConcedidoRetroativo();
+      const primeiroPagamentoStr = concedidoPrimeiroPagamentoInput ? concedidoPrimeiroPagamentoInput.value : '';
+
+      if (!rmi || rmi <= 0) {
+        showToast('Por favor, informe um valor de RMI válido.');
+        if (concedidoRMIInput) concedidoRMIInput.focus();
+        return;
+      }
+
+      if (!parcelas || parcelas < 1) {
+        showToast('Por favor, informe um número de parcelas válido (mínimo 1).');
+        if (concedidoParcelasInput) concedidoParcelasInput.focus();
+        return;
+      }
+
+      if (!primeiroPagamentoStr) {
+        showToast('Por favor, selecione a data do primeiro pagamento.');
+        if (concedidoPrimeiroPagamentoInput) concedidoPrimeiroPagamentoInput.focus();
+        return;
+      }
 
       confirmConcedidoBtn.disabled = true;
       const btnSpan = confirmConcedidoBtn.querySelector('span');
-      if (btnSpan) btnSpan.textContent = 'Enviando...';
+      if (btnSpan) btnSpan.textContent = 'Salvando...';
 
-      const webhookPayload = {
-        valor_renda: valorRenda,
-        meses_atraso: mesesAtraso,
-        data_cobranca: dataCobranca,
-        numero_parcelas: numeroParcelas,
-        id: concedidoCardTarget.id,
-        nome: concedidoCardTarget.nome,
-        cpf: concedidoCardTarget.cpf,
-        rg: concedidoCardTarget.rg,
-        data_nascimento: concedidoCardTarget.data_nascimento,
-        nome_mae: concedidoCardTarget.nome_mae,
-        telefone: concedidoCardTarget.telefone,
-        email: concedidoCardTarget.email,
-        cep: concedidoCardTarget.cep,
-        endereco: concedidoCardTarget.endereco,
-        numero: concedidoCardTarget.numero,
-        complemento: concedidoCardTarget.complemento,
-        bairro: concedidoCardTarget.bairro,
-        cidade: concedidoCardTarget.cidade,
-        estado: concedidoCardTarget.estado,
-        uf: concedidoCardTarget.uf,
-        estado_civil: concedidoCardTarget.estado_civil,
-        profissao: concedidoCardTarget.profissao,
-        nit_pis: concedidoCardTarget.nit_pis,
-        senha_meu_inss: concedidoCardTarget.senha_meu_inss,
-        data_requerimento: concedidoCardTarget.data_requerimento,
-        status: concedidoNewStatusTarget,
-        criado_em: concedidoCardTarget.criado_em
-      };
+      // Cálculo do valor por parcela: (((RMI * 3) + Retroativo) / Parcelas)
+      const valorTotal = (rmi * 3) + retroativo;
+      const valorParcela = parseFloat((valorTotal / parcelas).toFixed(2));
 
-      try {
-        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/cobranca_rp', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(webhookPayload)
+      // Gerar linhas da planilha financeiro
+      const registrosFinanceiro = [];
+      const [pAno, pMes, pDia] = primeiroPagamentoStr.split('-').map(num => parseInt(num, 10));
+
+      for (let i = 0; i < parcelas; i++) {
+        // Cada outra linha adicionará um mês
+        const dataParcela = new Date(pAno, (pMes - 1) + i, pDia);
+        // Garantir formato YYYY-MM-DD
+        const anoStr = dataParcela.getFullYear();
+        const mesStr = String(dataParcela.getMonth() + 1).padStart(2, '0');
+        const diaStr = String(dataParcela.getDate()).padStart(2, '0');
+        const dataFormatada = `${anoStr}-${mesStr}-${diaStr}`;
+
+        registrosFinanceiro.push({
+          tipo: 'receita',
+          descricao: parcelas > 1 ? `${clienteNome} (${i + 1}/${parcelas})` : clienteNome,
+          categoria: categoria,
+          data: dataFormatada,
+          valor: valorParcela,
+          status: 'Pendente'
         });
-      } catch (webhookErr) {
-        console.warn('Erro ao acionar webhook de cobrança:', webhookErr);
       }
 
+      // 1. Salvar no Supabase (tabela financeiro)
+      let salvoSupabase = false;
+      if (supabase) {
+        try {
+          const { error: finError } = await supabase
+            .from('financeiro')
+            .insert(registrosFinanceiro);
+
+          if (!finError) {
+            salvoSupabase = true;
+          } else {
+            console.error('Erro ao registrar no financeiro:', finError);
+          }
+        } catch (err) {
+          console.error('Falha de conexão com Supabase:', err);
+        }
+      }
+
+      // Se não salvou no Supabase (offline), salva no localStorage
+      if (!salvoSupabase) {
+        try {
+          const raw = localStorage.getItem('resolveprev_fin_receitas');
+          const list = raw ? JSON.parse(raw) : [];
+          registrosFinanceiro.forEach((reg, idx) => {
+            list.unshift({ ...reg, id: `rec_${Date.now()}_${idx}` });
+          });
+          localStorage.setItem('resolveprev_fin_receitas', JSON.stringify(list));
+        } catch (e) {
+          console.warn('Erro ao salvar localmente no financeiro:', e);
+        }
+      }
+
+      // Se a aba financeiro estiver ativa ou carregada, atualizar os dados
+      if (typeof window.renderFinancialData === 'function') {
+        window.renderFinancialData();
+      }
+
+      // 2. Mover o card para o novo status (Concedido)
       const cardToUpdate = concedidoCardTarget;
       const newStatus = concedidoNewStatusTarget;
       closeConcedidoModalWindow();
 
       await changeCardStatus(cardToUpdate, newStatus);
-      showToast(`Benefício concedido! Cobrança gerada.`);
+      showToast(`Benefício concedido! ${parcelas} parcela(s) registrada(s) no Financeiro.`);
 
       confirmConcedidoBtn.disabled = false;
-      if (btnSpan) btnSpan.textContent = 'Enviar';
+      if (btnSpan) btnSpan.textContent = 'Salvar';
     });
   }
 

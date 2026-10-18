@@ -1667,6 +1667,7 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
 </div>
 
   <!-- ==================== MODAL: CONFIRMAR CONCESSÃO ==================== -->
+  <!-- ==================== MODAL: BENEFÍCIO CONCEDIDO ==================== -->
   <div id="modalConcedido" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal-card concedido-modal-card">
       <button class="modal-close" id="closeConcedidoModal" aria-label="Fechar">&times;</button>
@@ -1678,32 +1679,52 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
           </svg>
         </div>
         <h3>Benefício Concedido</h3>
-        <p>Informe os dados de cobrança para<br><strong id="concedidoClientName">este cliente</strong>:</p>
+        <p>Informe os dados de concessão e cobrança de honorários:</p>
       </div>
 
       <div class="concedido-form-group">
         <div class="form-row">
-          <label for="concedidoValorRenda">Valor da Renda</label>
-          <input type="text" id="concedidoValorRenda" class="sheet-input" placeholder="R$ 0,00">
+          <label for="concedidoCliente">Cliente</label>
+          <input type="text" id="concedidoCliente" class="sheet-input input-readonly" readonly>
         </div>
+        
         <div class="form-row">
-          <label for="concedidoMesesAtraso">Meses de Atraso</label>
-          <input type="number" id="concedidoMesesAtraso" class="sheet-input" placeholder="Ex: 3">
+          <label for="concedidoCategoria">Categoria</label>
+          <input type="text" id="concedidoCategoria" class="sheet-input input-readonly" value="Honorários" readonly>
         </div>
-        <div class="form-row">
-          <label for="concedidoDataCobranca">Data de Cobrança</label>
-          <input type="date" id="concedidoDataCobranca" class="sheet-input">
+
+        <div class="concedido-grid-2">
+          <div class="form-row">
+            <label for="concedidoRMI">RMI (R$)</label>
+            <input type="text" id="concedidoRMI" class="sheet-input" placeholder="R$ 0,00" required>
+          </div>
+          <div class="form-row">
+            <label for="concedidoParcelas">Parcelas</label>
+            <input type="number" id="concedidoParcelas" class="sheet-input" placeholder="Ex: 3" min="1" step="1" required>
+          </div>
         </div>
+
+        <div class="concedido-grid-2">
+          <div class="form-row">
+            <label for="concedidoAtrasoDias">Atraso em dias</label>
+            <input type="number" id="concedidoAtrasoDias" class="sheet-input" placeholder="Ex: 90" min="0" step="1" required>
+          </div>
+          <div class="form-row">
+            <label for="concedidoRetroativo">Retroativo</label>
+            <input type="text" id="concedidoRetroativo" class="sheet-input input-readonly input-highlight" placeholder="R$ 0,00" readonly>
+          </div>
+        </div>
+
         <div class="form-row">
-          <label for="concedidoNumeroParcelas">Número de Parcelas</label>
-          <input type="number" id="concedidoNumeroParcelas" class="sheet-input" placeholder="Ex: 12">
+          <label for="concedidoPrimeiroPagamento">Primeiro Pagamento</label>
+          <input type="date" id="concedidoPrimeiroPagamento" class="sheet-input" required>
         </div>
       </div>
 
       <div class="modal-actions-row">
         <button id="cancelConcedidoBtn" class="btn-modal-cancel">Cancelar</button>
         <button id="confirmConcedidoBtn" class="btn-modal-primary">
-          <span>Enviar</span>
+          <span>Salvar</span>
         </button>
       </div>
     </div>
@@ -2461,11 +2482,75 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
               <h3 class="admin-area-title">Indicadores Financeiros</h3>
               <p class="admin-area-subtitle">Métricas consolidadas de desempenho econômico, margem e liquidez</p>
             </div>
-            <div class="fin-header-controls">
-              <span class="fin-status-pill">
-                <i class="ti ti-chart-arrows"></i>
-                Visão Consolidada
-              </span>
+            <!-- Filtro de Período Financeiro (Estilo Calendário do Design System) -->
+            <div class="mkt-datepicker-wrapper" id="finDatePickerWrapper">
+              <button type="button" class="mkt-datepicker-trigger" id="finDatePickerTrigger" aria-haspopup="dialog" aria-expanded="false">
+                <div class="mkt-datepicker-trigger-icon">
+                  <i class="ti ti-calendar-event"></i>
+                </div>
+                <div class="mkt-datepicker-trigger-info">
+                  <span class="mkt-datepicker-trigger-label">Período</span>
+                  <span class="mkt-datepicker-trigger-value" id="finDateRangeDisplay">Carregando...</span>
+                </div>
+                <i class="ti ti-chevron-down mkt-datepicker-chevron"></i>
+              </button>
+
+              <!-- Dropdown do Calendário com Seleção de Intervalo -->
+              <div class="mkt-datepicker-dropdown hidden" id="finDatePickerDropdown">
+                <!-- Cabeçalho do Calendário -->
+                <div class="mkt-calendar-header">
+                  <button type="button" class="mkt-cal-nav-btn" id="finCalPrevMonth" title="Anterior">
+                    <i class="ti ti-chevron-left"></i>
+                  </button>
+                  <div class="mkt-cal-header-selectors">
+                    <button type="button" class="mkt-cal-title-btn" id="finCalMonthBtn" title="Escolher mês">
+                      <span id="finCalMonthLabel">Outubro</span>
+                      <i class="ti ti-chevron-down mkt-cal-title-icon"></i>
+                    </button>
+                    <button type="button" class="mkt-cal-title-btn" id="finCalYearBtn" title="Escolher ano">
+                      <span id="finCalYearLabel">2026</span>
+                      <i class="ti ti-chevron-down mkt-cal-title-icon"></i>
+                    </button>
+                  </div>
+                  <button type="button" class="mkt-cal-nav-btn" id="finCalNextMonth" title="Próximo">
+                    <i class="ti ti-chevron-right"></i>
+                  </button>
+                </div>
+
+                <!-- Visão Principal: Dias do Mês -->
+                <div class="mkt-cal-view-days" id="finCalDaysView">
+                  <div class="mkt-calendar-weekdays">
+                    <span>Seg</span>
+                    <span>Ter</span>
+                    <span>Qua</span>
+                    <span>Qui</span>
+                    <span>Sex</span>
+                    <span>Sáb</span>
+                    <span>Dom</span>
+                  </div>
+                  <div class="mkt-calendar-grid" id="finCalendarGrid">
+                    <!-- Dias renderizados dinamicamente via JavaScript -->
+                  </div>
+                </div>
+
+                <!-- Visão Alternativa: Seleção de Mês -->
+                <div class="mkt-cal-view-months hidden" id="finCalMonthsView">
+                  <!-- 12 meses renderizados via JS -->
+                </div>
+
+                <!-- Visão Alternativa: Seleção de Ano -->
+                <div class="mkt-cal-view-years hidden" id="finCalYearsView">
+                  <!-- Grid de anos renderizados via JS -->
+                </div>
+
+                <div class="mkt-calendar-footer">
+                  <div class="mkt-calendar-quick-actions">
+                    <button type="button" class="mkt-cal-quick-btn fin-cal-quick-btn" data-range="this_month">Este Mês</button>
+                    <button type="button" class="mkt-cal-quick-btn fin-cal-quick-btn" data-range="this_year">Este Ano</button>
+                    <button type="button" class="mkt-cal-quick-btn fin-cal-quick-btn" data-range="all_time">Sempre</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -2600,6 +2600,25 @@ html, body {
   box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
+.concedido-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.concedido-form-group input.input-readonly {
+  background-color: #F8FAFC !important;
+  color: #475569 !important;
+  border-color: #E2E8F0 !important;
+  cursor: not-allowed;
+  font-weight: 600;
+}
+
+.concedido-form-group input.input-highlight {
+  color: #16A34A !important;
+  font-weight: 700 !important;
+}
+
 .concedido-form-group input::placeholder {
   color: var(--text-muted);
 }
