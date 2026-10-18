@@ -2964,6 +2964,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // Regra: Mudar automaticamente para 'Atrasado' qualquer linha que estiver como 'Pendente' quando ultrapassar a 'data'
+      // Atenção: Apenas se o status ainda for 'Pendente' e o usuário não tiver acabado de alterar
       const hojeISO = new Date().toISOString().split('T')[0];
       const itensParaAtualizarAtrasado = [];
 
@@ -2971,7 +2972,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         let st = item.status || 'Pendente';
         if (st === 'A Pagar') st = 'Pendente';
 
-        if (st === 'Pendente' && item.data) {
+        // Só converte automaticamente para Atrasado se estiver Pendente e a data for anterior a hoje,
+        // a não ser que tenha sido marcado como Pendente manualmente (item._manualStatus)
+        if (st === 'Pendente' && item.data && !item._manualPending) {
           const itemDateISO = item.data.includes('T') ? item.data.split('T')[0] : item.data;
           if (itemDateISO < hojeISO) {
             item.status = 'Atrasado';
@@ -3439,6 +3442,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (item) {
           const nextStatus = getNextStatus(item.status);
           item.status = nextStatus;
+          if (nextStatus === 'Pendente') {
+            item._manualPending = true;
+          } else {
+            delete item._manualPending;
+          }
 
           // Atualizar no Supabase
           if (supabase && !String(id).startsWith('rec_') && !String(id).startsWith('desp_')) {
