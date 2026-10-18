@@ -814,24 +814,91 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Estado da visualização do calendário ('days' | 'months' | 'years')
+  let mktCalCurrentView = 'days';
+
   // 2. Renderizar Calendário Visual do Filtro de Período
   function renderMarketingCalendar() {
+    const monthLabelEl = document.getElementById('mktCalMonthLabel');
+    const yearLabelEl = document.getElementById('mktCalYearLabel');
+    const monthBtn = document.getElementById('mktCalMonthBtn');
+    const yearBtn = document.getElementById('mktCalYearBtn');
+    const daysView = document.getElementById('mktCalDaysView');
+    const monthsView = document.getElementById('mktCalMonthsView');
+    const yearsView = document.getElementById('mktCalYearsView');
     const gridEl = document.getElementById('mktCalendarGrid');
-    const labelEl = document.getElementById('mktCalMonthYearLabel');
-    if (!gridEl || !labelEl) return;
 
     const monthNames = [
       'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
+    const monthShortNames = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+    ];
 
-    labelEl.textContent = `${monthNames[mktCalViewMonth]} ${mktCalViewYear}`;
+    if (monthLabelEl) monthLabelEl.textContent = monthNames[mktCalViewMonth];
+    if (yearLabelEl) yearLabelEl.textContent = mktCalViewYear;
+
+    if (monthBtn) monthBtn.classList.toggle('active', mktCalCurrentView === 'months');
+    if (yearBtn) yearBtn.classList.toggle('active', mktCalCurrentView === 'years');
+
+    // Alternar visibilidade das visões
+    if (daysView) daysView.classList.toggle('hidden', mktCalCurrentView !== 'days');
+    if (monthsView) monthsView.classList.toggle('hidden', mktCalCurrentView !== 'months');
+    if (yearsView) yearsView.classList.toggle('hidden', mktCalCurrentView !== 'years');
+
+    // Renderizar visão de meses
+    if (mktCalCurrentView === 'months' && monthsView) {
+      monthsView.innerHTML = '';
+      monthShortNames.forEach((shortName, idx) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'mkt-cal-picker-item';
+        if (idx === mktCalViewMonth) item.classList.add('active');
+        item.textContent = shortName;
+        item.title = monthNames[idx];
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          mktCalViewMonth = idx;
+          mktCalCurrentView = 'days';
+          renderMarketingCalendar();
+        });
+        monthsView.appendChild(item);
+      });
+      return;
+    }
+
+    // Renderizar visão de anos
+    if (mktCalCurrentView === 'years' && yearsView) {
+      yearsView.innerHTML = '';
+      const currentYear = new Date().getFullYear();
+      const startYear = Math.min(2020, mktCalViewYear - 4);
+      const endYear = Math.max(currentYear + 2, mktCalViewYear + 4);
+
+      for (let y = startYear; y <= endYear; y++) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'mkt-cal-picker-item';
+        if (y === mktCalViewYear) item.classList.add('active');
+        item.textContent = y;
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          mktCalViewYear = y;
+          mktCalCurrentView = 'days'; // Retorna direto para a visão de dias do mês atual
+          renderMarketingCalendar();
+        });
+        yearsView.appendChild(item);
+      }
+      return;
+    }
+
+    // Renderizar visão padrão de dias do mês
+    if (!gridEl) return;
     gridEl.innerHTML = '';
 
     // Primeiro dia do mês
     const firstDayDate = new Date(mktCalViewYear, mktCalViewMonth, 1);
-    // getDay(): 0 = Domingo, 1 = Segunda ... 6 = Sábado
-    // Ajustar para iniciar na Segunda-feira (Seg = 0, Dom = 6)
     let startDayIndex = firstDayDate.getDay() - 1;
     if (startDayIndex === -1) startDayIndex = 6;
 
@@ -904,6 +971,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       mktFilterStartDate = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate(), 0, 0, 0, 0);
       mktFilterEndDate = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate(), 23, 59, 59, 999);
       mktSelectingStart = null;
+      mktCalCurrentView = 'days';
 
       updateMarketingDateRangeDisplay();
       renderMarketingCalendar();
@@ -926,6 +994,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const wrapper = document.getElementById('mktDatePickerWrapper');
     const btnPrev = document.getElementById('mktCalPrevMonth');
     const btnNext = document.getElementById('mktCalNextMonth');
+    const monthBtn = document.getElementById('mktCalMonthBtn');
+    const yearBtn = document.getElementById('mktCalYearBtn');
+
+    if (monthBtn) {
+      monthBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mktCalCurrentView = (mktCalCurrentView === 'months') ? 'days' : 'months';
+        renderMarketingCalendar();
+      });
+    }
+
+    if (yearBtn) {
+      yearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mktCalCurrentView = (mktCalCurrentView === 'years') ? 'days' : 'years';
+        renderMarketingCalendar();
+      });
+    }
 
     if (trigger && dropdown) {
       trigger.addEventListener('click', (e) => {
@@ -937,10 +1023,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           mktCalViewYear = mktFilterStartDate.getFullYear();
           mktCalViewMonth = mktFilterStartDate.getMonth();
           mktSelectingStart = null;
+          mktCalCurrentView = 'days';
           renderMarketingCalendar();
         } else {
           dropdown.classList.add('hidden');
           if (wrapper) wrapper.classList.remove('open');
+          mktCalCurrentView = 'days';
         }
       });
 
@@ -949,6 +1037,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           dropdown.classList.add('hidden');
           wrapper.classList.remove('open');
           mktSelectingStart = null;
+          mktCalCurrentView = 'days';
         }
       });
     }
@@ -956,10 +1045,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnPrev) {
       btnPrev.addEventListener('click', (e) => {
         e.stopPropagation();
-        mktCalViewMonth--;
-        if (mktCalViewMonth < 0) {
-          mktCalViewMonth = 11;
+        if (mktCalCurrentView === 'years') {
+          mktCalViewYear -= 9;
+        } else if (mktCalCurrentView === 'months') {
           mktCalViewYear--;
+        } else {
+          mktCalViewMonth--;
+          if (mktCalViewMonth < 0) {
+            mktCalViewMonth = 11;
+            mktCalViewYear--;
+          }
         }
         renderMarketingCalendar();
       });
@@ -968,10 +1063,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnNext) {
       btnNext.addEventListener('click', (e) => {
         e.stopPropagation();
-        mktCalViewMonth++;
-        if (mktCalViewMonth > 11) {
-          mktCalViewMonth = 0;
+        if (mktCalCurrentView === 'years') {
+          mktCalViewYear += 9;
+        } else if (mktCalCurrentView === 'months') {
           mktCalViewYear++;
+        } else {
+          mktCalViewMonth++;
+          if (mktCalViewMonth > 11) {
+            mktCalViewMonth = 0;
+            mktCalViewYear++;
+          }
         }
         renderMarketingCalendar();
       });

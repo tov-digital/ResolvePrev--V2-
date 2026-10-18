@@ -4979,14 +4979,47 @@ a:hover,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0.25rem;
+  padding: 0 0.15rem;
 }
 
-.mkt-cal-month-label {
+.mkt-cal-header-selectors {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mkt-cal-title-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.55rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-neutral);
   letter-spacing: -0.2px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.mkt-cal-title-btn:hover,
+.mkt-cal-title-btn.active {
+  background: #F1F5F9;
+  color: var(--color-primary);
+  border-color: #E2E8F0;
+}
+
+.mkt-cal-title-icon {
+  font-size: 0.8rem;
+  transition: transform var(--transition-fast);
+  color: #64748B;
+}
+
+.mkt-cal-title-btn.active .mkt-cal-title-icon {
+  transform: rotate(180deg);
+  color: var(--color-primary);
 }
 
 .mkt-cal-nav-btn {
@@ -5007,6 +5040,65 @@ a:hover,
   background: #F1F5F9;
   color: var(--color-primary);
   border-color: #E2E8F0;
+}
+
+/* Visões Alternativas: Meses e Anos */
+.mkt-cal-view-days {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mkt-cal-view-days.hidden,
+.mkt-cal-view-months.hidden,
+.mkt-cal-view-years.hidden {
+  display: none !important;
+}
+
+.mkt-cal-view-months,
+.mkt-cal-view-years {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0.5rem 0.2rem;
+  min-height: 220px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.mkt-cal-view-years {
+  grid-template-columns: repeat(3, 1fr);
+  max-height: 250px;
+}
+
+.mkt-cal-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 0.4rem;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.mkt-cal-picker-item:hover {
+  background: #EBF3FA;
+  border-color: #93C5FD;
+  color: var(--color-primary);
+}
+
+.mkt-cal-picker-item.active {
+  background: #1E5080 !important;
+  color: #FFFFFF !important;
+  border-color: #1E5080 !important;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(30, 80, 128, 0.25);
 }
 
 .mkt-calendar-weekdays {

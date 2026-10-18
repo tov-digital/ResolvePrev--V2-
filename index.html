@@ -1993,28 +1993,50 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
 
               <!-- Dropdown do Calendário com Seleção de Intervalo -->
               <div class="mkt-datepicker-dropdown hidden" id="mktDatePickerDropdown">
+                <!-- Cabeçalho do Calendário -->
                 <div class="mkt-calendar-header">
-                  <button type="button" class="mkt-cal-nav-btn" id="mktCalPrevMonth" title="Mês anterior">
+                  <button type="button" class="mkt-cal-nav-btn" id="mktCalPrevMonth" title="Anterior">
                     <i class="ti ti-chevron-left"></i>
                   </button>
-                  <span class="mkt-cal-month-label" id="mktCalMonthYearLabel">Outubro 2026</span>
-                  <button type="button" class="mkt-cal-nav-btn" id="mktCalNextMonth" title="Próximo mês">
+                  <div class="mkt-cal-header-selectors">
+                    <button type="button" class="mkt-cal-title-btn" id="mktCalMonthBtn" title="Escolher mês">
+                      <span id="mktCalMonthLabel">Outubro</span>
+                      <i class="ti ti-chevron-down mkt-cal-title-icon"></i>
+                    </button>
+                    <button type="button" class="mkt-cal-title-btn" id="mktCalYearBtn" title="Escolher ano">
+                      <span id="mktCalYearLabel">2026</span>
+                      <i class="ti ti-chevron-down mkt-cal-title-icon"></i>
+                    </button>
+                  </div>
+                  <button type="button" class="mkt-cal-nav-btn" id="mktCalNextMonth" title="Próximo">
                     <i class="ti ti-chevron-right"></i>
                   </button>
                 </div>
 
-                <div class="mkt-calendar-weekdays">
-                  <span>Seg</span>
-                  <span>Ter</span>
-                  <span>Qua</span>
-                  <span>Qui</span>
-                  <span>Sex</span>
-                  <span>Sáb</span>
-                  <span>Dom</span>
+                <!-- Visão Principal: Dias do Mês -->
+                <div class="mkt-cal-view-days" id="mktCalDaysView">
+                  <div class="mkt-calendar-weekdays">
+                    <span>Seg</span>
+                    <span>Ter</span>
+                    <span>Qua</span>
+                    <span>Qui</span>
+                    <span>Sex</span>
+                    <span>Sáb</span>
+                    <span>Dom</span>
+                  </div>
+                  <div class="mkt-calendar-grid" id="mktCalendarGrid">
+                    <!-- Dias renderizados dinamicamente via JavaScript -->
+                  </div>
                 </div>
 
-                <div class="mkt-calendar-grid" id="mktCalendarGrid">
-                  <!-- Dias renderizados dinamicamente via JavaScript -->
+                <!-- Visão Alternativa: Seleção de Mês -->
+                <div class="mkt-cal-view-months hidden" id="mktCalMonthsView">
+                  <!-- 12 meses renderizados via JS -->
+                </div>
+
+                <!-- Visão Alternativa: Seleção de Ano -->
+                <div class="mkt-cal-view-years hidden" id="mktCalYearsView">
+                  <!-- Grid de anos renderizados via JS -->
                 </div>
 
                 <div class="mkt-calendar-footer">
