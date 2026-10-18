@@ -1130,6 +1130,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     return allRows;
   }
 
+  // Helper para obter dados da tabela 'financeiro' (Supabase com fallback no localStorage)
+  async function fetchFinanceiroRecords() {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('financeiro')
+          .select('*')
+          .order('data', { ascending: false });
+
+        if (!error && Array.isArray(data)) {
+          return data;
+        } else if (error) {
+          console.warn('Aviso ao consultar Supabase financeiro em Marketing:', error);
+        }
+      } catch (err) {
+        console.error('Erro na conexão Supabase financeiro em Marketing:', err);
+      }
+    }
+
+    try {
+      const rawRec = localStorage.getItem('resolveprev_fin_receitas');
+      const rawDesp = localStorage.getItem('resolveprev_fin_despesas');
+      const recs = rawRec ? JSON.parse(rawRec).map(r => ({ ...r, tipo: 'receita' })) : [];
+      const desps = rawDesp ? JSON.parse(rawDesp).map(d => ({ ...d, tipo: 'despesa' })) : [];
+      return [...recs, ...desps];
+    } catch (e) {
+      return [];
+    }
+  }
+
   // 3. Buscar Registros de Todas as 3 Tabelas no Período Selecionado
   async function loadMarketingDashboardData() {
     if (!supabase) return;
@@ -1144,11 +1174,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       const startISO = mktFilterStartDate.toISOString();
       const endISO = mktFilterEndDate.toISOString();
 
-      // Consultar as 3 tabelas no período baseado em criado_em com paginação completa
-      const [rowsOportunidades, rowsInsucessos, rowsOperacao] = await Promise.all([
+      const startDayISO = formatISODate(mktFilterStartDate);
+      const endDayISO = formatISODate(mktFilterEndDate);
+
+      // Consultar as 3 tabelas no período baseado em criado_em e a planilha financeiro
+      const [rowsOportunidades, rowsInsucessos, rowsOperacao, rowsFinanceiro] = await Promise.all([
         fetchAllCrmRows('oportunidades_crm', 'id, status, criado_em', startISO, endISO),
         fetchAllCrmRows('insucessos_crm', 'id, status, criado_em', startISO, endISO),
-        fetchAllCrmRows('operacao_crm', 'id, status, criado_em', startISO, endISO)
+        fetchAllCrmRows('operacao_crm', 'id, status, criado_em', startISO, endISO),
+        fetchFinanceiroRecords()
       ]);
 
       // Total de Leads = todas as linhas das 3 tabelas no período
@@ -1161,14 +1195,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         return s !== 'desqualificado' && s !== 'planejamento';
       }).length;
 
-      // 1. Investimento: ainda não conectado a base de dados -> 'R$ XX'
-      if (statInvestEl) statInvestEl.textContent = 'R$ XX';
+      // 1. Investimento: soma dos valores da planilha 'financeiro' cuja categoria for 'Tráfego' e a data estiver dentro do intervalo
+      const rowsTrafego = rowsFinanceiro.filter(item => {
+        const cat = (item.categoria || '').trim().toLowerCase();
+        if (cat !== 'tráfego' && cat !== 'trafego') return false;
+        if (!item.data) return false;
+        const itemDateISO = item.data.includes('T') ? item.data.split('T')[0] : item.data;
+        return itemDateISO >= startDayISO && itemDateISO <= endDayISO;
+      });
+
+      const totalInvestimento = rowsTrafego.reduce((acc, cur) => acc + (parseFloat(cur.valor) || 0), 0);
+
+      if (statInvestEl) {
+        statInvestEl.textContent = totalInvestimento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      }
 
       // 2. Leads: valor inteiro
       if (statLeadsEl) statLeadsEl.textContent = totalLeads.toLocaleString('pt-BR');
 
-      // 3. CPL = Investimento / Leads -> Como investimento é 'R$ XX', exibir 'R$ XX'
-      if (statCplEl) statCplEl.textContent = 'R$ XX';
+      // 3. CPL = Investimento / Leads
+      if (statCplEl) {
+        if (totalLeads > 0) {
+          const cpl = totalInvestimento / totalLeads;
+          statCplEl.textContent = cpl.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        } else {
+          statCplEl.textContent = (0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+      }
 
       // 4. Qualificados: valor inteiro
       if (statQualEl) statQualEl.textContent = totalQualificados.toLocaleString('pt-BR');
@@ -1255,11 +1308,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const startYearISO = new Date(year, 0, 1, 0, 0, 0, 0).toISOString();
       const endYearISO = new Date(year, 11, 31, 23, 59, 59, 999).toISOString();
 
-      // Consultar registros de todo o ano selecionado nas 3 tabelas com paginação completa
-      const [rowsOp, rowsIns, rowsOpr] = await Promise.all([
+      // Consultar registros de todo o ano selecionado nas 3 tabelas com paginação completa e financeiro
+      const [rowsOp, rowsIns, rowsOpr, rowsFinanceiro] = await Promise.all([
         fetchAllCrmRows('oportunidades_crm', 'status, criado_em', startYearISO, endYearISO),
         fetchAllCrmRows('insucessos_crm', 'status, criado_em', startYearISO, endYearISO),
-        fetchAllCrmRows('operacao_crm', 'status, criado_em', startYearISO, endYearISO)
+        fetchAllCrmRows('operacao_crm', 'status, criado_em', startYearISO, endYearISO),
+        fetchFinanceiroRecords()
       ]);
 
       const allYearRows = [
@@ -1271,6 +1325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Inicializar agregadores dos 12 meses (0 = Janeiro a 11 = Dezembro)
       const monthlyLeads = new Array(12).fill(0);
       const monthlyQualificados = new Array(12).fill(0);
+      const monthlyInvestimento = new Array(12).fill(0);
 
       allYearRows.forEach(row => {
         if (!row.criado_em) return;
@@ -1281,6 +1336,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           const s = (row.status || '').toLowerCase().trim();
           if (s !== 'desqualificado' && s !== 'planejamento') {
             monthlyQualificados[m]++;
+          }
+        }
+      });
+
+      // Calcular investimento mensal em Tráfego
+      rowsFinanceiro.forEach(item => {
+        const cat = (item.categoria || '').trim().toLowerCase();
+        if (cat !== 'tráfego' && cat !== 'trafego') return;
+        if (!item.data) return;
+        const itemDate = new Date(item.data.includes('T') ? item.data : `${item.data}T00:00:00`);
+        if (!isNaN(itemDate.getTime()) && itemDate.getFullYear() === year) {
+          const m = itemDate.getMonth();
+          if (m >= 0 && m < 12) {
+            monthlyInvestimento[m] += parseFloat(item.valor) || 0;
           }
         }
       });
@@ -1310,14 +1379,17 @@ document.addEventListener('DOMContentLoaded', async () => {
           metricName = 'Leads';
           break;
         case 'investimento':
-          chartData = new Array(12).fill(0); // R$ XX estático / sem base
+          chartData = monthlyInvestimento;
           yUnitPrefix = 'R$ ';
           yUnitSuffix = '';
           chartColor = '#D97706';
           metricName = 'Investimento';
           break;
         case 'cpl':
-          chartData = new Array(12).fill(0); // CPL baseado em R$ XX
+          chartData = monthlyLeads.map((leads, idx) => {
+            if (leads === 0) return 0;
+            return parseFloat((monthlyInvestimento[idx] / leads).toFixed(2));
+          });
           yUnitPrefix = 'R$ ';
           yUnitSuffix = '';
           chartColor = '#7C3AED';
