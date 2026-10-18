@@ -1914,6 +1914,13 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
           </svg>
           <span class="nav-label">Usuários</span>
         </a>
+        <a href="#" class="nav-item" data-admin-tab="financial" title="Financeiro">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          <span class="nav-label">Financeiro</span>
+        </a>
 
         <!-- Botão para alternar para o CRM comum -->
         <a href="#" id="switchToCrmBtn" class="nav-item nav-item-admin-link" title="Acessar CRM">
@@ -2444,6 +2451,155 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
           </div>
         </div>
       </section>
+      
+      <!-- Conteúdo da Aba 3: Financeiro -->
+      <section id="adminTabFinancial" class="admin-tab-content hidden">
+        <!-- ==================== ÁREA 1: INDICADORES FINANCEIROS ==================== -->
+        <div class="admin-dashboard-area admin-area-financeiro">
+          <div class="admin-area-header">
+            <div class="admin-area-title-group">
+              <h3 class="admin-area-title">Indicadores Financeiros</h3>
+              <p class="admin-area-subtitle">Métricas consolidadas de desempenho econômico, margem e liquidez</p>
+            </div>
+            <div class="fin-header-controls">
+              <span class="fin-status-pill">
+                <i class="ti ti-chart-arrows"></i>
+                Visão Consolidada
+              </span>
+            </div>
+          </div>
+
+          <!-- Cards de Indicadores Financeiros -->
+          <div class="fin-kpi-grid">
+            <div class="admin-stat-card fin-kpi-card">
+              <div class="stat-icon-wrapper icon-green">
+                <i class="ti ti-trending-up" style="font-size: 1.5rem;"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-label">Receita Total</span>
+                <span class="stat-value" id="finStatReceitasTotal">R$ 0,00</span>
+                <span class="stat-subtext">Total acumulado de entradas</span>
+              </div>
+            </div>
+
+            <div class="admin-stat-card fin-kpi-card">
+              <div class="stat-icon-wrapper icon-red">
+                <i class="ti ti-trending-down" style="font-size: 1.5rem;"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-label">Despesas Totais</span>
+                <span class="stat-value" id="finStatDespesasTotal">R$ 0,00</span>
+                <span class="stat-subtext">Custos operacionais e fixos</span>
+              </div>
+            </div>
+
+            <div class="admin-stat-card fin-kpi-card">
+              <div class="stat-icon-wrapper icon-blue">
+                <i class="ti ti-scale" style="font-size: 1.5rem;"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-label">Resultado Líquido</span>
+                <span class="stat-value" id="finStatLucroLiquido">R$ 0,00</span>
+                <span class="stat-subtext">Saldo operacional do período</span>
+              </div>
+            </div>
+
+            <div class="admin-stat-card fin-kpi-card">
+              <div class="stat-icon-wrapper icon-purple">
+                <i class="ti ti-percentage" style="font-size: 1.5rem;"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-label">Margem Líquida</span>
+                <span class="stat-value" id="finStatMargemLiquida">0,0%</span>
+                <span class="stat-subtext">Rentabilidade sobre faturamento</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== ÁREA 2: RECEITAS & DESPESAS (DUAS COLUNAS / SEÇÕES) ==================== -->
+        <div class="fin-split-layout">
+          <!-- Coluna 1: Receitas -->
+          <div class="admin-dashboard-area fin-column-box">
+            <div class="admin-area-header">
+              <div class="admin-area-title-group">
+                <h3 class="admin-area-title">Receitas</h3>
+                <p class="admin-area-subtitle">Entradas financeiras, honorários e pagamentos de clientes</p>
+              </div>
+              <button type="button" class="btn-create-user btn-fin-action btn-fin-receita" id="btnNovaReceita" title="Registrar Nova Receita">
+                <i class="ti ti-plus"></i>
+                <span>Nova Receita</span>
+              </button>
+            </div>
+
+            <div class="fin-table-wrapper">
+              <table class="admin-users-table fin-table">
+                <thead>
+                  <tr>
+                    <th>Descrição</th>
+                    <th>Categoria</th>
+                    <th>Data</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="finReceitasTableBody">
+                  <tr>
+                    <td colspan="6" class="fin-empty-cell">
+                      <div class="fin-empty-state">
+                        <i class="ti ti-receipt-2 fin-empty-icon"></i>
+                        <p class="fin-empty-text">Nenhuma receita registrada ainda</p>
+                        <span class="fin-empty-subtext">Clique em "Nova Receita" para registrar uma entrada financeira</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Coluna 2: Despesas -->
+          <div class="admin-dashboard-area fin-column-box">
+            <div class="admin-area-header">
+              <div class="admin-area-title-group">
+                <h3 class="admin-area-title">Despesas</h3>
+                <p class="admin-area-subtitle">Custos operacionais, ferramentas, impostos e despesas fixas</p>
+              </div>
+              <button type="button" class="btn-create-user btn-fin-action btn-fin-despesa" id="btnNovaDespesa" title="Registrar Nova Despesa">
+                <i class="ti ti-plus"></i>
+                <span>Nova Despesa</span>
+              </button>
+            </div>
+
+            <div class="fin-table-wrapper">
+              <table class="admin-users-table fin-table">
+                <thead>
+                  <tr>
+                    <th>Descrição</th>
+                    <th>Categoria</th>
+                    <th>Data</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="finDespesasTableBody">
+                  <tr>
+                    <td colspan="6" class="fin-empty-cell">
+                      <div class="fin-empty-state">
+                        <i class="ti ti-receipt-off fin-empty-icon"></i>
+                        <p class="fin-empty-text">Nenhuma despesa registrada ainda</p>
+                        <span class="fin-empty-subtext">Clique em "Nova Despesa" para registrar uma saída financeira</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
 
     </main>
   </div>
@@ -2623,6 +2779,147 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
           <span class="spinner hidden" id="adminDeleteUserSpinner"></span>
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: NOVA RECEITA ==================== -->
+  <div id="modalAddReceita" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" id="closeAddReceitaModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge icon-green-badge">
+          <i class="ti ti-cash" style="font-size: 1.6rem;"></i>
+        </div>
+        <h3>Nova Receita</h3>
+        <p>Preencha os dados da entrada financeira para registrar na tabela.</p>
+      </div>
+      <form id="addReceitaForm" class="modal-form">
+        <div class="input-group">
+          <label for="recDescricao" class="input-label">Descrição</label>
+          <div class="input-field-wrapper">
+            <i class="ti ti-file-text input-icon-tabler"></i>
+            <input type="text" id="recDescricao" class="form-control" placeholder="Ex: Honorários Cliente João Silva" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="recCategoria" class="input-label">Categoria</label>
+          <div class="input-field-wrapper">
+            <i class="ti ti-tag input-icon-tabler"></i>
+            <select id="recCategoria" class="form-control" required>
+              <option value="Honorários Iniciais">Honorários Iniciais</option>
+              <option value="Êxito / Sucumbência">Êxito / Sucumbência</option>
+              <option value="Consultoria Previdenciária">Consultoria Previdenciária</option>
+              <option value="Planejamento Previdenciário">Planejamento Previdenciário</option>
+              <option value="Outras Receitas">Outras Receitas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fin-modal-row">
+          <div class="input-group" style="flex: 1;">
+            <label for="recData" class="input-label">Data</label>
+            <div class="input-field-wrapper">
+              <i class="ti ti-calendar input-icon-tabler"></i>
+              <input type="date" id="recData" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="input-group" style="flex: 1;">
+            <label for="recValor" class="input-label">Valor (R$)</label>
+            <div class="input-field-wrapper">
+              <i class="ti ti-currency-real input-icon-tabler"></i>
+              <input type="text" id="recValor" class="form-control" placeholder="0,00" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="recStatus" class="input-label">Status</label>
+          <div class="input-field-wrapper">
+            <i class="ti ti-circle-check input-icon-tabler"></i>
+            <select id="recStatus" class="form-control" required>
+              <option value="Recebido">Recebido</option>
+              <option value="Pendente">Pendente</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="submitReceitaBtn" class="btn-submit btn-submit-receita">
+          <span class="btn-text">Salvar Receita</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: NOVA DESPESA ==================== -->
+  <div id="modalAddDespesa" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" id="closeAddDespesaModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge icon-red-badge">
+          <i class="ti ti-receipt-off" style="font-size: 1.6rem;"></i>
+        </div>
+        <h3>Nova Despesa</h3>
+        <p>Preencha os dados da saída financeira para registrar na tabela.</p>
+      </div>
+      <form id="addDespesaForm" class="modal-form">
+        <div class="input-group">
+          <label for="despDescricao" class="input-label">Descrição</label>
+          <div class="input-field-wrapper">
+            <i class="ti ti-file-text input-icon-tabler"></i>
+            <input type="text" id="despDescricao" class="form-control" placeholder="Ex: Assinatura Software / Servidor" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="despCategoria" class="input-label">Categoria</label>
+          <div class="input-field-wrapper">
+            <i class="ti ti-tag input-icon-tabler"></i>
+            <select id="despCategoria" class="form-control" required>
+              <option value="Software & Ferramentas">Software & Ferramentas</option>
+              <option value="Marketing & Tráfego">Marketing & Tráfego</option>
+              <option value="Infraestrutura & Escritório">Infraestrutura & Escritório</option>
+              <option value="Impostos & Taxas">Impostos & Taxas</option>
+              <option value="Equipe & Serviços">Equipe & Serviços</option>
+              <option value="Outras Despesas">Outras Despesas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fin-modal-row">
+          <div class="input-group" style="flex: 1;">
+            <label for="despData" class="input-label">Data</label>
+            <div class="input-field-wrapper">
+              <i class="ti ti-calendar input-icon-tabler"></i>
+              <input type="date" id="despData" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="input-group" style="flex: 1;">
+            <label for="despValor" class="input-label">Valor (R$)</label>
+            <div class="input-field-wrapper">
+              <i class="ti ti-currency-real input-icon-tabler"></i>
+              <input type="text" id="despValor" class="form-control" placeholder="0,00" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="despStatus" class="input-label">Status</label>
+          <div class="input-field-wrapper">
+            <i class="ti ti-circle-check input-icon-tabler"></i>
+            <select id="despStatus" class="form-control" required>
+              <option value="Pago">Pago</option>
+              <option value="A Pagar">A Pagar</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="submitDespesaBtn" class="btn-submit btn-submit-despesa">
+          <span class="btn-text">Salvar Despesa</span>
+        </button>
+      </form>
     </div>
   </div>
 

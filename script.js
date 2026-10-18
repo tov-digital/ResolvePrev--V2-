@@ -442,6 +442,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const adminHeaderSubtitle = document.getElementById('adminHeaderSubtitle');
   const adminTabDashboard = document.getElementById('adminTabDashboard');
   const adminTabUsers = document.getElementById('adminTabUsers');
+  const adminTabFinancial = document.getElementById('adminTabFinancial');
 
   adminNavItems.forEach(item => {
     item.addEventListener('click', (e) => {
@@ -452,15 +453,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       item.classList.add('active');
 
       if (targetTab === 'dashboard') {
-        adminTabDashboard.classList.remove('hidden');
-        adminTabUsers.classList.add('hidden');
+        if (adminTabDashboard) adminTabDashboard.classList.remove('hidden');
+        if (adminTabUsers) adminTabUsers.classList.add('hidden');
+        if (adminTabFinancial) adminTabFinancial.classList.add('hidden');
         if (adminHeaderTitle) adminHeaderTitle.textContent = 'Dashboard de Administração';
         if (adminHeaderSubtitle) adminHeaderSubtitle.textContent = 'Visão geral do banco de dados e métricas do sistema';
       } else if (targetTab === 'users') {
-        adminTabDashboard.classList.add('hidden');
-        adminTabUsers.classList.remove('hidden');
+        if (adminTabDashboard) adminTabDashboard.classList.add('hidden');
+        if (adminTabUsers) adminTabUsers.classList.remove('hidden');
+        if (adminTabFinancial) adminTabFinancial.classList.add('hidden');
         if (adminHeaderTitle) adminHeaderTitle.textContent = 'Gerenciamento de Usuários';
         if (adminHeaderSubtitle) adminHeaderSubtitle.textContent = 'Cadastre, edite e gerencie o acesso dos usuários';
+      } else if (targetTab === 'financial') {
+        if (adminTabDashboard) adminTabDashboard.classList.add('hidden');
+        if (adminTabUsers) adminTabUsers.classList.add('hidden');
+        if (adminTabFinancial) adminTabFinancial.classList.remove('hidden');
+        if (adminHeaderTitle) adminHeaderTitle.textContent = 'Gestão Financeira';
+        if (adminHeaderSubtitle) adminHeaderSubtitle.textContent = 'Controle de receitas, despesas e indicadores econômicos';
       }
     });
   });
@@ -2417,6 +2426,336 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+
+  /* ==========================================================================
+     MÓDULO FINANCEIRO (RECEITAS, DESPESAS E INDICADORES)
+     ========================================================================== */
+  function initFinancialModule() {
+    const STORAGE_KEY_RECEITAS = 'resolveprev_fin_receitas';
+    const STORAGE_KEY_DESPESAS = 'resolveprev_fin_despesas';
+
+    // Elementos de Indicadores
+    const finStatReceitasTotal = document.getElementById('finStatReceitasTotal');
+    const finStatDespesasTotal = document.getElementById('finStatDespesasTotal');
+    const finStatLucroLiquido = document.getElementById('finStatLucroLiquido');
+    const finStatMargemLiquida = document.getElementById('finStatMargemLiquida');
+
+    // Tabelas
+    const finReceitasTableBody = document.getElementById('finReceitasTableBody');
+    const finDespesasTableBody = document.getElementById('finDespesasTableBody');
+
+    // Botões de Abertura de Modal
+    const btnNovaReceita = document.getElementById('btnNovaReceita');
+    const btnNovaDespesa = document.getElementById('btnNovaDespesa');
+
+    // Modais
+    const modalAddReceita = document.getElementById('modalAddReceita');
+    const modalAddDespesa = document.getElementById('modalAddDespesa');
+    const closeAddReceitaModal = document.getElementById('closeAddReceitaModal');
+    const closeAddDespesaModal = document.getElementById('closeAddDespesaModal');
+
+    // Formulários
+    const addReceitaForm = document.getElementById('addReceitaForm');
+    const addDespesaForm = document.getElementById('addDespesaForm');
+    const recValorInput = document.getElementById('recValor');
+    const despValorInput = document.getElementById('despValor');
+    const recDataInput = document.getElementById('recData');
+    const despDataInput = document.getElementById('despData');
+
+    // Formatador de Moeda para Inputs
+    function setupCurrencyInput(input) {
+      if (!input) return;
+      input.addEventListener('input', (e) => {
+        let val = e.target.value.replace(/\D/g, '');
+        if (!val) {
+          e.target.value = '';
+          return;
+        }
+        val = (parseInt(val, 10) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        e.target.value = val;
+      });
+    }
+
+    setupCurrencyInput(recValorInput);
+    setupCurrencyInput(despValorInput);
+
+    function parseCurrencyValue(str) {
+      if (!str) return 0;
+      const cleaned = str.replace(/\./g, '').replace(',', '.');
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? 0 : num;
+    }
+
+    function formatBRL(num) {
+      return (num || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function formatDateBR(dateStr) {
+      if (!dateStr) return '--';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return dateStr;
+    }
+
+    function getReceitas() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_RECEITAS);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function setReceitas(list) {
+      localStorage.setItem(STORAGE_KEY_RECEITAS, JSON.stringify(list));
+    }
+
+    function getDespesas() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_DESPESAS);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function setDespesas(list) {
+      localStorage.setItem(STORAGE_KEY_DESPESAS, JSON.stringify(list));
+    }
+
+    // Renderizar Tabelas e Atualizar Indicadores
+    function renderFinancialData() {
+      const receitas = getReceitas();
+      const despesas = getDespesas();
+
+      // 1. Renderizar Tabela de Receitas
+      if (finReceitasTableBody) {
+        if (receitas.length === 0) {
+          finReceitasTableBody.innerHTML = `
+            <tr>
+              <td colspan="6" class="fin-empty-cell">
+                <div class="fin-empty-state">
+                  <i class="ti ti-receipt-2 fin-empty-icon"></i>
+                  <p class="fin-empty-text">Nenhuma receita registrada ainda</p>
+                  <span class="fin-empty-subtext">Clique em "Nova Receita" para registrar uma entrada financeira</span>
+                </div>
+              </td>
+            </tr>
+          `;
+        } else {
+          finReceitasTableBody.innerHTML = receitas.map(item => `
+            <tr>
+              <td><strong>${item.descricao}</strong></td>
+              <td><span style="color: var(--text-secondary);">${item.categoria}</span></td>
+              <td>${formatDateBR(item.data)}</td>
+              <td><span class="fin-val-receita">+ ${formatBRL(item.valor)}</span></td>
+              <td>
+                <span class="fin-badge-status ${item.status === 'Recebido' ? 'fin-badge-recebido' : 'fin-badge-pendente'}">
+                  ● ${item.status}
+                </span>
+              </td>
+              <td>
+                <button type="button" class="btn-delete-fin-row" data-type="receita" data-id="${item.id}" title="Excluir Receita">
+                  <i class="ti ti-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      // 2. Renderizar Tabela de Despesas
+      if (finDespesasTableBody) {
+        if (despesas.length === 0) {
+          finDespesasTableBody.innerHTML = `
+            <tr>
+              <td colspan="6" class="fin-empty-cell">
+                <div class="fin-empty-state">
+                  <i class="ti ti-receipt-off fin-empty-icon"></i>
+                  <p class="fin-empty-text">Nenhuma despesa registrada ainda</p>
+                  <span class="fin-empty-subtext">Clique em "Nova Despesa" para registrar uma saída financeira</span>
+                </div>
+              </td>
+            </tr>
+          `;
+        } else {
+          finDespesasTableBody.innerHTML = despesas.map(item => `
+            <tr>
+              <td><strong>${item.descricao}</strong></td>
+              <td><span style="color: var(--text-secondary);">${item.categoria}</span></td>
+              <td>${formatDateBR(item.data)}</td>
+              <td><span class="fin-val-despesa">- ${formatBRL(item.valor)}</span></td>
+              <td>
+                <span class="fin-badge-status ${item.status === 'Pago' ? 'fin-badge-pago' : 'fin-badge-a-pagar'}">
+                  ● ${item.status}
+                </span>
+              </td>
+              <td>
+                <button type="button" class="btn-delete-fin-row" data-type="despesa" data-id="${item.id}" title="Excluir Despesa">
+                  <i class="ti ti-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      // 3. Calcular e Atualizar Indicadores
+      const totalReceitas = receitas.reduce((acc, cur) => acc + (cur.valor || 0), 0);
+      const totalDespesas = despesas.reduce((acc, cur) => acc + (cur.valor || 0), 0);
+      const lucroLiquido = totalReceitas - totalDespesas;
+      const margemLiquida = totalReceitas > 0 ? ((lucroLiquido / totalReceitas) * 100) : 0;
+
+      if (finStatReceitasTotal) finStatReceitasTotal.textContent = formatBRL(totalReceitas);
+      if (finStatDespesasTotal) finStatDespesasTotal.textContent = formatBRL(totalDespesas);
+      if (finStatLucroLiquido) {
+        finStatLucroLiquido.textContent = formatBRL(lucroLiquido);
+        if (lucroLiquido < 0) {
+          finStatLucroLiquido.style.color = '#DC2626';
+        } else if (lucroLiquido > 0) {
+          finStatLucroLiquido.style.color = '#16A34A';
+        } else {
+          finStatLucroLiquido.style.color = 'var(--text-main)';
+        }
+      }
+      if (finStatMargemLiquida) {
+        finStatMargemLiquida.textContent = `${margemLiquida.toFixed(1).replace('.', ',')}%`;
+      }
+    }
+
+    // Abertura dos Modais
+    if (btnNovaReceita && modalAddReceita) {
+      btnNovaReceita.addEventListener('click', () => {
+        if (addReceitaForm) addReceitaForm.reset();
+        if (recDataInput) recDataInput.value = new Date().toISOString().split('T')[0];
+        modalAddReceita.classList.remove('hidden');
+      });
+    }
+
+    if (btnNovaDespesa && modalAddDespesa) {
+      btnNovaDespesa.addEventListener('click', () => {
+        if (addDespesaForm) addDespesaForm.reset();
+        if (despDataInput) despDataInput.value = new Date().toISOString().split('T')[0];
+        modalAddDespesa.classList.remove('hidden');
+      });
+    }
+
+    // Fechamento dos Modais
+    if (closeAddReceitaModal && modalAddReceita) {
+      closeAddReceitaModal.addEventListener('click', () => modalAddReceita.classList.add('hidden'));
+    }
+    if (closeAddDespesaModal && modalAddDespesa) {
+      closeAddDespesaModal.addEventListener('click', () => modalAddDespesa.classList.add('hidden'));
+    }
+
+    [modalAddReceita, modalAddDespesa].forEach(modal => {
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.classList.add('hidden');
+        });
+      }
+    });
+
+    // Salvar Nova Receita
+    if (addReceitaForm) {
+      addReceitaForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const desc = document.getElementById('recDescricao').value.trim();
+        const cat = document.getElementById('recCategoria').value;
+        const dt = document.getElementById('recData').value;
+        const val = parseCurrencyValue(document.getElementById('recValor').value);
+        const st = document.getElementById('recStatus').value;
+
+        if (!desc || isNaN(val) || val <= 0) {
+          showToast('Preencha uma descrição e um valor válido.');
+          return;
+        }
+
+        const novaReceita = {
+          id: 'rec_' + Date.now(),
+          descricao: desc,
+          categoria: cat,
+          data: dt,
+          valor: val,
+          status: st
+        };
+
+        const lista = getReceitas();
+        lista.unshift(novaReceita);
+        setReceitas(lista);
+
+        renderFinancialData();
+        modalAddReceita.classList.add('hidden');
+        addReceitaForm.reset();
+        showToast('Receita adicionada com sucesso!');
+      });
+    }
+
+    // Salvar Nova Despesa
+    if (addDespesaForm) {
+      addDespesaForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const desc = document.getElementById('despDescricao').value.trim();
+        const cat = document.getElementById('despCategoria').value;
+        const dt = document.getElementById('despData').value;
+        const val = parseCurrencyValue(document.getElementById('despValor').value);
+        const st = document.getElementById('despStatus').value;
+
+        if (!desc || isNaN(val) || val <= 0) {
+          showToast('Preencha uma descrição e um valor válido.');
+          return;
+        }
+
+        const novaDespesa = {
+          id: 'desp_' + Date.now(),
+          descricao: desc,
+          categoria: cat,
+          data: dt,
+          valor: val,
+          status: st
+        };
+
+        const lista = getDespesas();
+        lista.unshift(novaDespesa);
+        setDespesas(lista);
+
+        renderFinancialData();
+        modalAddDespesa.classList.add('hidden');
+        addDespesaForm.reset();
+        showToast('Despesa adicionada com sucesso!');
+      });
+    }
+
+    // Deleção de itens com clique
+    document.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('.btn-delete-fin-row');
+      if (!deleteBtn) return;
+      const type = deleteBtn.dataset.type;
+      const id = deleteBtn.dataset.id;
+
+      if (!id || !type) return;
+
+      if (type === 'receita') {
+        const list = getReceitas().filter(item => item.id !== id);
+        setReceitas(list);
+        renderFinancialData();
+        showToast('Receita removida.');
+      } else if (type === 'despesa') {
+        const list = getDespesas().filter(item => item.id !== id);
+        setDespesas(list);
+        renderFinancialData();
+        showToast('Despesa removida.');
+      }
+    });
+
+    // Render inicial
+    renderFinancialData();
+    window.renderFinancialData = renderFinancialData;
+  }
+
+  initFinancialModule();
 
   /* ==========================================
      1. MOSTRAR / OCULTAR SENHA
