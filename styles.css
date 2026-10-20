@@ -7122,7 +7122,7 @@ button:hover[style*="background: white"],
 }
 
 .sdr-commission-checkbox:checked + .sdr-commission-slider {
-  background-color: var(--color-secondary, #A3CA5C);
+  background-color: var(--success, #16A34A);
 }
 
 .sdr-commission-checkbox:checked + .sdr-commission-slider::before {
