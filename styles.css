@@ -1481,7 +1481,7 @@ display: flex;
 
 .btn-apply-filters {
   width: 100%;
-  background: linear-gradient(135deg, var(--color-primary, #1E5080) 0%, #163E65 100%);
+  background: linear-gradient(135deg, #2a2c31 0%, #0a0a0a 100%);
   color: #FFFFFF;
   border: none;
   border-radius: var(--radius-md);
@@ -1493,7 +1493,7 @@ display: flex;
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: var(--font-family);
-  box-shadow: 0 2px 8px rgba(30, 80, 128, 0.2);
+  box-shadow: var(--shadow-card);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1502,8 +1502,8 @@ display: flex;
 
 .btn-apply-filters:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(30, 80, 128, 0.3);
-  filter: brightness(1.06);
+  box-shadow: var(--shadow-pop);
+  filter: brightness(1.15);
 }
 
 .btn-apply-filters:active {
