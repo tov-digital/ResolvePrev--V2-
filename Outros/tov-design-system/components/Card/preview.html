@@ -1,0 +1,13 @@
+<!-- @dsCard group="Superfícies" height=220 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Card — preview</title></head>
+<body>
+<div id="root"></div>
+<script>
+  var T = window.Tov, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div',{className:'tv-pad'}, h(T.Card,{title:'Operação',subtitle:'Acompanhamento de processos, requerimentos e prazos de protocolo.',actions:h(T.Badge,{tone:'neutral'},'Total no período: 307 leads')},
+ h('div',{style:{display:'flex',gap:12,flexWrap:'wrap'}}, h(T.StatTile,{label:'Em andamento',value:'42'}), h(T.StatTile,{label:'Concluídos',value:'18',tone:'success'}), h(T.StatTile,{label:'Prazo vencendo',value:'5',tone:'danger'})))));
+</script>
+</body>
+</html>

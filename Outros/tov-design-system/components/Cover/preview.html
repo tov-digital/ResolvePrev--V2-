@@ -1,0 +1,41 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Tov — capa</title>
+<style>
+  html, body { margin: 0; background: var(--bg); }
+  .cv { position: relative; width: 960px; height: 288px; overflow: hidden; background: var(--bg); }
+  .cv svg { position: absolute; left: 480px; top: 0; }
+  .ink { fill: var(--primary); }
+  .brand { fill: var(--brand); }
+  .soft { fill: var(--brand-soft); }
+  .slab { rx: var(--radius-xl); ry: var(--radius-xl); }
+  .txt { position: absolute; left: 48px; bottom: 40px; max-width: 420px; }
+  .name { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 120px; line-height: .92; letter-spacing: -0.03em; color: var(--ink); }
+  .tag { margin: 12px 0 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="cv">
+  <!--
+    blocks: primary slab 192×240 (radius-xl), brand disc r=80, brand-soft card 160×112 (radius-xl), primary pill 176×48 (radius-pill)
+    arrangement: tall ink slab with the yellow disc overlapping its right side — the logo's "t" and its period; a soft yellow card and an ink pill as satellites bleeding off the right edge
+    pattern: soft, friendly, large radii → discs: a 3×3 grid of 16px brand dots on the slab (pitch space-8), echoing the period
+    scales: radius-xl 24px, radius-pill, space-6 24px, space-8 32px
+  -->
+  <svg width="480" height="288" viewBox="0 0 480 288" aria-hidden="true">
+    <rect class="ink slab" x="24" y="24" width="192" height="240"></rect>
+    <circle class="brand" cx="56" cy="56" r="8"></circle><circle class="brand" cx="88" cy="56" r="8"></circle><circle class="brand" cx="120" cy="56" r="8"></circle>
+    <circle class="brand" cx="56" cy="88" r="8"></circle><circle class="brand" cx="88" cy="88" r="8"></circle><circle class="brand" cx="120" cy="88" r="8"></circle>
+    <circle class="brand" cx="56" cy="120" r="8"></circle><circle class="brand" cx="88" cy="120" r="8"></circle><circle class="brand" cx="120" cy="120" r="8"></circle>
+    <rect class="soft slab" x="344" y="24" width="160" height="112"></rect>
+    <circle class="brand" cx="296" cy="184" r="80"></circle>
+    <rect class="ink" x="344" y="216" width="176" height="48" rx="24" ry="24"></rect>
+  </svg>
+  <div class="txt">
+    <h1 class="name">Tov</h1>
+    <p class="tag">Moderno, limpo e suave. Com ponto final.</p>
+  </div>
+</div>
+</body>
+</html>

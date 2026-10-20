@@ -1,0 +1,13 @@
+<!-- @dsCard group="Superfícies" height=380 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Modal — preview</title></head>
+<body>
+<div id="root"></div>
+<script>
+  var T = window.Tov, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(T.Modal,{inline:true,title:'Agendar reunião',footer:h(React.Fragment,null,h(T.Button,{variant:'secondary'},'Cancelar'),h(T.Button,{variant:'brand',icon:'calendar'},'Confirmar'))},
+ h('div',{style:{display:'grid',gap:16}}, h('p',{style:{margin:0}},'Escolha a data da reunião com Cecília Maria da Silva Batista.'), h(T.Input,{label:'Data',placeholder:'DD/MM/AAAA'}))));
+</script>
+</body>
+</html>

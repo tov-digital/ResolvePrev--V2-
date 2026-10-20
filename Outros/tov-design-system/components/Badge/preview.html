@@ -1,0 +1,20 @@
+<!-- @dsCard group="Status" height=120 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Badge — preview</title></head>
+<body>
+<div id="root"></div>
+<script>
+  var T = window.Tov, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div',null,
+ h('div',{className:'tv-row',style:{paddingBottom:8}},
+  h(T.Badge,{tone:'brand',dot:true},'Reunião'), h(T.Badge,{tone:'success',dot:true},'Convertido'),
+  h(T.Badge,{tone:'warning'},'Prazo em 3 dias'), h(T.Badge,{tone:'danger'},'Recusado'),
+  h(T.Badge,{tone:'info'},'Em análise'), h(T.Badge,{tone:'violet'},'Novo lead'),
+  h(T.Badge,{tone:'neutral'},'Rascunho'), h(T.Badge,{tone:'solid'},'PAINEL ADMIN')),
+ h('div',{className:'tv-row',style:{paddingTop:0}},
+  h(T.Badge,{code:true,tone:'info'},'CR'), h(T.Badge,{code:true,tone:'violet'},'MBR'),
+  h(T.Badge,{code:true,tone:'warning'},'SR'), h(T.Badge,{code:true,tone:'success'},'CLR'))));
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!-- @dsCard group="Dados" height=360 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>ProgressRow — preview</title></head>
+<body>
+<div id="root"></div>
+<script>
+  var T = window.Tov, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div',{className:'tv-stack'},
+ h(T.ProgressRow,{code:'CAR',codeTone:'neutral',tone:'ink',title:'Contact Attempt Rate',subtitle:'Tentativa de contato realizada',count:53,total:307}),
+ h(T.ProgressRow,{code:'CR',codeTone:'info',tone:'info',title:'Contact Rate',subtitle:'Contato efetivo estabelecido',count:34,total:53}),
+ h(T.ProgressRow,{code:'MBR',codeTone:'violet',tone:'violet',title:'Meeting Booking Rate',subtitle:'Reuniões agendadas com sucesso',count:20,total:34}),
+ h(T.ProgressRow,{code:'CLR',codeTone:'brand',tone:'brand',title:'Close Rate',subtitle:'Convertidos na operação',count:6,total:18})));
+</script>
+</body>
+</html>

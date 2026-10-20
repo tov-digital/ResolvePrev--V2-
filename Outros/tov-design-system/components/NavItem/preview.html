@@ -1,0 +1,13 @@
+<!-- @dsCard group="Navegação" height=260 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>NavItem — preview</title></head>
+<body>
+<div id="root"></div>
+<script>
+  var T = window.Tov, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('nav',{className:'tv-navlist','aria-label':'Principal'}, h('img',{src:'/_blob/edca4c0d8231e894bea68fe641de6d3f',alt:'tov.',style:{width:84,margin:'8px 12px 20px'}}),
+ h(T.NavItem,{icon:'dashboard',active:true},'Dashboard'), h(T.NavItem,{icon:'users',count:12},'Usuários'), h(T.NavItem,{icon:'money'},'Financeiro'), h(T.NavItem,{icon:'logout'},'Sair')));
+</script>
+</body>
+</html>

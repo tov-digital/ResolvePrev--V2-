@@ -1,0 +1,14 @@
+<!-- @dsCard group="Formulários" height=190 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Input — preview</title></head>
+<body>
+<div id="root"></div>
+<script>
+  var T = window.Tov, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div',{className:'tv-pad',style:{display:'grid',gridTemplateColumns:'repeat(2, minmax(0, 1fr))',gap:24}},
+ h(T.Input,{label:'Nome completo',placeholder:'Ex.: Cecília Maria da Silva',hint:'Como aparece no documento.'}),
+ h(T.Input,{label:'Aniversário',defaultValue:'17/13',error:'Mês inválido. Use DD/MM.'})));
+</script>
+</body>
+</html>

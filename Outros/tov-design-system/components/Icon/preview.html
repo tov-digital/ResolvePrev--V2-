@@ -1,0 +1,13 @@
+<!-- @dsCard group="Identidade" height=88 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Icon — preview</title></head>
+<body>
+<div id="root"></div>
+<script>
+  var T = window.Tov, h = React.createElement;
+  var names = ['dashboard','users','money','calendar','message','file','folder','filter','plus','close','check','chevron','logout','search'];
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div',{className:'tv-row',style:{gap:20,color:'var(--ink)'}}, names.map(function(n){ return h(T.Icon,{key:n,name:n,size:24}); })));
+</script>
+</body>
+</html>

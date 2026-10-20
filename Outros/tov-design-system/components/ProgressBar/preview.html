@@ -1,0 +1,12 @@
+<!-- @dsCard group="Dados" height=96 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>ProgressBar — preview</title></head>
+<body>
+<div id="root"></div>
+<script>
+  var T = window.Tov, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div',{className:'tv-stack'}, h(T.ProgressBar,{value:72,label:'Meta'}), h(T.ProgressBar,{value:45,tone:'ink',label:'Preto'}), h(T.ProgressBar,{value:30,tone:'success',label:'Sucesso'})));
+</script>
+</body>
+</html>

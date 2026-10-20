@@ -429,6 +429,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadAdminUsersTable();
   }
 
+  window.__tovShowDashboard = showDashboard;
+  window.__tovShowAdmin = showAdminPanel;
+
   // Toggle da Sidebar Admin
   if (toggleAdminSidebarBtn && adminSidebar) {
     toggleAdminSidebarBtn.addEventListener('click', () => {
@@ -658,14 +661,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             data: values,
             fill: true,
             backgroundColor: gradient,
-            borderColor: '#1E5080',
+            borderColor: '#0a0a0a',
             borderWidth: 2.5,
-            pointBackgroundColor: '#1E5080',
+            pointBackgroundColor: '#ffda0f',
             pointBorderColor: '#FFFFFF',
             pointBorderWidth: 2,
             pointRadius: 4.5,
             pointHoverRadius: 7,
-            pointHoverBackgroundColor: '#1E5080',
+            pointHoverBackgroundColor: '#ffda0f',
             pointHoverBorderColor: '#FFFFFF',
             pointHoverBorderWidth: 3,
             tension: 0.35
@@ -1359,7 +1362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       let chartData = [];
       let yUnitPrefix = '';
       let yUnitSuffix = '';
-      let chartColor = '#1E5080';
+      let chartColor = '#0a0a0a';
       let metricName = 'Leads';
 
       switch (mktSelectedMetric) {
@@ -1367,7 +1370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           chartData = monthlyLeads;
           yUnitPrefix = '';
           yUnitSuffix = '';
-          chartColor = '#1E5080';
+          chartColor = '#0a0a0a';
           metricName = 'Leads';
           break;
         case 'investimento':

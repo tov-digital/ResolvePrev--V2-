@@ -1,0 +1,14 @@
+<!-- @dsCard group="Identidade" height=88 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Avatar — preview</title></head>
+<body>
+<div id="root"></div>
+<script>
+  var T = window.Tov, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div',{className:'tv-row'},
+ h(T.Avatar,{name:'Cecília Batista',size:56}), h(T.Avatar,{name:'Gabriel Igreja',size:40}),
+ h(T.Avatar,{name:'Administrador',size:40,tone:'dark'}), h(T.Avatar,{name:'Ana Rocha',size:32}), h(T.Avatar,{name:'Tov',size:24,tone:'dark'})));
+</script>
+</body>
+</html>

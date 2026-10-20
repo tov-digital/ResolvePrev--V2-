@@ -1,0 +1,12 @@
+<!-- @dsCard group="Navegação" height=88 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Tabs — preview</title></head>
+<body>
+<div id="root"></div>
+<script>
+  var T = window.Tov, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div',{className:'tv-pad',style:{background:'var(--surface)'}}, h(T.Tabs,{items:[{value:'r',label:'Respostas',icon:'message'},{value:'f',label:'Ficha',icon:'file'},{value:'d',label:'Documentos',icon:'folder'}]})));
+</script>
+</body>
+</html>
