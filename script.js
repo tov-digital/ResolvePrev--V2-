@@ -4427,27 +4427,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.product-option-item').forEach(btn => {
       btn.addEventListener('click', () => {
         const selectedProduct = btn.dataset.product || '';
-        activeProductFilter = selectedProduct;
-
-        // Atualiza texto do botão
-        if (crmProductBtnLabel) {
-          crmProductBtnLabel.textContent = selectedProduct ? selectedProduct : 'Produto';
-        }
-
-        // Se tiver selecionado, dá um destaque no botão
-        if (crmProductBtnEl) {
-          if (selectedProduct) {
-            crmProductBtnEl.style.borderColor = 'var(--line-strong)';
-            crmProductBtnEl.style.fontWeight = '700';
-          } else {
+        
+        // Se clicar no produto que já está ativo, desmarca
+        if (activeProductFilter === selectedProduct) {
+          activeProductFilter = '';
+          btn.classList.remove('active');
+          if (crmProductBtnLabel) crmProductBtnLabel.textContent = 'Produto';
+          if (crmProductBtnEl) {
             crmProductBtnEl.style.borderColor = '';
             crmProductBtnEl.style.fontWeight = '';
           }
+        } else {
+          activeProductFilter = selectedProduct;
+          document.querySelectorAll('.product-option-item').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (crmProductBtnLabel) crmProductBtnLabel.textContent = selectedProduct;
+          if (crmProductBtnEl) {
+            crmProductBtnEl.style.borderColor = 'var(--line-strong)';
+            crmProductBtnEl.style.fontWeight = '700';
+          }
         }
-
-        // Atualiza classe active
-        document.querySelectorAll('.product-option-item').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
 
         // Fecha o dropdown
         productPanel.classList.add('hidden');
