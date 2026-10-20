@@ -4405,7 +4405,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let activeDateFilter    = ''; // string e.g. 'menos7'
   let activeOperatorFilter = ''; // string, id do operador
   let activeSortMode      = 'nome'; // 'nome' | 'data_requerimento' | 'created_at' | 'updated_at'
-  let activeProductFilter = ''; // '' | 'Aposentadoria' | 'Salário-Maternidade'
+  let activeProductFilter = 'Aposentadoria'; // 'Aposentadoria' (padrão) | 'Salário-Maternidade'
 
   // Dropdown e lógica de Produto
   const crmProductBtnEl       = document.getElementById('crmProductBtn');
@@ -4426,33 +4426,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.querySelectorAll('.product-option-item').forEach(btn => {
       btn.addEventListener('click', () => {
-        const selectedProduct = btn.dataset.product || '';
-        
-        // Se clicar no produto que já está ativo, desmarca
-        if (activeProductFilter === selectedProduct) {
-          activeProductFilter = '';
-          btn.classList.remove('active');
-          if (crmProductBtnLabel) crmProductBtnLabel.textContent = 'Produto';
-          if (crmProductBtnEl) {
-            crmProductBtnEl.style.borderColor = '';
-            crmProductBtnEl.style.fontWeight = '';
-          }
-        } else {
-          activeProductFilter = selectedProduct;
-          document.querySelectorAll('.product-option-item').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          if (crmProductBtnLabel) crmProductBtnLabel.textContent = selectedProduct;
-          if (crmProductBtnEl) {
-            crmProductBtnEl.style.borderColor = 'var(--line-strong)';
-            crmProductBtnEl.style.fontWeight = '700';
-          }
+        const selectedProduct = btn.dataset.product || 'Aposentadoria';
+        activeProductFilter = selectedProduct;
+
+        // Atualiza estilo active nas opções
+        document.querySelectorAll('.product-option-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Atualiza rótulo do botão
+        if (crmProductBtnLabel) {
+          crmProductBtnLabel.textContent = selectedProduct;
         }
 
         // Fecha o dropdown
         productPanel.classList.add('hidden');
         if (productDropWrapper) productDropWrapper.classList.remove('open');
 
-        // Re-renderiza cards com o filtro de produto
+        // Re-renderiza cards de acordo com o produto selecionado
         const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
         filterAndRenderCards(searchTerm);
       });
@@ -4663,17 +4653,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 2. Filtro de Produto ('Aposentadoria' | 'Salário-Maternidade')
-    if (activeProductFilter) {
-      const prodQuery = activeProductFilter.toLowerCase();
+    // 'Aposentadoria' puxa a base atual existente (padrão).
+    // 'Salário-Maternidade' ainda não possui planilhas criadas no momento.
+    if (activeProductFilter === 'Salário-Maternidade') {
       filtered = filtered.filter(card => {
-        // Verifica se o card possui campo de produto/beneficio explicitamente ou em respostas de qualificação
-        const cardProd = (card.produto || card.tipo_beneficio || card.beneficio || card.subtipo || '').toLowerCase();
-        if (cardProd && cardProd.includes(prodQuery)) return true;
-        // Caso os dados estejam no JSON ou texto de respostas
-        if (card.respostas_qualificacao && typeof card.respostas_qualificacao === 'string') {
-          if (card.respostas_qualificacao.toLowerCase().includes(prodQuery)) return true;
-        }
-        return false;
+        const cardProd = (card.produto || card.tipo_beneficio || card.beneficio || '').toLowerCase();
+        return cardProd.includes('maternidade');
+      });
+    } else {
+      // 'Aposentadoria' ou padrão: exibe toda a base atual existente
+      filtered = filtered.filter(card => {
+        const cardProd = (card.produto || card.tipo_beneficio || card.beneficio || '').toLowerCase();
+        return !cardProd.includes('maternidade');
       });
     }
 
