@@ -3729,37 +3729,42 @@ select.qual-select,
 
 /* Container de Input com Ação Inline (Botão WhatsApp no campo Telefone) */
 .input-with-action {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
 }
 
 .input-with-action input {
-  padding-right: 2.6rem !important;
+  width: 100% !important;
+  padding-right: 48px !important;
 }
 
-.input-action-btn {
-  position: absolute;
-  right: 0.45rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #22C55E;
-  background-color: transparent;
-  transition: all 0.2s ease;
-  text-decoration: none;
+.input-action-btn,
+.wa-action-btn {
+  position: absolute !important;
+  right: 6px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: var(--radius-sm) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #16a34a !important;
+  background-color: transparent !important;
+  border: none !important;
+  transition: color 0.15s ease, background-color 0.15s ease !important;
+  text-decoration: none !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
 }
 
-.input-action-btn:hover {
-  background-color: transparent;
-  color: #16A34A;
-  transform: translateY(-50%);
+.input-action-btn:hover,
+.wa-action-btn:hover {
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+  transform: translateY(-50%) !important;
 }
 
 .tab-pane {
@@ -5140,33 +5145,39 @@ a:hover,
 }
 
 .input-with-action {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  position: relative;
+  display: block;
   width: 100%;
 }
 
 .input-with-action input {
-  flex: 1;
+  width: 100%;
+  padding-right: 48px !important;
 }
 
 .wa-action-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%) !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background: var(--success-soft);
-  color: var(--success);
-  border: 1px solid rgba(15, 122, 74, 0.2);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: #16a34a;
+  border: none;
   flex-shrink: 0;
   text-decoration: none;
-  transition: transform var(--duration-fast) var(--ease);
+  transition: background-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
 }
 
 .wa-action-btn:hover {
-  transform: scale(1.05);
+  background: #dcfce7;
+  color: #15803d;
+  transform: translateY(-50%) !important;
 }
 
 /* Documentos Tab */
