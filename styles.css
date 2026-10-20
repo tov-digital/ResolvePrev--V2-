@@ -1076,8 +1076,95 @@ display: flex;
 
 /* Wrapper do dropdown — posicionamento relativo */
 .filter-dropdown-wrapper,
-.sort-dropdown-wrapper {
+.sort-dropdown-wrapper,
+.product-dropdown-wrapper {
   position: relative;
+}
+
+#crmProductBtn .dropdown-chevron {
+  transition: transform var(--transition-fast, 0.2s ease);
+  color: var(--ink-muted);
+}
+
+.product-dropdown-wrapper.open #crmProductBtn .dropdown-chevron {
+  transform: rotate(180deg);
+}
+
+/* Painel flutuante de Produtos */
+.product-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 300;
+  width: 220px;
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  padding: 0.5rem;
+  animation: filterPanelIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top left;
+}
+
+.product-panel.hidden { display: none; }
+
+.product-panel-header {
+  padding: 0.35rem 0.6rem 0.45rem;
+  border-bottom: 1px solid #F1F5F9;
+  margin-bottom: 0.35rem;
+}
+
+.product-panel-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.product-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.product-option-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.65rem;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #334155;
+  font-family: var(--font-family);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.product-option-item:hover {
+  background: #F8FAFC;
+  color: #0F172A;
+}
+
+.product-option-item.active {
+  background: #EFF6FF;
+  color: var(--color-primary, #1E5080);
+  font-weight: 600;
+}
+
+.product-check-icon {
+  display: none;
+  color: var(--color-primary, #1E5080);
+  flex-shrink: 0;
+}
+
+.product-option-item.active .product-check-icon {
+  display: block;
 }
 
 /* Painel flutuante de Ordenação */

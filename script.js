@@ -4405,6 +4405,60 @@ document.addEventListener('DOMContentLoaded', async () => {
   let activeDateFilter    = ''; // string e.g. 'menos7'
   let activeOperatorFilter = ''; // string, id do operador
   let activeSortMode      = 'nome'; // 'nome' | 'data_requerimento' | 'created_at' | 'updated_at'
+  let activeProductFilter = ''; // '' | 'Aposentadoria' | 'Salário-Maternidade'
+
+  // Dropdown e lógica de Produto
+  const crmProductBtnEl       = document.getElementById('crmProductBtn');
+  const productPanel          = document.getElementById('productPanel');
+  const productDropWrapper    = document.getElementById('productDropdownWrapper');
+  const crmProductBtnLabel    = document.getElementById('crmProductBtnLabel');
+
+  if (crmProductBtnEl && productPanel) {
+    crmProductBtnEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (filterPanel) filterPanel.classList.add('hidden');
+      if (sortPanel) sortPanel.classList.add('hidden');
+      const isHidden = productPanel.classList.toggle('hidden');
+      if (productDropWrapper) {
+        productDropWrapper.classList.toggle('open', !isHidden);
+      }
+    });
+
+    document.querySelectorAll('.product-option-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const selectedProduct = btn.dataset.product || '';
+        activeProductFilter = selectedProduct;
+
+        // Atualiza texto do botão
+        if (crmProductBtnLabel) {
+          crmProductBtnLabel.textContent = selectedProduct ? selectedProduct : 'Produto';
+        }
+
+        // Se tiver selecionado, dá um destaque no botão
+        if (crmProductBtnEl) {
+          if (selectedProduct) {
+            crmProductBtnEl.style.borderColor = 'var(--line-strong)';
+            crmProductBtnEl.style.fontWeight = '700';
+          } else {
+            crmProductBtnEl.style.borderColor = '';
+            crmProductBtnEl.style.fontWeight = '';
+          }
+        }
+
+        // Atualiza classe active
+        document.querySelectorAll('.product-option-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Fecha o dropdown
+        productPanel.classList.add('hidden');
+        if (productDropWrapper) productDropWrapper.classList.remove('open');
+
+        // Re-renderiza cards com o filtro de produto
+        const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
+        filterAndRenderCards(searchTerm);
+      });
+    });
+  }
 
   // Dropdown e lógica de Ordenação
   const crmSortBtnEl    = document.getElementById('crmSortBtn');
@@ -4415,6 +4469,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     crmSortBtnEl.addEventListener('click', (e) => {
       e.stopPropagation();
       if (filterPanel) filterPanel.classList.add('hidden');
+      if (productPanel) {
+        productPanel.classList.add('hidden');
+        if (productDropWrapper) productDropWrapper.classList.remove('open');
+      }
       sortPanel.classList.toggle('hidden');
     });
 
@@ -4458,6 +4516,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (crmFilterBtnEl && filterPanel) {
     crmFilterBtnEl.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (productPanel) {
+        productPanel.classList.add('hidden');
+        if (productDropWrapper) productDropWrapper.classList.remove('open');
+      }
+      if (sortPanel) sortPanel.classList.add('hidden');
       updateFilterStatusOptionsVisibility();
       filterPanel.classList.toggle('hidden');
     });
@@ -4482,6 +4545,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (sortPanel && !sortPanel.classList.contains('hidden')) {
       if (!sortDropWrapper?.contains(e.target) && !crmSortBtnEl?.contains(e.target)) {
         sortPanel.classList.add('hidden');
+      }
+    }
+    if (productPanel && !productPanel.classList.contains('hidden')) {
+      if (!productDropWrapper?.contains(e.target) && !crmProductBtnEl?.contains(e.target)) {
+        productPanel.classList.add('hidden');
+        if (productDropWrapper) productDropWrapper.classList.remove('open');
       }
     }
   });
@@ -4591,6 +4660,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const phoneFormattedMatch = card.telefone && card.telefone.toLowerCase().includes(searchTerm);
         const phoneDigitsMatch    = cleanSearchTerm && rawPhone.includes(cleanSearchTerm);
         return nameMatch || phoneFormattedMatch || phoneDigitsMatch;
+      });
+    }
+
+    // 2. Filtro de Produto ('Aposentadoria' | 'Salário-Maternidade')
+    if (activeProductFilter) {
+      const prodQuery = activeProductFilter.toLowerCase();
+      filtered = filtered.filter(card => {
+        // Verifica se o card possui campo de produto/beneficio explicitamente ou em respostas de qualificação
+        const cardProd = (card.produto || card.tipo_beneficio || card.beneficio || card.subtipo || '').toLowerCase();
+        if (cardProd && cardProd.includes(prodQuery)) return true;
+        // Caso os dados estejam no JSON ou texto de respostas
+        if (card.respostas_qualificacao && typeof card.respostas_qualificacao === 'string') {
+          if (card.respostas_qualificacao.toLowerCase().includes(prodQuery)) return true;
+        }
+        return false;
       });
     }
 
