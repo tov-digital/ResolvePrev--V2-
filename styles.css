@@ -4593,8 +4593,8 @@ select.qual-select,
 }
 
 .status-pill.status-admin {
-  background-color: #DBEAFE;
-  color: #1D4ED8;
+  background-color: var(--brand);
+  color: #FFFFFF;
 }
 
 .status-pill.status-user {
@@ -5278,20 +5278,21 @@ a:hover,
   gap: 8px;
   height: 40px;
   padding: 0 18px;
-  background: var(--primary) !important;
-  color: #ffffff !important;
+  background-color: var(--primary);
+  color: var(--on-primary);
   border: none;
-  border-radius: var(--radius-md) !important;
-  font-family: var(--font-sans) !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-card);
   transition: all var(--duration-fast) var(--ease);
 }
 
 .btn-create-user:hover {
-  background: var(--primary-hover) !important;
+  background-color: var(--color-primary-hover);
+  color: var(--on-primary);
   transform: translateY(-1px);
 }
 
@@ -5414,8 +5415,8 @@ a:hover,
 }
 
 .status-pill.status-admin {
-  background-color: #DBEAFE;
-  color: #1D4ED8;
+  background-color: var(--brand);
+  color: #FFFFFF;
 }
 
 .status-pill.status-user {
@@ -6668,26 +6669,44 @@ a:hover,
   font-size: 0.82rem;
   height: 36px;
   padding: 0 1rem;
+  color: #FFFFFF !important;
 }
 
 .btn-fin-receita {
-  background-color: #16A34A;
+  background-color: #16A34A !important;
   box-shadow: 0 2px 6px rgba(22, 163, 74, 0.2);
 }
 
 .btn-fin-receita:hover {
-  background-color: #15803D;
+  background-color: #15803D !important;
+  color: #FFFFFF !important;
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 .btn-fin-despesa {
-  background-color: #DC2626;
+  background-color: #DC2626 !important;
   box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
 }
 
 .btn-fin-despesa:hover {
-  background-color: #B91C1C;
+  background-color: #B91C1C !important;
+  color: #FFFFFF !important;
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Regra Geral: Botões com fundo branco ou claro no hover mantêm ou recebem cor de texto preta/escura */
+button:hover[style*="background:#fff"],
+button:hover[style*="background: #fff"],
+button:hover[style*="background:#FFFFFF"],
+button:hover[style*="background: #FFFFFF"],
+button:hover[style*="background:white"],
+button:hover[style*="background: white"],
+.btn-secondary:hover,
+.btn-light:hover,
+.btn-outline:hover,
+[class*="-secondary"]:hover,
+[class*="-outline"]:hover {
+  color: var(--ink) !important;
 }
 
 /* Tabela e Empty States do Financeiro */
