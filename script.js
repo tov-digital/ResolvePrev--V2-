@@ -4872,6 +4872,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const deleteOptionsCardName = document.getElementById('deleteOptionsCardName');
   const btnOptDesqualificado = document.getElementById('btnOptDesqualificado');
   const btnOptRecusado = document.getElementById('btnOptRecusado');
+  const btnOptPerdido = document.getElementById('btnOptPerdido');
   const btnOptRecuperacao = document.getElementById('btnOptRecuperacao');
   const btnOptNoShow = document.getElementById('btnOptNoShow');
   const btnOptNegado = document.getElementById('btnOptNegado');
@@ -4992,6 +4993,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   if (btnOptRecusado) {
     btnOptRecusado.addEventListener('click', () => requestStatusChangeConfirmation('Recusado', 'recusado'));
+  }
+  if (btnOptPerdido) {
+    btnOptPerdido.addEventListener('click', () => requestStatusChangeConfirmation('Perdido', 'perdido'));
   }
   if (btnOptRecuperacao) {
     btnOptRecuperacao.addEventListener('click', () => requestStatusChangeConfirmation('Recuperação', 'recuperacao'));
