@@ -239,6 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'acompanhamento': 'dot-acompanhamento',
     'reuniao': 'dot-reuniao',
     'proposta': 'dot-proposta',
+    'planejamento': 'dot-planejamento',
     'documentacao': 'dot-documentacao',
     'na_fila': 'dot-na_fila',
     'requerido': 'dot-requerido',
@@ -4314,7 +4315,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const canSeeAllCards = isAdmin || userRole === 'supervisor_comercial' || userRole === 'supervisor_juridico';
 
     // Operadores (operador_comercial, operador_juridico e legacy usuario/advogado) vêem apenas cards atribuídos a eles
-    if (!canSeeAllCards) {
+    // Nota: 'insucessos_crm' (aba judicial) não possui coluna user_id
+    if (!canSeeAllCards && window.currentTab !== 'judicial') {
       query = query.eq('user_id', currentUserId);
     }
 
@@ -6624,7 +6626,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (window.currentTab === 'operacao') {
         stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
       } else if (window.currentTab === 'judicial') {
-        stages = ['negado'];
+        stages = ['negado', 'planejamento'];
       }
       
       const currentIndex = stages.indexOf(stage);
@@ -7557,7 +7559,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (window.currentTab === 'operacao') {
         stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
       } else if (window.currentTab === 'judicial') {
-        stages = ['negado'];
+        stages = ['negado', 'planejamento'];
       }
       
       const currentIndex = stages.indexOf(currentActiveCard.status);
