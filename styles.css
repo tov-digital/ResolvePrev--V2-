@@ -3813,7 +3813,7 @@ select.qual-select,
   border-color: var(--line);
 }
 
-/* Container de Input com Ação Inline (Botão WhatsApp no campo Telefone) */
+/* Container de Input com Ação Inline (Botões de Ação no campo Telefone) */
 .input-with-action {
   position: relative !important;
   display: block !important;
@@ -3822,35 +3822,57 @@ select.qual-select,
 
 .input-with-action input {
   width: 100% !important;
-  padding-right: 48px !important;
+  padding-right: 76px !important;
 }
 
-.input-action-btn,
-.wa-action-btn {
+.input-actions-group {
   position: absolute !important;
   right: 6px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: var(--radius-sm) !important;
   display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+}
+
+.input-action-btn,
+.wa-action-btn {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: var(--radius-sm, 6px) !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   color: #16a34a !important;
   background-color: transparent !important;
   border: none !important;
-  transition: color 0.15s ease, background-color 0.15s ease !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
   text-decoration: none !important;
   box-sizing: border-box !important;
   margin: 0 !important;
+  padding: 0 !important;
 }
 
 .input-action-btn:hover,
 .wa-action-btn:hover {
   background-color: #dcfce7 !important;
   color: #15803d !important;
-  transform: translateY(-50%) !important;
+}
+
+.copy-action-btn {
+  color: var(--text-tertiary, #94a3b8) !important;
+}
+
+.copy-action-btn:hover {
+  background-color: var(--bg-hover, #f1f5f9) !important;
+  color: var(--text-primary, #0f172a) !important;
+}
+
+.copy-action-btn.copied {
+  color: #16a34a !important;
+  background-color: #dcfce7 !important;
 }
 
 .tab-pane {
@@ -5231,39 +5253,51 @@ a:hover,
 }
 
 .input-with-action {
-  position: relative;
-  display: block;
-  width: 100%;
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
 }
 
 .input-with-action input {
-  width: 100%;
-  padding-right: 48px !important;
+  width: 100% !important;
+  padding-right: 76px !important;
 }
 
-.wa-action-btn {
-  position: absolute;
-  right: 6px;
-  top: 50%;
+.input-actions-group {
+  position: absolute !important;
+  right: 6px !important;
+  top: 50% !important;
   transform: translateY(-50%) !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: #16a34a;
-  border: none;
-  flex-shrink: 0;
-  text-decoration: none;
-  transition: background-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 2px !important;
+  z-index: 2 !important;
 }
 
-.wa-action-btn:hover {
-  background: #dcfce7;
-  color: #15803d;
-  transform: translateY(-50%) !important;
+.input-actions-group .input-action-btn,
+.input-actions-group .wa-action-btn,
+.input-actions-group .copy-action-btn {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  transform: none !important;
+  width: 30px !important;
+  height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  border-radius: var(--radius-sm, 6px) !important;
+}
+
+.input-actions-group .input-action-btn:hover,
+.input-actions-group .wa-action-btn:hover,
+.input-actions-group .copy-action-btn:hover {
+  transform: none !important;
 }
 
 /* Documentos Tab */

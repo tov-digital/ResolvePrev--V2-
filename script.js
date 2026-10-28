@@ -5830,6 +5830,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  const sheetPhoneCopyBtn = document.getElementById('sheetPhoneCopyBtn');
+  if (sheetPhoneCopyBtn && sheetPhone) {
+    sheetPhoneCopyBtn.addEventListener('click', () => {
+      const phoneVal = sheetPhone.value ? sheetPhone.value.trim() : '';
+      if (!phoneVal) {
+        showToast('Nenhum telefone para copiar.');
+        return;
+      }
+
+      navigator.clipboard.writeText(phoneVal).then(() => {
+        sheetPhoneCopyBtn.classList.add('copied');
+        sheetPhoneCopyBtn.title = 'Telefone copiado!';
+        const originalSvg = sheetPhoneCopyBtn.innerHTML;
+        sheetPhoneCopyBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        `;
+        showToast('Telefone copiado para a área de transferência!');
+
+        setTimeout(() => {
+          sheetPhoneCopyBtn.classList.remove('copied');
+          sheetPhoneCopyBtn.title = 'Copiar número de telefone';
+          sheetPhoneCopyBtn.innerHTML = originalSvg;
+        }, 2000);
+      }).catch(() => {
+        // Fallback caso clipboard API falhe
+        try {
+          const tempInput = document.createElement('input');
+          tempInput.value = phoneVal;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          document.execCommand('copy');
+          document.body.removeChild(tempInput);
+          showToast('Telefone copiado para a área de transferência!');
+        } catch (err) {
+          showToast('Não foi possível copiar o telefone.');
+        }
+      });
+    });
+  }
+
   // Máscaras de entrada em tempo real
   if (sheetPhone) {
     sheetPhone.addEventListener('input', (e) => {
