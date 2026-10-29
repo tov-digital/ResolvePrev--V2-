@@ -5,13 +5,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-  // Estado da aba atual (Comercial vs Operação)
+  // Estado da aba atual (Comercial, Operação, Judicial) — Tabela unificada 'CRM'
   window.currentTab = 'comercial';
   function getCurrentTable() {
-    if (window.currentTab === 'comercial') return 'oportunidades_crm';
-    if (window.currentTab === 'operacao') return 'operacao_crm';
-    if (window.currentTab === 'judicial') return 'insucessos_crm';
-    return 'oportunidades_crm';
+    return 'CRM';
   }
 
   function getUserDisplayName(profile) {
@@ -517,12 +514,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         .select('*', { count: 'exact', head: true });
 
       const { count: countComercial } = await supabase
-        .from('oportunidades_crm')
-        .select('*', { count: 'exact', head: true });
+        .from('CRM')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta', 'planejamento']);
 
       const { count: countOperacao } = await supabase
-        .from('operacao_crm')
-        .select('*', { count: 'exact', head: true });
+        .from('CRM')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido']);
 
       const profilesTotal = countProfiles || 0;
       const comercialTotal = countComercial || 0;
@@ -591,10 +590,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const lastMonthObj = new Date(currentYear, currentMonth + 12, 0); // Último dia do 12º mês
       const maxDateStr = `${lastMonthObj.getFullYear()}-${String(lastMonthObj.getMonth() + 1).padStart(2, '0')}-${String(lastMonthObj.getDate()).padStart(2, '0')}`;
 
-      // 2. Buscar linhas da tabela operacao_crm com data_requerimento no intervalo
+      // 2. Buscar linhas da tabela CRM (status de Operação) com data_requerimento no intervalo
       const { data: rows, error } = await supabase
-        .from('operacao_crm')
+        .from('CRM')
         .select('data_requerimento')
+        .in('status', ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'])
         .not('data_requerimento', 'is', null)
         .gte('data_requerimento', minDateStr)
         .lte('data_requerimento', maxDateStr);
@@ -1173,16 +1173,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const startDayISO = formatISODate(mktFilterStartDate);
       const endDayISO = formatISODate(mktFilterEndDate);
 
-      // Consultar as 3 tabelas no período baseado em criado_em e a planilha financeiro
-      const [rowsOportunidades, rowsInsucessos, rowsOperacao, rowsFinanceiro] = await Promise.all([
-        fetchAllCrmRows('oportunidades_crm', 'id, status, criado_em', startISO, endISO),
-        fetchAllCrmRows('insucessos_crm', 'id, status, criado_em', startISO, endISO),
-        fetchAllCrmRows('operacao_crm', 'id, status, criado_em', startISO, endISO),
+      // Consultar a tabela unificada CRM no período baseado em criado_em e a planilha financeiro
+      const [allRows, rowsFinanceiro] = await Promise.all([
+        fetchAllCrmRows('CRM', 'id, status, criado_em', startISO, endISO),
         fetchFinanceiroRecords()
       ]);
 
-      // Total de Leads = todas as linhas das 3 tabelas no período
-      const allRows = [...rowsOportunidades, ...rowsInsucessos, ...rowsOperacao];
+      // Total de Leads = todas as linhas da tabela CRM no período
       const totalLeads = allRows.length;
 
       // Qualificados = todas as linhas das 3 tabelas, exceto status 'planejamento' e 'desqualificado'
@@ -1248,20 +1245,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentYear = new Date().getFullYear();
     const yearsSet = new Set([currentYear, currentYear - 1]);
 
-    // Buscar anos presentes em criado_em das 3 tabelas
+    // Buscar anos presentes em criado_em da tabela unificada CRM
     try {
-      const [resOp, resIns, resOpr] = await Promise.all([
-        supabase.from('oportunidades_crm').select('criado_em').order('criado_em', { ascending: true }).limit(1),
-        supabase.from('insucessos_crm').select('criado_em').order('criado_em', { ascending: true }).limit(1),
-        supabase.from('operacao_crm').select('criado_em').order('criado_em', { ascending: true }).limit(1)
-      ]);
+      const { data: rows } = await supabase
+        .from('CRM')
+        .select('criado_em')
+        .order('criado_em', { ascending: true })
+        .limit(1);
 
-      [resOp.data, resIns.data, resOpr.data].forEach(rows => {
-        if (rows && rows[0] && rows[0].criado_em) {
-          const y = new Date(rows[0].criado_em).getFullYear();
-          if (!isNaN(y) && y > 2000) yearsSet.add(y);
-        }
-      });
+      if (rows && rows[0] && rows[0].criado_em) {
+        const y = new Date(rows[0].criado_em).getFullYear();
+        if (!isNaN(y) && y > 2000) yearsSet.add(y);
+      }
     } catch (e) {
       // fallback gracioso
     }
@@ -1304,19 +1299,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const startYearISO = new Date(year, 0, 1, 0, 0, 0, 0).toISOString();
       const endYearISO = new Date(year, 11, 31, 23, 59, 59, 999).toISOString();
 
-      // Consultar registros de todo o ano selecionado nas 3 tabelas com paginação completa e financeiro
-      const [rowsOp, rowsIns, rowsOpr, rowsFinanceiro] = await Promise.all([
-        fetchAllCrmRows('oportunidades_crm', 'status, criado_em', startYearISO, endYearISO),
-        fetchAllCrmRows('insucessos_crm', 'status, criado_em', startYearISO, endYearISO),
-        fetchAllCrmRows('operacao_crm', 'status, criado_em', startYearISO, endYearISO),
+      // Consultar registros de todo o ano selecionado na tabela unificada CRM com paginação completa e financeiro
+      const [allYearRows, rowsFinanceiro] = await Promise.all([
+        fetchAllCrmRows('CRM', 'status, criado_em', startYearISO, endYearISO),
         fetchFinanceiroRecords()
       ]);
-
-      const allYearRows = [
-        ...rowsOp,
-        ...rowsIns,
-        ...rowsOpr
-      ];
 
       // Inicializar agregadores dos 12 meses (0 = Janeiro a 11 = Dezembro)
       const monthlyLeads = new Array(12).fill(0);
@@ -1902,15 +1889,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const startISO = comFilterStartDate.toISOString();
       const endISO = comFilterEndDate.toISOString();
 
-      // Buscar registros das 3 tabelas no período selecionado (baseado estritamente em criado_em)
-      const [rowsOp, rowsIns, rowsOpr] = await Promise.all([
-        fetchAllCrmRows('oportunidades_crm', 'id, status, criado_em', startISO, endISO),
-        fetchAllCrmRows('insucessos_crm', 'id, status, criado_em', startISO, endISO),
-        fetchAllCrmRows('operacao_crm', 'id, status, criado_em', startISO, endISO)
-      ]);
-
-      // Unir todas as linhas das 3 tabelas
-      const rawRows = [...rowsOp, ...rowsIns, ...rowsOpr];
+      // Buscar registros da tabela unificada CRM no período selecionado (baseado estritamente em criado_em)
+      const rawRows = await fetchAllCrmRows('CRM', 'id, status, criado_em', startISO, endISO);
 
       // Regra obrigatória: 'desqualificado' e 'planejamento' devem ser totalmente desconsiderados de qualquer cálculo
       const validRows = rawRows.filter(r => {
@@ -1963,12 +1943,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       const pctSR = denSR > 0 ? (numSR / denSR) * 100 : 0;
 
       // 5. CLR (Close Rate):
-      // Numerador: total de registros em "operacao_crm"
+      // Numerador: total de registros com status de Operação (documentacao, na_fila, requerido, exigencia, concedido)
       // Denominador: total de SR (leads que compareceram: numSR)
-      const validOperacaoRows = rowsOpr.filter(r => {
-        const s = (r.status || '').toLowerCase().trim();
-        return s !== 'desqualificado' && s !== 'planejamento';
-      });
+      const operacaoStatuses = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
+      const validOperacaoRows = validRows.filter(r => operacaoStatuses.includes(getStatus(r)));
       const numCLR = validOperacaoRows.length;
       const denCLR = numSR; // Total de comparecimentos (SR)
       const pctCLR = denCLR > 0 ? (numCLR / denCLR) * 100 : 0;
@@ -4231,43 +4209,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         {
           event: '*',
           schema: 'public',
-          table: 'oportunidades_crm'
+          table: 'CRM'
         },
         () => {
-          if (window.currentTab === 'comercial') {
-            loadUserCards();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'operacao_crm'
-        },
-        () => {
-          if (window.currentTab === 'operacao') {
-            loadUserCards();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'insucessos_crm'
-        },
-        () => {
-          if (window.currentTab === 'judicial') {
-            loadUserCards();
-          }
+          loadUserCards();
         }
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Sincronização em tempo real ativa no Supabase.');
+          console.log('Sincronização em tempo real ativa no Supabase (tabela CRM).');
         }
       });
   }
@@ -4309,13 +4259,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Atualiza visibilidade de abas no menu conforme perfil
     updateNavigationByRole(userProfile, currentUserId);
 
-    let query = supabase.from(getCurrentTable()).select('*');
+    let tabStages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
+    if (window.currentTab === 'operacao') {
+      tabStages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
+    } else if (window.currentTab === 'judicial') {
+      tabStages = ['negado', 'planejamento'];
+    }
+
+    let query = supabase.from(getCurrentTable()).select('*').in('status', tabStages);
 
     // Quem vê TODOS os cards da aba: Administradores e Supervisores
     const canSeeAllCards = isAdmin || userRole === 'supervisor_comercial' || userRole === 'supervisor_juridico';
 
     // Operadores (operador_comercial, operador_juridico e legacy usuario/advogado) vêem apenas cards atribuídos a eles
-    // Nota: 'insucessos_crm' (aba judicial) não possui coluna user_id
+    // Na aba judicial os registros são visíveis independentemente de user_id
     if (!canSeeAllCards && window.currentTab !== 'judicial') {
       query = query.eq('user_id', currentUserId);
     }
@@ -4943,51 +4900,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Ações das opções de status (Desqualificado, Recusado, Recuperação, No-Show) -> Solicita Confirmação
+  // Ações das opções de insucesso (Desqualificado, Recusado, Perdido, Recuperação, No-Show, Triagem/Negado)
   async function triggerInsuccessWebhook(actionLabel, actionValue) {
     if (!cardToDelete) return;
 
     const targetCard = cardToDelete;
     const cardElToRem = cardElementToDelete;
-
-    // Monta o payload incluindo a ação/status selecionado e todas as informações existentes do card/linha
-    const payload = {
-      opcao_selecionada: actionValue,
-      status_selecionado: actionLabel,
-      tabela_origem: getCurrentTable(),
-      data_envio: new Date().toISOString(),
-      ...targetCard
-    };
-
-    // Remove o card da lista local e atualiza a interface imediatamente sem precisar de F5
-    allUserCards = allUserCards.filter(c => c.id !== targetCard.id);
-    if (cardElToRem) cardElToRem.remove();
-    const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
-    filterAndRenderCards(searchTerm);
-
-    try {
-      showToast(`Enviando dados para processamento (${actionLabel})...`);
-
-      const response = await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/insucessos-rp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        showToast(`Enviado com sucesso (${actionLabel})!`);
-      } else {
-        showToast(`Webhook acionado, retorno: ${response.status}`);
-      }
-    } catch (err) {
-      console.error('Erro ao chamar webhook:', err);
-      showToast('Erro ao conectar com o webhook.');
-    }
+    const oldStatus = targetCard.status;
+    const oldAtualizadoEm = targetCard.atualizado_em;
+    const nowIso = new Date().toISOString();
 
     cardToDelete = null;
     cardElementToDelete = null;
+
+    // Atualiza estado local e interface imediatamente sem precisar de F5
+    targetCard.status = actionValue;
+    targetCard.atualizado_em = nowIso;
+
+    const staysInCurrentTab =
+      (window.currentTab === 'judicial' && ['negado', 'planejamento'].includes(actionValue)) ||
+      (window.currentTab === 'comercial' && ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'].includes(actionValue)) ||
+      (window.currentTab === 'operacao' && ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'].includes(actionValue));
+
+    if (!staysInCurrentTab) {
+      allUserCards = allUserCards.filter(c => c.id !== targetCard.id);
+      if (cardElToRem) cardElToRem.remove();
+    }
+
+    const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
+    filterAndRenderCards(searchTerm);
+
+    // Atualiza exclusivamente a coluna 'status' na tabela unificada CRM (sem acionar webhook)
+    if (supabase && targetCard.id && actionValue) {
+      const { error } = await supabase
+        .from(getCurrentTable())
+        .update({
+          status: actionValue,
+          atualizado_em: nowIso
+        })
+        .eq('id', targetCard.id);
+
+      if (error) {
+        console.error('Erro ao atualizar status na tabela CRM:', error);
+        targetCard.status = oldStatus;
+        targetCard.atualizado_em = oldAtualizadoEm;
+        if (!staysInCurrentTab && !allUserCards.some(c => c.id === targetCard.id)) {
+          allUserCards.push(targetCard);
+        }
+        filterAndRenderCards(searchTerm);
+        showToast('Erro ao alterar status: ' + error.message);
+      } else {
+        showToast(`Status alterado para "${actionLabel}".`);
+      }
+    }
   }
 
   if (btnOptDesqualificado) {
