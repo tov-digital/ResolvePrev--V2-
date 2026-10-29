@@ -5,10 +5,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-  // Estado da aba atual (Comercial, Operação, Judicial) — Tabela unificada 'CRM'
+  // Estado da aba atual (Comercial, Operação, Judicial) — Tabela unificada 'crm'
   window.currentTab = 'comercial';
   function getCurrentTable() {
-    return 'CRM';
+    return 'crm';
   }
 
   function getUserDisplayName(profile) {
@@ -514,12 +514,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         .select('*', { count: 'exact', head: true });
 
       const { count: countComercial } = await supabase
-        .from('CRM')
+        .from('crm')
         .select('*', { count: 'exact', head: true })
         .in('status', ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta', 'planejamento']);
 
       const { count: countOperacao } = await supabase
-        .from('CRM')
+        .from('crm')
         .select('*', { count: 'exact', head: true })
         .in('status', ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido']);
 
@@ -590,9 +590,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const lastMonthObj = new Date(currentYear, currentMonth + 12, 0); // Último dia do 12º mês
       const maxDateStr = `${lastMonthObj.getFullYear()}-${String(lastMonthObj.getMonth() + 1).padStart(2, '0')}-${String(lastMonthObj.getDate()).padStart(2, '0')}`;
 
-      // 2. Buscar linhas da tabela CRM (status de Operação) com data_requerimento no intervalo
+      // 2. Buscar linhas da tabela crm (status de Operação) com data_requerimento no intervalo
       const { data: rows, error } = await supabase
-        .from('CRM')
+        .from('crm')
         .select('data_requerimento')
         .in('status', ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'])
         .not('data_requerimento', 'is', null)
@@ -1173,13 +1173,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const startDayISO = formatISODate(mktFilterStartDate);
       const endDayISO = formatISODate(mktFilterEndDate);
 
-      // Consultar a tabela unificada CRM no período baseado em criado_em e a planilha financeiro
+      // Consultar a tabela unificada crm no período baseado em criado_em e a planilha financeiro
       const [allRows, rowsFinanceiro] = await Promise.all([
-        fetchAllCrmRows('CRM', 'id, status, criado_em', startISO, endISO),
+        fetchAllCrmRows('crm', 'id, status, criado_em', startISO, endISO),
         fetchFinanceiroRecords()
       ]);
 
-      // Total de Leads = todas as linhas da tabela CRM no período
+      // Total de Leads = todas as linhas da tabela crm no período
       const totalLeads = allRows.length;
 
       // Qualificados = todas as linhas das 3 tabelas, exceto status 'planejamento' e 'desqualificado'
@@ -1245,10 +1245,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentYear = new Date().getFullYear();
     const yearsSet = new Set([currentYear, currentYear - 1]);
 
-    // Buscar anos presentes em criado_em da tabela unificada CRM
+    // Buscar anos presentes em criado_em da tabela unificada crm
     try {
       const { data: rows } = await supabase
-        .from('CRM')
+        .from('crm')
         .select('criado_em')
         .order('criado_em', { ascending: true })
         .limit(1);
@@ -1299,9 +1299,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const startYearISO = new Date(year, 0, 1, 0, 0, 0, 0).toISOString();
       const endYearISO = new Date(year, 11, 31, 23, 59, 59, 999).toISOString();
 
-      // Consultar registros de todo o ano selecionado na tabela unificada CRM com paginação completa e financeiro
+      // Consultar registros de todo o ano selecionado na tabela unificada crm com paginação completa e financeiro
       const [allYearRows, rowsFinanceiro] = await Promise.all([
-        fetchAllCrmRows('CRM', 'status, criado_em', startYearISO, endYearISO),
+        fetchAllCrmRows('crm', 'status, criado_em', startYearISO, endYearISO),
         fetchFinanceiroRecords()
       ]);
 
@@ -1889,8 +1889,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const startISO = comFilterStartDate.toISOString();
       const endISO = comFilterEndDate.toISOString();
 
-      // Buscar registros da tabela unificada CRM no período selecionado (baseado estritamente em criado_em)
-      const rawRows = await fetchAllCrmRows('CRM', 'id, status, criado_em', startISO, endISO);
+      // Buscar registros da tabela unificada crm no período selecionado (baseado estritamente em criado_em)
+      const rawRows = await fetchAllCrmRows('crm', 'id, status, criado_em', startISO, endISO);
 
       // Regra obrigatória: 'desqualificado' e 'planejamento' devem ser totalmente desconsiderados de qualquer cálculo
       const validRows = rawRows.filter(r => {
@@ -4209,7 +4209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         {
           event: '*',
           schema: 'public',
-          table: 'CRM'
+          table: 'crm'
         },
         () => {
           loadUserCards();
@@ -4217,7 +4217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Sincronização em tempo real ativa no Supabase (tabela CRM).');
+          console.log('Sincronização em tempo real ativa no Supabase (tabela crm).');
         }
       });
   }

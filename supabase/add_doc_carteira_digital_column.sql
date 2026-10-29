@@ -1,14 +1,14 @@
 -- ==============================================================================
--- ADICIONAR COLUNA 'doc_carteira_digital' NA TABELA UNIFICADA 'CRM'
+-- ADICIONAR COLUNA 'doc_carteira_digital' NA TABELA UNIFICADA 'crm'
 -- Documento Obrigatório: Carteira de Trabalho Digital
 -- Tipo: VARCHAR(50) ou TEXT com valor padrão 'Pendente'
 -- ==============================================================================
 
--- 1. Adicionar na tabela unificada CRM
-ALTER TABLE IF EXISTS public."CRM"
+-- 1. Adicionar na tabela unificada crm
+ALTER TABLE IF EXISTS public.crm
   ADD COLUMN IF NOT EXISTS doc_carteira_digital TEXT DEFAULT 'Pendente';
 
 -- 2. Garantir que registros existentes que estejam NULL sejam preenchidos como 'Pendente'
-UPDATE public."CRM"
+UPDATE public.crm
 SET doc_carteira_digital = 'Pendente'
 WHERE doc_carteira_digital IS NULL;
