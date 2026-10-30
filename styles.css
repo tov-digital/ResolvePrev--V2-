@@ -291,7 +291,7 @@ html, body {
   background-color: var(--bg);
 }
 
-/* Fundo Limpo e Suave Tov */
+/* Fundo Corporativo Elegante e Suave Tov */
 .bg-container {
   position: absolute;
   top: 0;
@@ -299,18 +299,39 @@ html, body {
   width: 100%;
   height: 100%;
   z-index: 1;
-  background: radial-gradient(circle at 10% 20%, rgba(255, 218, 15, 0.08) 0%, transparent 40%),
-              radial-gradient(circle at 90% 80%, rgba(10, 10, 10, 0.03) 0%, transparent 45%),
-              var(--bg);
   overflow: hidden;
 }
 
 .bg-image {
-  display: none !important;
+  display: block !important;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: brightness(0.96) contrast(1.02);
+  transform: scale(1.01);
+  transition: transform 12s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.login-wrapper:hover .bg-image {
+  transform: scale(1.04);
 }
 
 .bg-overlay {
-  display: none !important;
+  display: block !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(245, 247, 250, 0.75) 60%,
+    rgba(226, 232, 240, 0.90) 100%
+  );
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 
 /* Card Container */
@@ -5111,7 +5132,8 @@ a:hover,
 .btn-gmail {
   transition: all 0.2s ease !important;
 }
-.btn-gmail:hover {
+.btn-gmail:hover,
+.btn-gmail.btn-reuniao-agendada {
   background-color: #EA4335 !important;
   color: var(--surface) !important;
   border-color: #EA4335 !important;
@@ -5951,7 +5973,8 @@ a:hover,
 .btn-gmail {
   transition: all 0.2s ease !important;
 }
-.btn-gmail:hover {
+.btn-gmail:hover,
+.btn-gmail.btn-reuniao-agendada {
   background-color: #EA4335 !important;
   color: #ffffff !important;
   border-color: #EA4335 !important;

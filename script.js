@@ -6229,6 +6229,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Atualizar estado visual do botão Etiqueta (Status)
       updateStatusTagUI(card.status || 'novo');
 
+      // Atualizar botão de agendamento de reunião
+      const btnAgendar = document.getElementById('modalBtnAgendarReuniao');
+      if (btnAgendar) {
+        let reuniaoFormatada = card._reuniaoAgendada || '';
+        if (!reuniaoFormatada && card.data_reuniao) {
+          try {
+            const dt = new Date(card.data_reuniao);
+            if (!isNaN(dt.getTime())) {
+              const dStr = String(dt.getDate()).padStart(2, '0');
+              const mStr = String(dt.getMonth() + 1).padStart(2, '0');
+              const hStr = String(dt.getHours()).padStart(2, '0');
+              const minStr = String(dt.getMinutes()).padStart(2, '0');
+              reuniaoFormatada = `${dStr}/${mStr} - ${hStr}:${minStr}`;
+            }
+          } catch (e) {}
+        }
+
+        if (reuniaoFormatada) {
+          btnAgendar.innerHTML = `<i class="ti ti-calendar-check" style="font-size:16px" aria-hidden="true"></i>${reuniaoFormatada}`;
+          btnAgendar.title = `Reunião agendada para: ${reuniaoFormatada}`;
+          btnAgendar.classList.add('btn-reuniao-agendada');
+        } else {
+          btnAgendar.innerHTML = `<i class="ti ti-calendar-plus" style="font-size:16px" aria-hidden="true"></i>Agendar reunião`;
+          btnAgendar.title = `Agendar reunião`;
+          btnAgendar.classList.remove('btn-reuniao-agendada');
+        }
+      }
+
       // Atualizar estado do botão de Comissão de SDR (apenas clicável em Operação)
       updateSdrCommissionUI(card);
 
@@ -7549,9 +7577,150 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const modalBtnAgendarReuniao = document.getElementById('modalBtnAgendarReuniao');
+  const modalAgendarReuniao = document.getElementById('modalAgendarReuniao');
+  const closeAgendarReuniaoModal = document.getElementById('closeAgendarReuniaoModal');
+  const cancelAgendarReuniaoBtn = document.getElementById('cancelAgendarReuniaoBtn');
+  const agendarReuniaoForm = document.getElementById('agendarReuniaoForm');
+  const agendarReuniaoData = document.getElementById('agendarReuniaoData');
+  const agendarReuniaoHora = document.getElementById('agendarReuniaoHora');
+  const agendarReuniaoMinuto = document.getElementById('agendarReuniaoMinuto');
+  const agendarReuniaoSubtitulo = document.getElementById('agendarReuniaoSubtitulo');
+
+  function fecharModalAgendamento() {
+    if (modalAgendarReuniao) {
+      modalAgendarReuniao.classList.add('hidden');
+    }
+  }
+
   if (modalBtnAgendarReuniao) {
     modalBtnAgendarReuniao.addEventListener('click', () => {
-      window.open('https://calendar.app.google/etUZShcszLkFJ8wB6', '_blank');
+      if (!currentActiveCard) {
+        showToast('Nenhum card selecionado.');
+        return;
+      }
+      if (agendarReuniaoSubtitulo) {
+        agendarReuniaoSubtitulo.textContent = currentActiveCard.nome 
+          ? `Cliente: ${currentActiveCard.nome}` 
+          : 'Selecione data e horário para a reunião';
+      }
+      if (agendarReuniaoData) agendarReuniaoData.value = '';
+      if (agendarReuniaoHora) agendarReuniaoHora.value = '';
+      if (agendarReuniaoMinuto) agendarReuniaoMinuto.value = '00';
+      if (modalAgendarReuniao) {
+        modalAgendarReuniao.classList.remove('hidden');
+        if (agendarReuniaoData) agendarReuniaoData.focus();
+      }
+    });
+  }
+
+  if (closeAgendarReuniaoModal) {
+    closeAgendarReuniaoModal.addEventListener('click', fecharModalAgendamento);
+  }
+  if (cancelAgendarReuniaoBtn) {
+    cancelAgendarReuniaoBtn.addEventListener('click', fecharModalAgendamento);
+  }
+  if (modalAgendarReuniao) {
+    modalAgendarReuniao.addEventListener('click', (e) => {
+      if (e.target === modalAgendarReuniao) {
+        fecharModalAgendamento();
+      }
+    });
+  }
+
+  if (agendarReuniaoForm) {
+    agendarReuniaoForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentActiveCard) {
+        showToast('Nenhum card ativo.');
+        return;
+      }
+
+      const dataVal = agendarReuniaoData ? agendarReuniaoData.value.trim() : '';
+      const horaVal = agendarReuniaoHora ? agendarReuniaoHora.value.trim() : '';
+      const minVal = agendarReuniaoMinuto ? agendarReuniaoMinuto.value.trim() : '00';
+
+      if (!dataVal || !horaVal) {
+        showToast('Por favor, selecione data e horário.');
+        return;
+      }
+
+      const horarioFormatado = `${horaVal}:${minVal}`;
+
+      // Formatar exibição no botão: dd/mm - 23:59
+      let formatted = `${dataVal} - ${horarioFormatado}`;
+      const parts = dataVal.split('-');
+      if (parts.length === 3) {
+        const [ano, mes, dia] = parts;
+        formatted = `${dia}/${mes} - ${horarioFormatado}`;
+      }
+
+      // Montar timestamp ISO com timezone local (ex: 2026-10-30T14:30:00.000-03:00)
+      const dataHoraObj = new Date(`${dataVal}T${horarioFormatado}:00`);
+      let isoComTimezone = '';
+      if (!isNaN(dataHoraObj.getTime())) {
+        const tzo = -dataHoraObj.getTimezoneOffset();
+        const dif = tzo >= 0 ? '+' : '-';
+        const pad = (num) => String(Math.floor(Math.abs(num))).padStart(2, '0');
+        const tzString = `${dif}${pad(tzo / 60)}:${pad(tzo % 60)}`;
+        isoComTimezone = `${dataVal}T${horarioFormatado}:00.000${tzString}`;
+      } else {
+        isoComTimezone = `${dataVal}T${horarioFormatado}:00.000-03:00`;
+      }
+
+      const submitBtn = document.getElementById('confirmAgendarReuniaoBtn');
+      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="ti ti-loader" style="animation: spin 1s linear infinite;" aria-hidden="true"></i> Agendando...`;
+      }
+
+      const payload = {
+        id: currentActiveCard.id,
+        nome: currentActiveCard.nome || '',
+        telefone: currentActiveCard.telefone || '',
+        data_reuniao: isoComTimezone,
+        data_hora: isoComTimezone,
+        data_horario_formatado: formatted
+      };
+
+      try {
+        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/agendamento_reuniao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn('Webhook agendamento enviado com aviso de rede:', err);
+      }
+
+      // Persistir na tabela crm no Supabase
+      try {
+        if (typeof supabase !== 'undefined' && currentActiveCard.id) {
+          await supabase
+            .from('crm')
+            .update({ data_reuniao: isoComTimezone })
+            .eq('id', currentActiveCard.id);
+        }
+      } catch (dbErr) {
+        console.warn('Erro ao salvar data_reuniao na tabela crm:', dbErr);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
+      }
+
+      // Atualizar objeto e interface
+      currentActiveCard._reuniaoAgendada = formatted;
+      currentActiveCard.data_reuniao = isoComTimezone;
+      if (modalBtnAgendarReuniao) {
+        modalBtnAgendarReuniao.innerHTML = `<i class="ti ti-calendar-check" style="font-size:16px" aria-hidden="true"></i>${formatted}`;
+        modalBtnAgendarReuniao.title = `Reunião agendada para: ${formatted}`;
+        modalBtnAgendarReuniao.classList.add('btn-reuniao-agendada');
+      }
+
+      fecharModalAgendamento();
+      showToast('Reunião agendada com sucesso!');
     });
   }
 
