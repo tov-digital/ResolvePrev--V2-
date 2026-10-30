@@ -7596,6 +7596,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const agendarReuniaoForm = document.getElementById('agendarReuniaoForm');
   const agendarReuniaoData = document.getElementById('agendarReuniaoData');
   const agendarReuniaoHorarioSlot = document.getElementById('agendarReuniaoHorarioSlot');
+  const agendarReuniaoUsuario = document.getElementById('agendarReuniaoUsuario');
   const agendarReuniaoLoadingSlots = document.getElementById('agendarReuniaoLoadingSlots');
   const agendarReuniaoAvisoStatus = document.getElementById('agendarReuniaoAvisoStatus');
   const agendarReuniaoSubtitulo = document.getElementById('agendarReuniaoSubtitulo');
@@ -7606,14 +7607,300 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function resetarCamposAgendamento() {
-    if (agendarReuniaoData) agendarReuniaoData.value = '';
-    if (agendarReuniaoHorarioSlot) {
-      agendarReuniaoHorarioSlot.innerHTML = '<option value="" disabled selected>Selecione primeiro uma data acima...</option>';
-      agendarReuniaoHorarioSlot.disabled = true;
-      agendarReuniaoHorarioSlot.style.cursor = 'not-allowed';
-      agendarReuniaoHorarioSlot.style.backgroundColor = 'var(--surface-muted)';
+  async function popularSelectUsuariosAgendamento() {
+    if (!agendarUsuarioDropdownMenu) return;
+
+    // Obter lista de perfis do cache ou banco
+    let profiles = window.crmProfilesCache || cachedProfiles || [];
+    if (profiles.length === 0 && typeof supabase !== 'undefined') {
+      try {
+        const { data } = await supabase.from('profiles').select('*');
+        if (data && data.length > 0) {
+          profiles = data;
+          cachedProfiles = data;
+          window.crmProfilesCache = data;
+        }
+      } catch (err) {}
     }
+
+    const currentAssignedId = currentActiveCard ? currentActiveCard.user_id : null;
+    let currentAssignedName = 'Não atribuído';
+    if (currentAssignedId) {
+      const p = profiles.find(x => x.id === currentAssignedId);
+      if (p) currentAssignedName = getUserDisplayName(p);
+    }
+
+    if (agendarReuniaoUsuario) agendarReuniaoUsuario.value = '';
+    if (agendarUsuarioTriggerText) {
+      agendarUsuarioTriggerText.textContent = `Manter atual (${currentAssignedName})`;
+      agendarUsuarioTriggerText.style.fontWeight = '500';
+    }
+
+    agendarUsuarioDropdownMenu.innerHTML = '';
+
+    // Opção padrão: Manter atual
+    const defaultOpt = document.createElement('div');
+    defaultOpt.className = 'custom-user-opt selected';
+    defaultOpt.textContent = `Manter atual (${currentAssignedName})`;
+    defaultOpt.style.padding = '10px 14px';
+    defaultOpt.style.fontSize = '0.9rem';
+    defaultOpt.style.fontWeight = '700';
+    defaultOpt.style.color = 'var(--ink)';
+    defaultOpt.style.borderRadius = '10px';
+    defaultOpt.style.backgroundColor = '#f1f5f9';
+    defaultOpt.style.cursor = 'pointer';
+    defaultOpt.style.transition = 'all 0.15s ease';
+
+    defaultOpt.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (agendarReuniaoUsuario) agendarReuniaoUsuario.value = '';
+      if (agendarUsuarioTriggerText) agendarUsuarioTriggerText.textContent = `Manter atual (${currentAssignedName})`;
+
+      Array.from(agendarUsuarioDropdownMenu.children).forEach(c => {
+        c.classList.remove('selected');
+        c.style.backgroundColor = 'transparent';
+        c.style.fontWeight = '500';
+      });
+
+      defaultOpt.classList.add('selected');
+      defaultOpt.style.backgroundColor = '#f1f5f9';
+      defaultOpt.style.fontWeight = '700';
+      agendarUsuarioDropdownMenu.classList.add('hidden');
+    });
+
+    agendarUsuarioDropdownMenu.appendChild(defaultOpt);
+
+    // Listar outros usuários
+    profiles.forEach(p => {
+      const name = getUserDisplayName(p);
+      const isCurrent = p.id === currentAssignedId;
+
+      const userOpt = document.createElement('div');
+      userOpt.className = 'custom-user-opt';
+      userOpt.textContent = isCurrent ? `${name} (Atual)` : name;
+      userOpt.style.padding = '10px 14px';
+      userOpt.style.fontSize = '0.9rem';
+      userOpt.style.fontWeight = '500';
+      userOpt.style.color = 'var(--ink)';
+      userOpt.style.borderRadius = '10px';
+      userOpt.style.cursor = 'pointer';
+      userOpt.style.transition = 'all 0.15s ease';
+
+      userOpt.onmouseover = () => {
+        if (!userOpt.classList.contains('selected')) {
+          userOpt.style.backgroundColor = 'var(--surface-hover)';
+        }
+      };
+      userOpt.onmouseout = () => {
+        if (!userOpt.classList.contains('selected')) {
+          userOpt.style.backgroundColor = 'transparent';
+        }
+      };
+
+      userOpt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (agendarReuniaoUsuario) agendarReuniaoUsuario.value = p.id;
+        if (agendarUsuarioTriggerText) agendarUsuarioTriggerText.textContent = name;
+
+        Array.from(agendarUsuarioDropdownMenu.children).forEach(c => {
+          c.classList.remove('selected');
+          c.style.backgroundColor = 'transparent';
+          c.style.fontWeight = '500';
+        });
+
+        userOpt.classList.add('selected');
+        userOpt.style.backgroundColor = '#f1f5f9';
+        userOpt.style.fontWeight = '700';
+        agendarUsuarioDropdownMenu.classList.add('hidden');
+      });
+
+      agendarUsuarioDropdownMenu.appendChild(userOpt);
+    });
+  }
+
+  let calSelectedDate = null;
+  let calViewYear = new Date().getFullYear();
+  let calViewMonth = new Date().getMonth(); // 0 a 11
+
+  const MESES_NOMES = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+
+  function renderInlineCalendar() {
+    const calLabel = document.getElementById('calCurrentMonthLabel');
+    const calGrid = document.getElementById('calDaysGrid');
+    if (!calLabel || !calGrid) return;
+
+    calLabel.textContent = MESES_NOMES[calViewMonth];
+    calGrid.innerHTML = '';
+
+    // Dia 1 do mês atual visualizado
+    const firstDayOfMonth = new Date(calViewYear, calViewMonth, 1);
+    const lastDayOfMonth = new Date(calViewYear, calViewMonth + 1, 0);
+    const totalDays = lastDayOfMonth.getDate();
+
+    // Dia da semana do 1º dia (0 = Domingo, 1 = Segunda ... 6 = Sábado)
+    // No nosso calendário o cabeçalho é: Seg, Ter, Qua, Qui, Sex, Sáb, Dom
+    let startingDay = firstDayOfMonth.getDay() - 1;
+    if (startingDay === -1) startingDay = 6; // Se for domingo, fica no índice 6
+
+    // Preencher espaços vazios antes do 1º dia
+    for (let i = 0; i < startingDay; i++) {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.style.height = '34px';
+      calGrid.appendChild(emptyDiv);
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    for (let day = 1; day <= totalDays; day++) {
+      const currentDayDate = new Date(calViewYear, calViewMonth, day);
+      const isPast = currentDayDate < hoje;
+
+      const dayBtn = document.createElement('button');
+      dayBtn.type = 'button';
+      dayBtn.textContent = day;
+      dayBtn.style.height = '34px';
+      dayBtn.style.border = 'none';
+      dayBtn.style.borderRadius = '10px';
+      dayBtn.style.fontFamily = 'inherit';
+      dayBtn.style.fontSize = '0.88rem';
+      dayBtn.style.fontWeight = '500';
+      dayBtn.style.display = 'flex';
+      dayBtn.style.alignItems = 'center';
+      dayBtn.style.justifyContent = 'center';
+      dayBtn.style.transition = 'all 0.15s ease';
+
+      // Verificar se é o dia selecionado
+      const dateStr = `${calViewYear}-${String(calViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const isSelected = calSelectedDate === dateStr;
+
+      if (isSelected) {
+        dayBtn.style.background = '#0a0a0a';
+        dayBtn.style.color = '#ffffff';
+        dayBtn.style.fontWeight = '700';
+        dayBtn.style.cursor = 'pointer';
+      } else if (isPast) {
+        dayBtn.style.background = 'transparent';
+        dayBtn.style.color = 'var(--line-strong)';
+        dayBtn.style.opacity = '0.35';
+        dayBtn.style.cursor = 'not-allowed';
+      } else {
+        dayBtn.style.background = 'transparent';
+        dayBtn.style.color = 'var(--ink)';
+        dayBtn.style.cursor = 'pointer';
+
+        dayBtn.onmouseover = () => {
+          if (calSelectedDate !== dateStr) dayBtn.style.background = 'var(--surface-hover)';
+        };
+        dayBtn.onmouseout = () => {
+          if (calSelectedDate !== dateStr) dayBtn.style.background = 'transparent';
+        };
+      }
+
+      if (!isPast) {
+        dayBtn.addEventListener('click', () => {
+          calSelectedDate = dateStr;
+          if (agendarReuniaoData) agendarReuniaoData.value = dateStr;
+          renderInlineCalendar();
+          carregarHorariosDisponiveis(dateStr);
+        });
+      }
+
+      calGrid.appendChild(dayBtn);
+    }
+  }
+
+  // Navegação do calendário
+  const calPrevMonthBtn = document.getElementById('calPrevMonthBtn');
+  const calNextMonthBtn = document.getElementById('calNextMonthBtn');
+  if (calPrevMonthBtn) {
+    calPrevMonthBtn.addEventListener('click', () => {
+      calViewMonth--;
+      if (calViewMonth < 0) {
+        calViewMonth = 11;
+        calViewYear--;
+      }
+      renderInlineCalendar();
+    });
+  }
+  if (calNextMonthBtn) {
+    calNextMonthBtn.addEventListener('click', () => {
+      calViewMonth++;
+      if (calViewMonth > 11) {
+        calViewMonth = 0;
+        calViewYear++;
+      }
+      renderInlineCalendar();
+    });
+  }
+
+  const agendarHorarioDropdownTrigger = document.getElementById('agendarHorarioDropdownTrigger');
+  const agendarHorarioTriggerText = document.getElementById('agendarHorarioTriggerText');
+  const agendarHorarioDropdownMenu = document.getElementById('agendarHorarioDropdownMenu');
+
+  const agendarUsuarioDropdownTrigger = document.getElementById('agendarUsuarioDropdownTrigger');
+  const agendarUsuarioTriggerText = document.getElementById('agendarUsuarioTriggerText');
+  const agendarUsuarioDropdownMenu = document.getElementById('agendarUsuarioDropdownMenu');
+
+  if (agendarHorarioDropdownTrigger) {
+    agendarHorarioDropdownTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (agendarHorarioDropdownTrigger.style.cursor === 'not-allowed') return;
+      if (agendarUsuarioDropdownMenu) agendarUsuarioDropdownMenu.classList.add('hidden');
+      const isHidden = agendarHorarioDropdownMenu.classList.contains('hidden');
+      if (isHidden) {
+        agendarHorarioDropdownMenu.classList.remove('hidden');
+      } else {
+        agendarHorarioDropdownMenu.classList.add('hidden');
+      }
+    });
+  }
+
+  if (agendarUsuarioDropdownTrigger) {
+    agendarUsuarioDropdownTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (agendarHorarioDropdownMenu) agendarHorarioDropdownMenu.classList.add('hidden');
+      const isHidden = agendarUsuarioDropdownMenu.classList.contains('hidden');
+      if (isHidden) {
+        agendarUsuarioDropdownMenu.classList.remove('hidden');
+      } else {
+        agendarUsuarioDropdownMenu.classList.add('hidden');
+      }
+    });
+  }
+
+  document.addEventListener('click', () => {
+    if (agendarHorarioDropdownMenu) {
+      agendarHorarioDropdownMenu.classList.add('hidden');
+    }
+    if (agendarUsuarioDropdownMenu) {
+      agendarUsuarioDropdownMenu.classList.add('hidden');
+    }
+  });
+
+  function resetarCamposAgendamento() {
+    calSelectedDate = null;
+    calViewYear = new Date().getFullYear();
+    calViewMonth = new Date().getMonth();
+    renderInlineCalendar();
+
+    if (agendarReuniaoData) agendarReuniaoData.value = '';
+    if (agendarReuniaoHorarioSlot) agendarReuniaoHorarioSlot.value = '';
+
+    if (agendarHorarioTriggerText) agendarHorarioTriggerText.textContent = 'Selecione primeiro uma data acima...';
+    if (agendarHorarioDropdownTrigger) {
+      agendarHorarioDropdownTrigger.style.cursor = 'not-allowed';
+      agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface-muted)';
+      agendarHorarioDropdownTrigger.style.color = 'var(--ink-muted)';
+    }
+    if (agendarHorarioDropdownMenu) {
+      agendarHorarioDropdownMenu.innerHTML = '';
+      agendarHorarioDropdownMenu.classList.add('hidden');
+    }
+
     if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.add('hidden');
     if (agendarReuniaoAvisoStatus) agendarReuniaoAvisoStatus.textContent = '';
   }
@@ -7645,13 +7932,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function carregarHorariosDisponiveis(dataEscolhida) {
-    if (!agendarReuniaoHorarioSlot) return;
     if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.remove('hidden');
     if (agendarReuniaoAvisoStatus) agendarReuniaoAvisoStatus.textContent = '';
 
-    agendarReuniaoHorarioSlot.disabled = true;
-    agendarReuniaoHorarioSlot.style.cursor = 'wait';
-    agendarReuniaoHorarioSlot.innerHTML = '<option value="" disabled selected>Consultando disponibilidade na agenda...</option>';
+    if (agendarHorarioTriggerText) agendarHorarioTriggerText.textContent = 'Consultando horários livres...';
+    if (agendarHorarioDropdownTrigger) {
+      agendarHorarioDropdownTrigger.style.cursor = 'wait';
+      agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface-muted)';
+    }
+    if (agendarHorarioDropdownMenu) {
+      agendarHorarioDropdownMenu.innerHTML = '';
+      agendarHorarioDropdownMenu.classList.add('hidden');
+    }
 
     const slots = gerarSlotsBase(dataEscolhida);
     let busyList = [];
@@ -7681,41 +7973,99 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.add('hidden');
     }
 
-    // Exibir apenas os horários realmente DISPONÍVEIS
-    agendarReuniaoHorarioSlot.innerHTML = '<option value="" disabled selected>Selecione o horário desejado...</option>';
+    // Exibir apenas os horários realmente DISPONÍVEIS no Dropdown estilizado
     let countDisponiveis = 0;
+    if (agendarHorarioDropdownMenu) {
+      agendarHorarioDropdownMenu.innerHTML = '';
 
-    slots.forEach(slot => {
-      const slotStart = new Date(slot.start).getTime();
-      const slotEnd = new Date(slot.end).getTime();
+      slots.forEach(slot => {
+        const slotStart = new Date(slot.start).getTime();
+        const slotEnd = new Date(slot.end).getTime();
 
-      const isBusy = busyList.some(b => {
-        const bStart = new Date(b.start).getTime();
-        const bEnd = new Date(b.end).getTime();
-        return (slotStart < bEnd && slotEnd > bStart);
-      });
+        const isBusy = busyList.some(b => {
+          const bStart = new Date(b.start).getTime();
+          const bEnd = new Date(b.end).getTime();
+          return (slotStart < bEnd && slotEnd > bStart);
+        });
 
-        // Se estiver ocupado na agenda, não exibe como opção
         if (!isBusy) {
-          const opt = document.createElement('option');
-          opt.value = `${slot.hora}:${slot.minuto}`;
-          opt.textContent = `${slot.label}`;
-          agendarReuniaoHorarioSlot.appendChild(opt);
           countDisponiveis++;
+          const optDiv = document.createElement('div');
+          optDiv.className = 'custom-horario-opt';
+          optDiv.textContent = slot.label;
+          optDiv.style.padding = '10px 14px';
+          optDiv.style.fontSize = '0.9rem';
+          optDiv.style.fontWeight = '500';
+          optDiv.style.color = 'var(--ink)';
+          optDiv.style.borderRadius = '10px';
+          optDiv.style.cursor = 'pointer';
+          optDiv.style.transition = 'all 0.15s ease';
+
+          optDiv.onmouseover = () => {
+            if (!optDiv.classList.contains('selected')) {
+              optDiv.style.backgroundColor = 'var(--surface-hover)';
+            }
+          };
+          optDiv.onmouseout = () => {
+            if (!optDiv.classList.contains('selected')) {
+              optDiv.style.backgroundColor = 'transparent';
+            }
+          };
+
+          optDiv.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (agendarReuniaoHorarioSlot) agendarReuniaoHorarioSlot.value = `${slot.hora}:${slot.minuto}`;
+            if (agendarHorarioTriggerText) {
+              agendarHorarioTriggerText.textContent = slot.label;
+              agendarHorarioTriggerText.style.color = 'var(--ink)';
+              agendarHorarioTriggerText.style.fontWeight = '600';
+            }
+
+            Array.from(agendarHorarioDropdownMenu.children).forEach(child => {
+              child.classList.remove('selected');
+              child.style.backgroundColor = 'transparent';
+              child.style.fontWeight = '500';
+            });
+
+            optDiv.classList.add('selected');
+            optDiv.style.backgroundColor = '#f1f5f9';
+            optDiv.style.fontWeight = '700';
+
+            agendarHorarioDropdownMenu.classList.add('hidden');
+          });
+
+          agendarHorarioDropdownMenu.appendChild(optDiv);
         }
       });
+    }
 
-    agendarReuniaoHorarioSlot.disabled = false;
-    agendarReuniaoHorarioSlot.style.cursor = 'pointer';
-    agendarReuniaoHorarioSlot.style.backgroundColor = 'var(--bg-input)';
-
-    if (agendarReuniaoAvisoStatus) {
-      if (countDisponiveis === 0) {
-        agendarReuniaoAvisoStatus.textContent = 'Não há horários livres nesta data.';
-        agendarReuniaoAvisoStatus.style.color = '#ef4444';
-      } else {
+    if (countDisponiveis > 0) {
+      if (agendarHorarioTriggerText) {
+        agendarHorarioTriggerText.textContent = 'Selecione o horário desejado...';
+        agendarHorarioTriggerText.style.color = 'var(--ink-muted)';
+        agendarHorarioTriggerText.style.fontWeight = '400';
+      }
+      if (agendarHorarioDropdownTrigger) {
+        agendarHorarioDropdownTrigger.style.cursor = 'pointer';
+        agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface)';
+        agendarHorarioDropdownTrigger.style.color = 'var(--ink)';
+      }
+      if (agendarReuniaoAvisoStatus) {
         agendarReuniaoAvisoStatus.textContent = `${countDisponiveis} horários livres encontrados.`;
         agendarReuniaoAvisoStatus.style.color = '#10B981';
+      }
+    } else {
+      if (agendarHorarioTriggerText) {
+        agendarHorarioTriggerText.textContent = 'Nenhum horário livre nesta data';
+        agendarHorarioTriggerText.style.color = '#ef4444';
+      }
+      if (agendarHorarioDropdownTrigger) {
+        agendarHorarioDropdownTrigger.style.cursor = 'not-allowed';
+        agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface-muted)';
+      }
+      if (agendarReuniaoAvisoStatus) {
+        agendarReuniaoAvisoStatus.textContent = 'Não há horários livres nesta data.';
+        agendarReuniaoAvisoStatus.style.color = '#ef4444';
       }
     }
   }
@@ -7743,6 +8093,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           : 'Selecione data e horário para a reunião';
       }
       resetarCamposAgendamento();
+      popularSelectUsuariosAgendamento();
       if (modalAgendarReuniao) {
         modalAgendarReuniao.classList.remove('hidden');
         if (agendarReuniaoData) agendarReuniaoData.focus();
@@ -7848,16 +8199,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.warn('Webhook agendamento enviado com aviso de rede:', err);
       }
 
-      // 2. Persistir na tabela crm no Supabase
+      // 2. Persistir na tabela crm no Supabase (data_reuniao, status 'reuniao' e novo responsável se selecionado)
+      const novoUserId = agendarReuniaoUsuario && agendarReuniaoUsuario.value ? agendarReuniaoUsuario.value : null;
+      const updatePayload = {
+        data_reuniao: isoComTimezone,
+        status: 'reuniao',
+        atualizado_em: new Date().toISOString()
+      };
+      if (novoUserId) {
+        updatePayload.user_id = novoUserId;
+      }
+
       try {
         if (typeof supabase !== 'undefined' && currentActiveCard.id) {
           await supabase
             .from('crm')
-            .update({ data_reuniao: isoComTimezone })
+            .update(updatePayload)
             .eq('id', currentActiveCard.id);
         }
       } catch (dbErr) {
-        console.warn('Erro ao salvar data_reuniao na tabela crm:', dbErr);
+        console.warn('Erro ao atualizar card na tabela crm:', dbErr);
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -7865,10 +8226,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // 3. Atualizar objeto e interface
+      // 3. Atualizar objeto e interface local
       currentActiveCard._reuniaoAgendada = formatted;
       currentActiveCard._reuniaoIso = isoComTimezone;
       currentActiveCard.data_reuniao = isoComTimezone;
+      currentActiveCard.status = 'reuniao';
+      if (novoUserId) {
+        currentActiveCard.user_id = novoUserId;
+      }
+
+      // Atualizar badge de status na ficha
+      if (typeof updateStatusTagUI === 'function') {
+        updateStatusTagUI('reuniao');
+      }
+
+      // Atualizar responsável no botão de atribuição da ficha
+      if (novoUserId) {
+        const profiles = window.crmProfilesCache || cachedProfiles || [];
+        const p = profiles.find(x => x.id === novoUserId);
+        const displayName = p ? getUserDisplayName(p) : 'Atribuído';
+        const sheetAssigneeName = document.getElementById('sheetAssigneeName');
+        const sheetAssigneeAvatar = document.getElementById('sheetAssigneeAvatar');
+        const sheetReassignBtnEl = document.getElementById('sheetReassignBtn');
+        if (sheetAssigneeName) {
+          sheetAssigneeName.textContent = displayName;
+          if (sheetAssigneeAvatar) {
+            sheetAssigneeAvatar.textContent = displayName.charAt(0).toUpperCase();
+          }
+          if (sheetReassignBtnEl) sheetReassignBtnEl.title = `Atribuído a: ${displayName} (Clique para alterar)`;
+        }
+      }
+
       if (modalBtnAgendarReuniao) {
         modalBtnAgendarReuniao.innerHTML = `<i class="ti ti-calendar-check" style="font-size:16px" aria-hidden="true"></i>${formatted}`;
         modalBtnAgendarReuniao.title = `Reunião agendada para: ${formatted}`;
@@ -7876,7 +8264,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       fecharModalAgendamento();
-      showToast('Reunião agendada com sucesso!');
+      if (typeof loadUserCards === 'function') {
+        loadUserCards(); // Move o card para a coluna Reunião no Kanban em tempo real
+      }
+      showToast('Reunião agendada e card movido para "Reunião" com sucesso!');
     });
   }
 

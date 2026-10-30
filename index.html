@@ -3480,8 +3480,9 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
       </div>
 
       <form id="agendarReuniaoForm" class="concedido-form-group" style="margin-top: 1.25rem;">
-        <div class="form-row">
-          <label for="agendarReuniaoData" style="font-size: 0.84rem; font-weight: 600; color: var(--color-neutral); display: flex; align-items: center; justify-content: space-between;">
+        <!-- Calendário Customizado Integrado -->
+        <div class="form-row" style="position: relative;">
+          <label style="font-size: 0.84rem; font-weight: 600; color: var(--color-neutral); display: flex; align-items: center; justify-content: space-between;">
             <span style="display: flex; align-items: center; gap: 4px;">
               <i class="ti ti-calendar" style="font-size: 15px; color: var(--ink-muted);"></i>
               Data da Reunião <span style="color: #ef4444;">*</span>
@@ -3490,18 +3491,84 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
               <i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i> Consultando agenda...
             </span>
           </label>
-          <input type="date" id="agendarReuniaoData" required />
+          
+          <input type="hidden" id="agendarReuniaoData" required />
+
+          <!-- Card do Calendário Embutido -->
+          <div id="customInlineCalendar" style="background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(16, 24, 40, 0.04); margin-top: 4px;">
+            <!-- Cabeçalho do Calendário (Apenas Mês com setas) -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 0 4px;">
+              <button type="button" id="calPrevMonthBtn" style="background: none; border: none; cursor: pointer; color: var(--ink-muted); padding: 4px 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                <i class="ti ti-chevron-left" style="font-size: 16px;"></i>
+              </button>
+              
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span id="calCurrentMonthLabel" style="font-size: 1.05rem; font-weight: 700; color: var(--color-neutral); letter-spacing: -0.2px;">Outubro</span>
+              </div>
+
+              <button type="button" id="calNextMonthBtn" style="background: none; border: none; cursor: pointer; color: var(--ink-muted); padding: 4px 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                <i class="ti ti-chevron-right" style="font-size: 16px;"></i>
+              </button>
+            </div>
+
+            <!-- Dias da Semana (Seg, Ter, Qua, Qui, Sex, Sáb, Dom) -->
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 0.78rem; font-weight: 600; color: var(--ink-muted); margin-bottom: 8px;">
+              <div>Seg</div>
+              <div>Ter</div>
+              <div>Qua</div>
+              <div>Qui</div>
+              <div>Sex</div>
+              <div>Sáb</div>
+              <div>Dom</div>
+            </div>
+
+            <!-- Grid de Dias do Mês -->
+            <div id="calDaysGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center;">
+              <!-- Gerado via Javascript -->
+            </div>
+          </div>
         </div>
 
-        <div class="form-row">
-          <label for="agendarReuniaoHorarioSlot" style="font-size: 0.84rem; font-weight: 600; color: var(--color-neutral); display: flex; align-items: center; gap: 4px;">
+        <div class="form-row" style="position: relative;">
+          <label style="font-size: 0.84rem; font-weight: 600; color: var(--color-neutral); display: flex; align-items: center; gap: 4px;">
             <i class="ti ti-clock" style="font-size: 15px; color: var(--ink-muted);"></i>
             Horário Disponível (Duração: 30 min) <span style="color: #ef4444;">*</span>
           </label>
-          <select id="agendarReuniaoHorarioSlot" required disabled style="width: 100%; height: 46px; background-color: var(--surface-muted); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 0 0.85rem; font-family: var(--font-family); font-size: 0.9rem; color: var(--color-neutral); outline: none; cursor: not-allowed; transition: all var(--transition-fast);">
-            <option value="" disabled selected>Selecione primeiro uma data acima...</option>
-          </select>
+          
+          <input type="hidden" id="agendarReuniaoHorarioSlot" required />
+
+          <!-- Custom Dropdown Trigger (Igual ao Tov Design System) -->
+          <div id="agendarHorarioDropdownTrigger" style="width: 100%; height: 46px; background-color: var(--surface-muted); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 0 0.85rem; font-size: 0.9rem; color: var(--ink-muted); display: flex; align-items: center; justify-content: space-between; cursor: not-allowed; transition: all var(--transition-fast); box-sizing: border-box;">
+            <span id="agendarHorarioTriggerText">Selecione primeiro uma data acima...</span>
+            <i class="ti ti-chevron-down" style="font-size: 16px; color: var(--ink-muted); transition: transform 0.2s;"></i>
+          </div>
+
+          <!-- Custom Dropdown Menu (Cards flutuantes com cantos arredondados) -->
+          <div id="agendarHorarioDropdownMenu" class="hidden" style="position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #ffffff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12); padding: 6px; z-index: 10001; max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; box-sizing: border-box;">
+            <!-- Opções inseridas dinamicamente -->
+          </div>
+
           <p id="agendarReuniaoAvisoStatus" style="font-size: 0.78rem; color: var(--ink-muted); margin: 4px 0 0 0;"></p>
+        </div>
+
+        <div class="form-row" style="position: relative;">
+          <label style="font-size: 0.84rem; font-weight: 600; color: var(--color-neutral); display: flex; align-items: center; gap: 4px;">
+            <i class="ti ti-user-check" style="font-size: 15px; color: var(--ink-muted);"></i>
+            Atribuir Responsável
+          </label>
+          
+          <input type="hidden" id="agendarReuniaoUsuario" />
+
+          <!-- Custom Dropdown Trigger para Usuário -->
+          <div id="agendarUsuarioDropdownTrigger" style="width: 100%; height: 46px; background-color: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 0 0.85rem; font-size: 0.9rem; color: var(--ink); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all var(--transition-fast); box-sizing: border-box;">
+            <span id="agendarUsuarioTriggerText">Manter responsável atual</span>
+            <i class="ti ti-chevron-down" style="font-size: 16px; color: var(--ink-muted); transition: transform 0.2s;"></i>
+          </div>
+
+          <!-- Custom Dropdown Menu para Usuário -->
+          <div id="agendarUsuarioDropdownMenu" class="hidden" style="position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #ffffff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12); padding: 6px; z-index: 10001; max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; box-sizing: border-box;">
+            <!-- Opções inseridas dinamicamente -->
+          </div>
         </div>
 
         <div class="modal-actions-row" style="margin-top: 1.75rem; justify-content: center;">
