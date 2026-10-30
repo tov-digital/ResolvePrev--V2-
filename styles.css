@@ -7388,6 +7388,11 @@ button:hover[style*="background: white"],
 }
 
 /* Estado de Documentos Bloqueados quando a pasta está fechada */
+.docs-locked .doc-name {
+  color: #94A3B8 !important; /* Nome do documento mais apagado */
+  transition: color var(--transition-fast);
+}
+
 .docs-locked .doc-status-badge {
   pointer-events: none !important;
   cursor: not-allowed !important;
@@ -7408,6 +7413,38 @@ button:hover[style*="background: white"],
 .docs-locked .add-eventual-doc-row input,
 .docs-locked .add-eventual-doc-row button {
   cursor: not-allowed !important;
+}
+
+/* Indicador visual de pasta fechada (sem pendências) no card */
+.card-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.card-bottom-row .card-date-badge {
+  margin-top: 0 !important;
+}
+
+.card-pasta-fechada-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: #DCFCE7;
+  color: #16A34A;
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.card-pasta-fechada-badge svg {
+  width: 13px;
+  height: 13px;
 }
 
 

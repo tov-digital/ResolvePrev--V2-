@@ -5231,7 +5231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function createCardElement(card) {
     const cardDiv = document.createElement('div');
-    cardDiv.className = 'kanban-card';
+    cardDiv.className = 'kanban-card' + (card.pasta_fechada ? ' card-pasta-fechada' : '');
     cardDiv.dataset.id = card.id;
 
     // Formatação da Data (DD/MM/AA) e Lógica de Cores por Período
@@ -5269,6 +5269,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rawPhone = card.telefone ? card.telefone.replace(/\D/g, '') : '';
     const whatsappUrl = rawPhone ? `https://web.whatsapp.com/send/?phone=55${rawPhone}` : '#';
 
+    const pastaFechadaBadgeHtml = card.pasta_fechada ? `
+      <div class="card-pasta-fechada-badge" title="Pasta fechada (Sem pendências de documentos)">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+    ` : '';
+
     cardDiv.innerHTML = `
       <div class="card-top-row">
         <h5 class="card-client-name" title="${escapeHtml(card.nome)}">${escapeHtml(card.nome)}</h5>
@@ -5287,15 +5295,18 @@ document.addEventListener('DOMContentLoaded', async () => {
           </svg>
         </a>
       </div>
-      <div class="card-detail-item card-date-badge ${dateStatusClass}">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-          <line x1="16" x2="16" y1="2" y2="6"/>
-          <line x1="8" x2="8" y1="2" y2="6"/>
-          <line x1="3" x2="21" y1="10" y2="10"/>
-        </svg>
-        ${formattedDate}
-        <span class="date-dot" title="Status da Data"></span>
+      <div class="card-bottom-row">
+        <div class="card-detail-item card-date-badge ${dateStatusClass}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+            <line x1="16" x2="16" y1="2" y2="6"/>
+            <line x1="8" x2="8" y1="2" y2="6"/>
+            <line x1="3" x2="21" y1="10" y2="10"/>
+          </svg>
+          ${formattedDate}
+          <span class="date-dot" title="Status da Data"></span>
+        </div>
+        ${pastaFechadaBadgeHtml}
       </div>
     `;
 
@@ -7208,6 +7219,30 @@ document.addEventListener('DOMContentLoaded', async () => {
               .eq('id', currentActiveCard.id);
           } catch (dbErr) {
             console.warn('Erro ao atualizar pasta_fechada no Supabase:', dbErr);
+          }
+        }
+
+        // Atualizar card correspondente no Kanban
+        const kanbanCardEl = document.querySelector(`.kanban-card[data-id="${currentActiveCard.id}"]`);
+        if (kanbanCardEl) {
+          const bottomRow = kanbanCardEl.querySelector('.card-bottom-row');
+          if (bottomRow) {
+            let badge = bottomRow.querySelector('.card-pasta-fechada-badge');
+            if (isChecked) {
+              if (!badge) {
+                const badgeEl = document.createElement('div');
+                badgeEl.className = 'card-pasta-fechada-badge';
+                badgeEl.title = 'Pasta fechada (Sem pendências de documentos)';
+                badgeEl.innerHTML = `
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                `;
+                bottomRow.appendChild(badgeEl);
+              }
+            } else {
+              if (badge) badge.remove();
+            }
           }
         }
 
