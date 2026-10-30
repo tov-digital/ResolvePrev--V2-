@@ -7620,7 +7620,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           cachedProfiles = data;
           window.crmProfilesCache = data;
         }
-      } catch (err) {}
+      } catch (err) { }
     }
 
     const currentAssignedId = currentActiveCard ? currentActiveCard.user_id : null;
@@ -7670,14 +7670,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     agendarUsuarioDropdownMenu.appendChild(defaultOpt);
 
-    // Listar outros usuários
+    // Listar apenas os outros usuários (evitando duplicar o responsável atual)
     profiles.forEach(p => {
-      const name = getUserDisplayName(p);
-      const isCurrent = p.id === currentAssignedId;
+      // Se for o responsável atual, ignora pois já está no topo como "Manter atual"
+      if (p.id === currentAssignedId) return;
 
+      const name = getUserDisplayName(p);
       const userOpt = document.createElement('div');
       userOpt.className = 'custom-user-opt';
-      userOpt.textContent = isCurrent ? `${name} (Atual)` : name;
+      userOpt.textContent = name;
       userOpt.style.padding = '10px 14px';
       userOpt.style.fontSize = '0.9rem';
       userOpt.style.fontWeight = '500';
@@ -7741,9 +7742,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const totalDays = lastDayOfMonth.getDate();
 
     // Dia da semana do 1º dia (0 = Domingo, 1 = Segunda ... 6 = Sábado)
-    // No nosso calendário o cabeçalho é: Seg, Ter, Qua, Qui, Sex, Sáb, Dom
-    let startingDay = firstDayOfMonth.getDay() - 1;
-    if (startingDay === -1) startingDay = 6; // Se for domingo, fica no índice 6
+    // No nosso calendário o cabeçalho começa no Domingo (índice 0): Dom, Seg, Ter, Qua, Qui, Sex, Sáb
+    let startingDay = firstDayOfMonth.getDay(); // 0 = Domingo diretamente
 
     // Preencher espaços vazios antes do 1º dia
     for (let i = 0; i < startingDay; i++) {
@@ -7758,6 +7758,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     for (let day = 1; day <= totalDays; day++) {
       const currentDayDate = new Date(calViewYear, calViewMonth, day);
       const isPast = currentDayDate < hoje;
+      const dayOfWeek = currentDayDate.getDay(); // 0 = Domingo, 6 = Sábado
+      const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+      const isBlocked = isPast || isWeekend;
 
       const dayBtn = document.createElement('button');
       dayBtn.type = 'button';
@@ -7782,10 +7785,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         dayBtn.style.color = '#ffffff';
         dayBtn.style.fontWeight = '700';
         dayBtn.style.cursor = 'pointer';
-      } else if (isPast) {
+      } else if (isBlocked) {
         dayBtn.style.background = 'transparent';
         dayBtn.style.color = 'var(--line-strong)';
-        dayBtn.style.opacity = '0.35';
+        dayBtn.style.opacity = '0.25';
         dayBtn.style.cursor = 'not-allowed';
       } else {
         dayBtn.style.background = 'transparent';
@@ -7800,7 +7803,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
       }
 
-      if (!isPast) {
+      if (!isBlocked) {
         dayBtn.addEventListener('click', () => {
           calSelectedDate = dateStr;
           if (agendarReuniaoData) agendarReuniaoData.value = dateStr;
@@ -7905,10 +7908,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (agendarReuniaoAvisoStatus) agendarReuniaoAvisoStatus.textContent = '';
   }
 
-  // Gera slots padrão de 30min entre 09:00 e 17:00
+  // Gera slots padrão de 30min entre 09:00 e 16:00 (último horário de início é 15:30 às 16:00)
   function gerarSlotsBase(dataStr) {
     const slots = [];
-    for (let h = 9; h <= 16; h++) {
+    for (let h = 9; h <= 15; h++) {
       ['00', '30'].forEach(min => {
         const horaStr = String(h).padStart(2, '0');
         const start = `${dataStr}T${horaStr}:${min}:00`;
@@ -7973,8 +7976,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.add('hidden');
     }
 
-    // Exibir apenas os horários realmente DISPONÍVEIS no Dropdown estilizado
+    // Exibir apenas os horários realmente DISPONÍVEIS e que ainda NÃO passaram (futuros)
     let countDisponiveis = 0;
+    const agoraTime = Date.now();
+
     if (agendarHorarioDropdownMenu) {
       agendarHorarioDropdownMenu.innerHTML = '';
 
@@ -7982,13 +7987,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const slotStart = new Date(slot.start).getTime();
         const slotEnd = new Date(slot.end).getTime();
 
+        // 1. Desconsiderar horários que já passaram hoje
+        const jaPassou = slotStart <= agoraTime;
+
+        // 2. Desconsiderar horários ocupados na agenda do Google
         const isBusy = busyList.some(b => {
           const bStart = new Date(b.start).getTime();
           const bEnd = new Date(b.end).getTime();
           return (slotStart < bEnd && slotEnd > bStart);
         });
 
-        if (!isBusy) {
+        if (!jaPassou && !isBusy) {
           countDisponiveis++;
           const optDiv = document.createElement('div');
           optDiv.className = 'custom-horario-opt';
