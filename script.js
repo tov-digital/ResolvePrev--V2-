@@ -6266,6 +6266,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Atualizar estado do botão de Comissão de SDR (apenas clicável em Operação)
       updateSdrCommissionUI(card);
 
+      // Atualizar estado do botão Switch Fechar Pasta / Reabrir Pasta
+      updateFecharPastaUI(card);
+
       // Resetar para a aba 'Documentos' se estiver em Operação, caso contrário 'Respostas'
       switchTab(window.currentTab === 'operacao' ? 'documentos' : 'respostas');
 
@@ -7022,300 +7025,526 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Ação de Atribuição a Outro Usuário (Dropdown estilo Print)
-  const modalReassignUser = document.getElementById('modalReassignUser');
-  const closeReassignModal = document.getElementById('closeReassignModal');
-  const reassignSearchInput = document.getElementById('reassignSearchInput');
-  const reassignUserList = document.getElementById('reassignUserList');
-  let cachedProfiles = [];
+  // Controle de Fechar Pasta / Reabrir Pasta com Switch e Modal de Confirmação
+  const fecharPastaBtn = document.getElementById('fecharPastaBtn');
+  const fecharPastaSwitch = document.getElementById('fecharPastaSwitch');
+  const fecharPastaLabel = document.getElementById('fecharPastaLabel');
 
-  if (sheetReassignBtn) {
-    sheetReassignBtn.addEventListener('click', () => {
-      if (currentActiveCard) {
-        openReassignModal();
+  const modalFecharPastaConfirm = document.getElementById('modalFecharPastaConfirm');
+  const closeFecharPastaModal = document.getElementById('closeFecharPastaModal');
+  const cancelFecharPastaBtn = document.getElementById('cancelFecharPastaBtn');
+  const confirmFecharPastaBtn = document.getElementById('confirmFecharPastaBtn');
+  const fecharPastaModalBadge = document.getElementById('fecharPastaModalBadge');
+  const fecharPastaModalTitle = document.getElementById('fecharPastaModalTitle');
+  const fecharPastaModalDesc = document.getElementById('fecharPastaModalDesc');
+
+  let pendingPastaFechadaState = null;
+
+  function closeFecharPastaModalFn() {
+    pendingPastaFechadaState = null;
+    if (modalFecharPastaConfirm) modalFecharPastaConfirm.classList.add('hidden');
+  }
+
+  if (closeFecharPastaModal) closeFecharPastaModal.addEventListener('click', closeFecharPastaModalFn);
+  if (cancelFecharPastaBtn) cancelFecharPastaBtn.addEventListener('click', closeFecharPastaModalFn);
+  window.addEventListener('click', (e) => {
+    if (e.target === modalFecharPastaConfirm) closeFecharPastaModalFn();
+  });
+
+  function toggleDocumentsLock(isLocked) {
+    if (tabContentDocumentos) {
+      tabContentDocumentos.classList.toggle('docs-locked', isLocked);
+    }
+    const newDocInput = document.getElementById('newEventualDocName');
+    const newDocBtn = document.getElementById('addEventualDocBtn');
+    if (newDocInput) {
+      newDocInput.disabled = isLocked;
+      newDocInput.placeholder = isLocked ? 'Pasta fechada (documentos bloqueados)...' : 'Nome do documento eventual...';
+    }
+    if (newDocBtn) {
+      newDocBtn.disabled = isLocked;
+    }
+  }
+
+  function updateFecharPastaUI(card) {
+    if (!fecharPastaBtn || !fecharPastaSwitch) return;
+
+    // Se a pasta estiver fechada (card.pasta_fechada === true)
+    const isFechada = card ? Boolean(card.pasta_fechada) : false;
+    fecharPastaSwitch.checked = isFechada;
+
+    if (fecharPastaLabel) {
+      fecharPastaLabel.textContent = isFechada ? 'Reabrir pasta:' : 'Fechar pasta:';
+    }
+    if (fecharPastaBtn) {
+      fecharPastaBtn.title = isFechada ? 'Clique para reabrir a pasta' : 'Clique para fechar a pasta';
+    }
+
+    toggleDocumentsLock(isFechada);
+  }
+
+      if (fecharPastaBtn && fecharPastaSwitch) {
+        // Interceptar clique para exibir popup de confirmação antes de alterar
+        fecharPastaBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (!currentActiveCard) return;
+
+          const currentStatus = Boolean(currentActiveCard.pasta_fechada);
+          const targetState = !currentStatus; // true = vai fechar a pasta, false = vai reabrir
+          pendingPastaFechadaState = targetState;
+
+          const clientName = currentActiveCard.nome ? `<strong>${escapeHtml(currentActiveCard.nome)}</strong>` : 'o cliente';
+
+          if (targetState) {
+            // Fechar pasta
+            if (fecharPastaModalBadge) {
+              fecharPastaModalBadge.style.backgroundColor = '#DCFCE7';
+              fecharPastaModalBadge.style.color = '#16A34A';
+              fecharPastaModalBadge.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          `;
+            }
+            if (fecharPastaModalTitle) fecharPastaModalTitle.textContent = 'Fechar pasta?';
+            if (fecharPastaModalDesc) {
+              fecharPastaModalDesc.innerHTML = `Ao fechar a pasta, ${clientName} será notificado de que a <strong>documentação está completa</strong>.<br><br>Deseja continuar?`;
+            }
+            if (confirmFecharPastaBtn) {
+              confirmFecharPastaBtn.textContent = 'Sim, fechar pasta';
+              confirmFecharPastaBtn.className = 'btn-modal-primary';
+              confirmFecharPastaBtn.style.backgroundColor = 'var(--success, #16A34A)';
+            }
+          } else {
+            // Reabrir pasta
+            if (fecharPastaModalBadge) {
+              fecharPastaModalBadge.style.backgroundColor = '#FEF3C7';
+              fecharPastaModalBadge.style.color = '#D97706';
+              fecharPastaModalBadge.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          `;
+            }
+            if (fecharPastaModalTitle) fecharPastaModalTitle.textContent = 'Reabrir pasta?';
+            if (fecharPastaModalDesc) {
+              fecharPastaModalDesc.innerHTML = `Ao reabrir a pasta, ${clientName} será notificado de que <strong>precisaremos pedir novos documentos</strong>.<br><br>Deseja continuar?`;
+            }
+            if (confirmFecharPastaBtn) {
+              confirmFecharPastaBtn.textContent = 'Sim, reabrir pasta';
+              confirmFecharPastaBtn.className = 'btn-modal-primary';
+              confirmFecharPastaBtn.style.backgroundColor = 'var(--brand-primary, #0F172A)';
+            }
+          }
+
+          if (modalFecharPastaConfirm) {
+            modalFecharPastaConfirm.classList.remove('hidden');
+          }
+        });
       }
-    });
-  }
 
-  if (reassignSearchInput) {
-    reassignSearchInput.addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase().trim();
-      renderReassignUserList(term);
-    });
-  }
+      // Confirmar ação no Modal de Fechar/Reabrir Pasta
+      if (confirmFecharPastaBtn) {
+        confirmFecharPastaBtn.addEventListener('click', async () => {
+          if (pendingPastaFechadaState === null || !currentActiveCard) {
+            closeFecharPastaModalFn();
+            return;
+          }
 
-  async function openReassignModal() {
-    if (reassignSearchInput) reassignSearchInput.value = '';
-    if (modalReassignUser) modalReassignUser.classList.remove('hidden');
+          const isChecked = pendingPastaFechadaState;
+          closeFecharPastaModalFn();
 
-    if (!supabase) return;
-    reassignUserList.innerHTML = '<div class="loading-users-spinner" style="font-size:0.85rem; color:#64748B; text-align:center; padding:1rem;">Carregando usuários...</div>';
+          fecharPastaSwitch.checked = isChecked;
+          if (fecharPastaLabel) {
+            fecharPastaLabel.textContent = isChecked ? 'Reabrir pasta:' : 'Fechar pasta:';
+          }
+          if (fecharPastaBtn) {
+            fecharPastaBtn.title = isChecked ? 'Clique para reabrir a pasta' : 'Clique para fechar a pasta';
+          }
 
-    // Buscar todos os usuários cadastrados na tabela 'profiles' do Supabase
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('*');
+          toggleDocumentsLock(isChecked);
 
-    if (error || !profiles || profiles.length === 0) {
-      reassignUserList.innerHTML = '<div style="font-size:0.85rem; color:#64748B; text-align:center; padding:1rem;">Nenhum usuário encontrado.</div>';
-      return;
-    }
+          if (currentActiveCard) {
+            currentActiveCard.pasta_fechada = isChecked;
+            currentActiveCard.pasta_fechada = isChecked;
 
-    cachedProfiles = profiles;
-    renderReassignUserList('');
-  }
+            // Disparar Webhook do n8n
+            const payload = {
+              id: currentActiveCard.id,
+              codigo: currentActiveCard.codigo || '',
+              nome: currentActiveCard.nome || '',
+              telefone: currentActiveCard.telefone || '',
+              drive_link: currentActiveCard.drive_link || '',
+              acao: isChecked ? 'fechar_pasta' : 'reabrir_pasta',
+              pasta_fechada: isChecked,
+              data_hora: new Date().toISOString()
+            };
+            // Disparar Webhook do n8n
+            const payload = {
+              id: currentActiveCard.id,
+              codigo: currentActiveCard.codigo || '',
+              nome: currentActiveCard.nome || '',
+              telefone: currentActiveCard.telefone || '',
+              drive_link: currentActiveCard.drive_link || '',
+              acao: isChecked ? 'fechar_pasta' : 'reabrir_pasta',
+              pasta_fechada: isChecked,
+              data_hora: new Date().toISOString()
+            };
 
-  function renderReassignUserList(searchTerm) {
-    reassignUserList.innerHTML = '';
+            try {
+              await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/fechar_pasta', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+            } catch (webhookErr) {
+              console.warn('Aviso no envio do webhook fechar_pasta:', webhookErr);
+            }
 
-    const filtered = cachedProfiles.filter(p => {
-      const name = getUserDisplayName(p).toLowerCase();
-      const email = (p.email || '').toLowerCase();
-      return name.includes(searchTerm) || email.includes(searchTerm);
-    });
+            // Salvar status da pasta no banco Supabase
+            if (supabase) {
+              try {
+                await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/fechar_pasta', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+                });
+              } catch (webhookErr) {
+                console.warn('Aviso no envio do webhook fechar_pasta:', webhookErr);
+                await supabase
+                  .from(getCurrentTable())
+                  .update({
+                    pasta_fechada: isChecked,
+                    atualizado_em: new Date().toISOString()
+                  })
+                  .eq('id', currentActiveCard.id);
+              } catch (dbErr) {
+                console.warn('Erro ao atualizar pasta_fechada no Supabase:', dbErr);
+              }
+            }
 
-    // Excluir o próprio usuário logado ('Eu') e listar apenas os outros usuários
-    const otherUsers = filtered.filter(p => p.id !== currentUserId);
+            // Salvar status da pasta no banco Supabase
+            if (supabase) {
+              try {
+                await supabase
+                  .from(getCurrentTable())
+                  .update({
+                    pasta_fechada: isChecked,
+                    atualizado_em: new Date().toISOString()
+                  })
+                  .eq('id', currentActiveCard.id);
+              } catch (dbErr) {
+                console.warn('Erro ao atualizar pasta_fechada no Supabase:', dbErr);
+              }
+            }
 
-    if (otherUsers.length === 0) {
-      reassignUserList.innerHTML = '<div style="font-size:0.85rem; color:#64748B; text-align:center; padding:1rem;">Nenhum usuário encontrado.</div>';
-      return;
-    }
+            showToast(isChecked ? 'Pasta fechada e webhook acionado!' : 'Pasta reaberta e webhook acionado!');
+          }
+          showToast(isChecked ? 'Pasta fechada e cliente notificado!' : 'Pasta reaberta e cliente notificado!');
+        });
+      }
 
-    // Seção 'Usuários'
-    const usersHeader = document.createElement('div');
-    usersHeader.className = 'reassign-section-title';
-    usersHeader.textContent = 'Usuários';
-    reassignUserList.appendChild(usersHeader);
+      // Ação de Atribuição a Outro Usuário (Dropdown estilo Print)
+      const modalReassignUser = document.getElementById('modalReassignUser');
+      const closeReassignModal = document.getElementById('closeReassignModal');
+      const reassignSearchInput = document.getElementById('reassignSearchInput');
+      const reassignUserList = document.getElementById('reassignUserList');
+      let cachedProfiles = [];
 
-    otherUsers.forEach(profile => {
-      reassignUserList.appendChild(createUserItemElement(profile));
-    });
-  }
+      if (sheetReassignBtn) {
+        sheetReassignBtn.addEventListener('click', () => {
+          if (currentActiveCard) {
+            openReassignModal();
+          }
+        });
+      }
 
-  function createUserItemElement(profile) {
-    const displayName = getUserDisplayName(profile);
-    const initial = displayName.charAt(0).toUpperCase();
+      if (reassignSearchInput) {
+        reassignSearchInput.addEventListener('input', (e) => {
+          const term = e.target.value.toLowerCase().trim();
+          renderReassignUserList(term);
+        });
+      }
 
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'reassign-user-item';
-    itemDiv.innerHTML = `
+      async function openReassignModal() {
+        if (reassignSearchInput) reassignSearchInput.value = '';
+        if (modalReassignUser) modalReassignUser.classList.remove('hidden');
+
+        if (!supabase) return;
+        reassignUserList.innerHTML = '<div class="loading-users-spinner" style="font-size:0.85rem; color:#64748B; text-align:center; padding:1rem;">Carregando usuários...</div>';
+
+        // Buscar todos os usuários cadastrados na tabela 'profiles' do Supabase
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select('*');
+
+        if (error || !profiles || profiles.length === 0) {
+          reassignUserList.innerHTML = '<div style="font-size:0.85rem; color:#64748B; text-align:center; padding:1rem;">Nenhum usuário encontrado.</div>';
+          return;
+        }
+
+        cachedProfiles = profiles;
+        renderReassignUserList('');
+      }
+
+      function renderReassignUserList(searchTerm) {
+        reassignUserList.innerHTML = '';
+
+        const filtered = cachedProfiles.filter(p => {
+          const name = getUserDisplayName(p).toLowerCase();
+          const email = (p.email || '').toLowerCase();
+          return name.includes(searchTerm) || email.includes(searchTerm);
+        });
+
+        // Excluir o próprio usuário logado ('Eu') e listar apenas os outros usuários
+        const otherUsers = filtered.filter(p => p.id !== currentUserId);
+
+        if (otherUsers.length === 0) {
+          reassignUserList.innerHTML = '<div style="font-size:0.85rem; color:#64748B; text-align:center; padding:1rem;">Nenhum usuário encontrado.</div>';
+          return;
+        }
+
+        // Seção 'Usuários'
+        const usersHeader = document.createElement('div');
+        usersHeader.className = 'reassign-section-title';
+        usersHeader.textContent = 'Usuários';
+        reassignUserList.appendChild(usersHeader);
+
+        otherUsers.forEach(profile => {
+          reassignUserList.appendChild(createUserItemElement(profile));
+        });
+      }
+
+      function createUserItemElement(profile) {
+        const displayName = getUserDisplayName(profile);
+        const initial = displayName.charAt(0).toUpperCase();
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'reassign-user-item';
+        itemDiv.innerHTML = `
       <div class="user-avatar-circle">${initial}</div>
       <div class="user-item-name">${escapeHtml(displayName)}</div>
     `;
 
-    // Reatribuição Instantânea ao Clicar
-    itemDiv.addEventListener('click', async () => {
-      if (currentActiveCard && supabase) {
-        const nowIso = new Date().toISOString();
-        const { error } = await supabase
-          .from(getCurrentTable())
-          .update({
-            user_id: profile.id,
-            atualizado_em: nowIso
-          })
-          .eq('id', currentActiveCard.id);
+        // Reatribuição Instantânea ao Clicar
+        itemDiv.addEventListener('click', async () => {
+          if (currentActiveCard && supabase) {
+            const nowIso = new Date().toISOString();
+            const { error } = await supabase
+              .from(getCurrentTable())
+              .update({
+                user_id: profile.id,
+                atualizado_em: nowIso
+              })
+              .eq('id', currentActiveCard.id);
 
-        if (error) {
-          showToast('Erro ao atribuir: ' + error.message);
-          return;
-        }
+            if (error) {
+              showToast('Erro ao atribuir: ' + error.message);
+              return;
+            }
 
-        currentActiveCard.user_id = profile.id;
-        currentActiveCard.atualizado_em = nowIso;
+            currentActiveCard.user_id = profile.id;
+            currentActiveCard.atualizado_em = nowIso;
 
-        const sheetAssigneeName = document.getElementById('sheetAssigneeName');
-        const sheetAssigneeAvatar = document.getElementById('sheetAssigneeAvatar');
-        const sheetReassignBtnEl = document.getElementById('sheetReassignBtn');
-        if (sheetAssigneeName) {
-          sheetAssigneeName.textContent = displayName;
-          if (sheetAssigneeAvatar) {
-            sheetAssigneeAvatar.textContent = displayName.charAt(0).toUpperCase();
+            const sheetAssigneeName = document.getElementById('sheetAssigneeName');
+            const sheetAssigneeAvatar = document.getElementById('sheetAssigneeAvatar');
+            const sheetReassignBtnEl = document.getElementById('sheetReassignBtn');
+            if (sheetAssigneeName) {
+              sheetAssigneeName.textContent = displayName;
+              if (sheetAssigneeAvatar) {
+                sheetAssigneeAvatar.textContent = displayName.charAt(0).toUpperCase();
+              }
+              if (sheetReassignBtnEl) sheetReassignBtnEl.title = `Atribuído a: ${displayName} (Clique para alterar)`;
+            }
+
+            closeReassignUserModal();
+            closeClientSheet();
+            loadUserCards(); // Atualiza o funil
+            showToast(`Oportunidade atribuída a ${displayName}!`);
           }
-          if (sheetReassignBtnEl) sheetReassignBtnEl.title = `Atribuído a: ${displayName} (Clique para alterar)`;
+        });
+
+        return itemDiv;
+      }
+
+      function closeReassignUserModal() {
+        if (modalReassignUser) modalReassignUser.classList.add('hidden');
+      }
+
+      if (closeReassignModal) closeReassignModal.addEventListener('click', closeReassignUserModal);
+
+      window.addEventListener('click', (e) => {
+        if (e.target === modalReassignUser) closeReassignUserModal();
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalReassignUser) closeReassignUserModal();
+      });
+
+      const tabContentRespostas = document.getElementById('tabContentRespostas');
+
+      function switchTab(targetTab) {
+        browserTabs.forEach(tab => {
+          if (tab.dataset.tab === targetTab) {
+            tab.classList.add('active');
+          } else {
+            tab.classList.remove('active');
+          }
+        });
+
+        if (targetTab === 'ficha') {
+          if (tabContentFicha) tabContentFicha.classList.remove('hidden');
+          if (tabContentRespostas) tabContentRespostas.classList.add('hidden');
+          if (tabContentDocumentos) tabContentDocumentos.classList.add('hidden');
+        } else if (targetTab === 'respostas') {
+          if (tabContentRespostas) tabContentRespostas.classList.remove('hidden');
+          if (tabContentFicha) tabContentFicha.classList.add('hidden');
+          if (tabContentDocumentos) tabContentDocumentos.classList.add('hidden');
+        } else if (targetTab === 'documentos') {
+          if (tabContentDocumentos) tabContentDocumentos.classList.remove('hidden');
+          if (tabContentFicha) tabContentFicha.classList.add('hidden');
+          if (tabContentRespostas) tabContentRespostas.classList.add('hidden');
+        }
+      }
+
+      // Alternância de Guias (Tabs)
+      browserTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          switchTab(tab.dataset.tab);
+        });
+      });
+
+      if (closeClientSheetModal) closeClientSheetModal.addEventListener('click', closeClientSheet);
+
+      // window.addEventListener('click', (e) => {
+      //   if (e.target === modalClientSheet) closeClientSheet();
+      // });
+
+
+      // window.addEventListener('keydown', (e) => {
+      //   if (e.key === 'Escape' && modalClientSheet) closeClientSheet();
+      // });
+
+      function escapeHtml(text) {
+        if (!text) return '';
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      /* ==========================================
+         6. TOAST NOTIFICATIONS
+         ========================================== */
+      function showToast(message) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateX(100%)';
+          toast.style.transition = 'all 0.3s ease';
+          setTimeout(() => toast.remove(), 300);
+        }, 3500);
+      }
+
+      // Inicializar verificação de sessão após registrar todos os ouvintes do DOM
+      checkActiveSession();
+      // ==================== LÓGICA DO MODAL: ADD INFO QUESTION ====================
+      const modalAddInfo = document.getElementById('modalAddInfo');
+      const closeAddInfoModal = document.getElementById('closeAddInfoModal');
+      const confirmAddInfoBtn = document.getElementById('confirmAddInfoBtn');
+      const addInfoDynamicFields = document.getElementById('addInfoDynamicFields');
+      const btnAddInfoList = document.querySelectorAll('.btn-add-info');
+
+      function openAddInfoModal(fieldId, originalLabel) {
+        if (!modalAddInfo) return;
+
+        // Configuração das perguntas dinâmicas por campo
+        const questionsConfig = {
+          'respTempoContribuicao': [
+            { id: 'addInfoMilitar', label: 'Prestou serviço militar?', type: 'textarea' }
+          ],
+          'respSolicitouBeneficio': [
+            { id: 'addInfoMotivoNegativa', label: 'Se tentou e foi negado, qual foi o motivo da negativa?', type: 'textarea' },
+            { id: 'addInfoNovoPedido', label: 'Foi feito um novo pedido ou protocolado algum processo?', type: 'textarea' }
+          ],
+          'respJaContribuiu': [
+            { id: 'addInfoTempoParou', label: 'Há quanto tempo parou de contribuir?', type: 'textarea' },
+            { id: 'addInfoQualidadeSegurado', label: 'Você sabe se ainda tem qualidade de segurado?', type: 'textarea' },
+            { id: 'addInfo120Contribuicoes', label: 'Sabe se fez mais de 120 contribuições sem interrupção?', type: 'textarea' },
+            { id: 'addInfo12MesesSem', label: 'Sabe se ficou um período maior que 12 meses sem contribuir?', type: 'textarea' }
+          ],
+          'respExerceuAtividadeEspecial': [
+            { id: 'addInfoAtivEspecial1', label: 'Por quanto tempo, e qual era a atividade?', type: 'textarea' },
+            { id: 'addInfoAtivEspecial2', label: 'As empresas ainda existem, caso precise fazer alguma correção ou pedir documentos?', type: 'textarea' },
+            { id: 'addInfoAtivEspecial3', label: 'Sabe a classificação de exposição aos agentes nocivos?', type: 'textarea' },
+            { id: 'addInfoAtivEspecial4', label: 'Sabe se o uso de EPIs neutraliza a exposição a ponto de anular o direito?', type: 'textarea' }
+          ]
+        };
+
+        let fields = questionsConfig[fieldId];
+
+        if (fieldId === 'respTipoTrabalho') {
+          const selectEl = document.getElementById(fieldId);
+          const val = selectEl ? selectEl.value : '';
+          if (val === 'Emprego de carteira assinada (CLT)') {
+            fields = [
+              { id: 'addInfoCLT1', label: 'Como CLT, com o que você trabalhava?', type: 'textarea' },
+              { id: 'addInfoCLT2', label: 'Alguém já analisou o seu CNIS pra ver se todo o período em que trabalhou como CLT está registrado corretamente?', type: 'textarea' },
+              { id: 'addInfoCLT3', label: 'Você sabe se tem alguma contribuição que foi registrada com valor errado ou abaixo de um salário mínimo?', type: 'textarea' },
+              { id: 'addInfoCLT4', label: 'Você sabe se tem alguma data de entrada, saída ou de intervalo que precisa ser corrigida ?', type: 'textarea' }
+            ];
+          } else if (val === 'Empresário / Autônomo / MEI') {
+            fields = [
+              { id: 'addInfoMEI1', label: 'Como autônomo, com o que você trabalhava, e suas contribuições eram no carnê, ou como MEI?', type: 'textarea' },
+              { id: 'addInfoMEI2', label: 'Alguém já analisou como essas contribuições aparecem no seu CNIS, se existe alguma lacuna ou se algo não foi contabilizado?', type: 'textarea' },
+              { id: 'addInfoMEI3', label: 'Você sabe se tem alguma contribuição duplicada?', type: 'textarea' },
+              { id: 'addInfoMEI4', label: 'Você sabe se todas as contribuições foram feitas no código correto?', type: 'textarea' }
+            ];
+          } else if (val === 'Trabalhador rural') {
+            fields = [
+              { id: 'addInfoRural1', label: 'Na roça, para quem você trabalhava?', type: 'textarea' },
+              { id: 'addInfoRural2', label: 'As terras eram da sua família, e se sim, sabe quantos hectares ?', type: 'textarea' },
+              { id: 'addInfoRural3', label: 'Você tem algum registro documental desse tempo de trabalho e que você produzia na terra?', type: 'textarea' },
+              { id: 'addInfoRural4', label: 'Ainda existem testemunhas vivas do seu trabalho rural?', type: 'textarea' },
+              { id: 'addInfoRural5', label: 'Você tem algum registro documental da sua relação com a terra?', type: 'textarea' }
+            ];
+          } else if (val === 'Servidor público') {
+            return; // Modal is blocked
+          } else {
+            // "Outro" or any other unmapped value
+            fields = [
+              { id: 'addInfoGeneric', label: originalLabel || 'Pergunta selecionada', type: 'textarea' }
+            ];
+          }
         }
 
-        closeReassignUserModal();
-        closeClientSheet();
-        loadUserCards(); // Atualiza o funil
-        showToast(`Oportunidade atribuída a ${displayName}!`);
-      }
-    });
+        if (!fields || fields.length === 0) {
+          // Fallback para uma pergunta genérica se não estiver mapeado
+          fields = [
+            { id: 'addInfoGeneric', label: originalLabel || 'Pergunta selecionada', type: 'textarea' }
+          ];
+        }
 
-    return itemDiv;
-  }
+        // Gerar o HTML dos campos dinâmicos
+        if (addInfoDynamicFields) {
+          let html = '';
 
-  function closeReassignUserModal() {
-    if (modalReassignUser) modalReassignUser.classList.add('hidden');
-  }
-
-  if (closeReassignModal) closeReassignModal.addEventListener('click', closeReassignUserModal);
-
-  window.addEventListener('click', (e) => {
-    if (e.target === modalReassignUser) closeReassignUserModal();
-  });
-
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modalReassignUser) closeReassignUserModal();
-  });
-
-  const tabContentRespostas = document.getElementById('tabContentRespostas');
-
-  function switchTab(targetTab) {
-    browserTabs.forEach(tab => {
-      if (tab.dataset.tab === targetTab) {
-        tab.classList.add('active');
-      } else {
-        tab.classList.remove('active');
-      }
-    });
-
-    if (targetTab === 'ficha') {
-      if (tabContentFicha) tabContentFicha.classList.remove('hidden');
-      if (tabContentRespostas) tabContentRespostas.classList.add('hidden');
-      if (tabContentDocumentos) tabContentDocumentos.classList.add('hidden');
-    } else if (targetTab === 'respostas') {
-      if (tabContentRespostas) tabContentRespostas.classList.remove('hidden');
-      if (tabContentFicha) tabContentFicha.classList.add('hidden');
-      if (tabContentDocumentos) tabContentDocumentos.classList.add('hidden');
-    } else if (targetTab === 'documentos') {
-      if (tabContentDocumentos) tabContentDocumentos.classList.remove('hidden');
-      if (tabContentFicha) tabContentFicha.classList.add('hidden');
-      if (tabContentRespostas) tabContentRespostas.classList.add('hidden');
-    }
-  }
-
-  // Alternância de Guias (Tabs)
-  browserTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      switchTab(tab.dataset.tab);
-    });
-  });
-
-  if (closeClientSheetModal) closeClientSheetModal.addEventListener('click', closeClientSheet);
-
-  // window.addEventListener('click', (e) => {
-  //   if (e.target === modalClientSheet) closeClientSheet();
-  // });
-
-
-  // window.addEventListener('keydown', (e) => {
-  //   if (e.key === 'Escape' && modalClientSheet) closeClientSheet();
-  // });
-
-  function escapeHtml(text) {
-    if (!text) return '';
-    return text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  /* ==========================================
-     6. TOAST NOTIFICATIONS
-     ========================================== */
-  function showToast(message) {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    container.appendChild(toast);
-
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(100%)';
-      toast.style.transition = 'all 0.3s ease';
-      setTimeout(() => toast.remove(), 300);
-    }, 3500);
-  }
-
-  // Inicializar verificação de sessão após registrar todos os ouvintes do DOM
-  checkActiveSession();
-  // ==================== LÓGICA DO MODAL: ADD INFO QUESTION ====================
-  const modalAddInfo = document.getElementById('modalAddInfo');
-  const closeAddInfoModal = document.getElementById('closeAddInfoModal');
-  const confirmAddInfoBtn = document.getElementById('confirmAddInfoBtn');
-  const addInfoDynamicFields = document.getElementById('addInfoDynamicFields');
-  const btnAddInfoList = document.querySelectorAll('.btn-add-info');
-
-  function openAddInfoModal(fieldId, originalLabel) {
-    if (!modalAddInfo) return;
-
-    // Configuração das perguntas dinâmicas por campo
-    const questionsConfig = {
-      'respTempoContribuicao': [
-        { id: 'addInfoMilitar', label: 'Prestou serviço militar?', type: 'textarea' }
-      ],
-      'respSolicitouBeneficio': [
-        { id: 'addInfoMotivoNegativa', label: 'Se tentou e foi negado, qual foi o motivo da negativa?', type: 'textarea' },
-        { id: 'addInfoNovoPedido', label: 'Foi feito um novo pedido ou protocolado algum processo?', type: 'textarea' }
-      ],
-      'respJaContribuiu': [
-        { id: 'addInfoTempoParou', label: 'Há quanto tempo parou de contribuir?', type: 'textarea' },
-        { id: 'addInfoQualidadeSegurado', label: 'Você sabe se ainda tem qualidade de segurado?', type: 'textarea' },
-        { id: 'addInfo120Contribuicoes', label: 'Sabe se fez mais de 120 contribuições sem interrupção?', type: 'textarea' },
-        { id: 'addInfo12MesesSem', label: 'Sabe se ficou um período maior que 12 meses sem contribuir?', type: 'textarea' }
-      ],
-      'respExerceuAtividadeEspecial': [
-        { id: 'addInfoAtivEspecial1', label: 'Por quanto tempo, e qual era a atividade?', type: 'textarea' },
-        { id: 'addInfoAtivEspecial2', label: 'As empresas ainda existem, caso precise fazer alguma correção ou pedir documentos?', type: 'textarea' },
-        { id: 'addInfoAtivEspecial3', label: 'Sabe a classificação de exposição aos agentes nocivos?', type: 'textarea' },
-        { id: 'addInfoAtivEspecial4', label: 'Sabe se o uso de EPIs neutraliza a exposição a ponto de anular o direito?', type: 'textarea' }
-      ]
-    };
-
-    let fields = questionsConfig[fieldId];
-
-    if (fieldId === 'respTipoTrabalho') {
-      const selectEl = document.getElementById(fieldId);
-      const val = selectEl ? selectEl.value : '';
-      if (val === 'Emprego de carteira assinada (CLT)') {
-        fields = [
-          { id: 'addInfoCLT1', label: 'Como CLT, com o que você trabalhava?', type: 'textarea' },
-          { id: 'addInfoCLT2', label: 'Alguém já analisou o seu CNIS pra ver se todo o período em que trabalhou como CLT está registrado corretamente?', type: 'textarea' },
-          { id: 'addInfoCLT3', label: 'Você sabe se tem alguma contribuição que foi registrada com valor errado ou abaixo de um salário mínimo?', type: 'textarea' },
-          { id: 'addInfoCLT4', label: 'Você sabe se tem alguma data de entrada, saída ou de intervalo que precisa ser corrigida ?', type: 'textarea' }
-        ];
-      } else if (val === 'Empresário / Autônomo / MEI') {
-        fields = [
-          { id: 'addInfoMEI1', label: 'Como autônomo, com o que você trabalhava, e suas contribuições eram no carnê, ou como MEI?', type: 'textarea' },
-          { id: 'addInfoMEI2', label: 'Alguém já analisou como essas contribuições aparecem no seu CNIS, se existe alguma lacuna ou se algo não foi contabilizado?', type: 'textarea' },
-          { id: 'addInfoMEI3', label: 'Você sabe se tem alguma contribuição duplicada?', type: 'textarea' },
-          { id: 'addInfoMEI4', label: 'Você sabe se todas as contribuições foram feitas no código correto?', type: 'textarea' }
-        ];
-      } else if (val === 'Trabalhador rural') {
-        fields = [
-          { id: 'addInfoRural1', label: 'Na roça, para quem você trabalhava?', type: 'textarea' },
-          { id: 'addInfoRural2', label: 'As terras eram da sua família, e se sim, sabe quantos hectares ?', type: 'textarea' },
-          { id: 'addInfoRural3', label: 'Você tem algum registro documental desse tempo de trabalho e que você produzia na terra?', type: 'textarea' },
-          { id: 'addInfoRural4', label: 'Ainda existem testemunhas vivas do seu trabalho rural?', type: 'textarea' },
-          { id: 'addInfoRural5', label: 'Você tem algum registro documental da sua relação com a terra?', type: 'textarea' }
-        ];
-      } else if (val === 'Servidor público') {
-        return; // Modal is blocked
-      } else {
-        // "Outro" or any other unmapped value
-        fields = [
-          { id: 'addInfoGeneric', label: originalLabel || 'Pergunta selecionada', type: 'textarea' }
-        ];
-      }
-    }
-
-    if (!fields || fields.length === 0) {
-      // Fallback para uma pergunta genérica se não estiver mapeado
-      fields = [
-        { id: 'addInfoGeneric', label: originalLabel || 'Pergunta selecionada', type: 'textarea' }
-      ];
-    }
-
-    // Gerar o HTML dos campos dinâmicos
-    if (addInfoDynamicFields) {
-      let html = '';
-
-      const generateExpandableNoteHTML = (text) => {
-        return `
+          const generateExpandableNoteHTML = (text) => {
+            return `
           <div style="position: sticky; top: 0; z-index: 10; background-color: #fffbeb; color: #b45309; padding: 0.75rem; border-radius: 6px; border: 1px solid #fde68a; font-size: 0.9rem; font-weight: 500; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start;">
@@ -7326,1008 +7555,1008 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           </div>
         `;
-      };
+          };
 
-      if (fieldId === 'respJaContribuiu') {
-        html += generateExpandableNoteHTML('Se o cliente não tiver qualidade de segurado, não terá o direito de pedir a aposentadoria, mesmo que tenha a idade e o tempo de contribuição necessários.');
-      } else if (fieldId === 'respTipoTrabalho') {
-        const selectEl = document.getElementById(fieldId);
-        const val = selectEl ? selectEl.value : '';
-        let noteText = '';
-        if (val === 'Emprego de carteira assinada (CLT)' || val === 'Empresário / Autônomo / MEI') {
-          noteText = 'Se o INSS exigir correção de alguma dessas informações do CNIS, o tempo poderá se alongar por mais 6 meses até uma nova tentativa.';
-        } else if (val === 'Trabalhador rural') {
-          noteText = 'Sem a documentação correta, é quase impossível, no administrativo, o INSS aprovar a aposentadoria rural, e no judicial, levará, em média, de 3 a 4 anos.';
-        }
+          if (fieldId === 'respJaContribuiu') {
+            html += generateExpandableNoteHTML('Se o cliente não tiver qualidade de segurado, não terá o direito de pedir a aposentadoria, mesmo que tenha a idade e o tempo de contribuição necessários.');
+          } else if (fieldId === 'respTipoTrabalho') {
+            const selectEl = document.getElementById(fieldId);
+            const val = selectEl ? selectEl.value : '';
+            let noteText = '';
+            if (val === 'Emprego de carteira assinada (CLT)' || val === 'Empresário / Autônomo / MEI') {
+              noteText = 'Se o INSS exigir correção de alguma dessas informações do CNIS, o tempo poderá se alongar por mais 6 meses até uma nova tentativa.';
+            } else if (val === 'Trabalhador rural') {
+              noteText = 'Sem a documentação correta, é quase impossível, no administrativo, o INSS aprovar a aposentadoria rural, e no judicial, levará, em média, de 3 a 4 anos.';
+            }
 
-        if (noteText) {
-          html += generateExpandableNoteHTML(noteText);
-        }
-      } else if (fieldId === 'respExerceuAtividadeEspecial') {
-        html += generateExpandableNoteHTML('Sem a documentação correta, é quase impossível, no administrativo, o INSS transformar o tempo especial em tempo regular adicionando os 40%, e no judicial, levará, em média, de 3 a 4 anos.');
-      }
+            if (noteText) {
+              html += generateExpandableNoteHTML(noteText);
+            }
+          } else if (fieldId === 'respExerceuAtividadeEspecial') {
+            html += generateExpandableNoteHTML('Sem a documentação correta, é quase impossível, no administrativo, o INSS transformar o tempo especial em tempo regular adicionando os 40%, e no judicial, levará, em média, de 3 a 4 anos.');
+          }
 
-      html += fields.map(field => {
-        return `
+          html += fields.map(field => {
+            return `
           <div class="sheet-field-group" style="margin-bottom: 1rem;">
             <label for="${field.id}" style="display: block; font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text-dark);">${escapeHtml(field.label)}</label>
             <textarea id="${field.id}" class="sheet-input" placeholder="Digite sua resposta aqui..." rows="4" style="width: 100%; resize: vertical; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-light); font-size: 0.95rem; font-family: inherit; background-color: #f8fafc; transition: all 0.2s;"></textarea>
           </div>
         `;
-      }).join('');
+          }).join('');
 
-      addInfoDynamicFields.innerHTML = html;
-    }
-
-    modalAddInfo.classList.remove('hidden');
-    // Focar no primeiro campo gerado
-    const firstInput = addInfoDynamicFields.querySelector('textarea, input');
-    if (firstInput) firstInput.focus();
-  }
-
-  function closeAddInfoModalHandler() {
-    if (!modalAddInfo) return;
-    modalAddInfo.classList.add('hidden');
-  }
-
-  btnAddInfoList.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const flexContainer = btn.parentElement;
-      const label = flexContainer ? flexContainer.querySelector('label') : null;
-      const fieldId = label ? label.getAttribute('for') : null;
-      const questionText = label ? label.textContent.trim() : 'Pergunta selecionada';
-
-      if (fieldId === 'respTipoTrabalho') {
-        const selectEl = document.getElementById(fieldId);
-        if (selectEl && selectEl.value === 'Servidor público') {
-          showToast('Adição de informações extras bloqueada para Servidor público.');
-          return;
+          addInfoDynamicFields.innerHTML = html;
         }
+
+        modalAddInfo.classList.remove('hidden');
+        // Focar no primeiro campo gerado
+        const firstInput = addInfoDynamicFields.querySelector('textarea, input');
+        if (firstInput) firstInput.focus();
       }
 
-      openAddInfoModal(fieldId, questionText);
-    });
-  });
+      function closeAddInfoModalHandler() {
+        if (!modalAddInfo) return;
+        modalAddInfo.classList.add('hidden');
+      }
 
-  function updateAddInfoButtonsVisibility() {
-    const rules = {
-      'respSolicitouBeneficio': 'Não - nunca tentei aposentar.',
-      'respJaContribuiu': 'Sim - e continuo contribuindo.',
-      'respTipoTrabalho': 'Outro',
-      'respExerceuAtividadeEspecial': 'Não - nunca trabalhei com isso.'
-    };
+      btnAddInfoList.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const flexContainer = btn.parentElement;
+          const label = flexContainer ? flexContainer.querySelector('label') : null;
+          const fieldId = label ? label.getAttribute('for') : null;
+          const questionText = label ? label.textContent.trim() : 'Pergunta selecionada';
 
-    Object.keys(rules).forEach(id => {
-      const selectEl = document.getElementById(id);
-      if (!selectEl) return;
-      const group = selectEl.closest('.sheet-field-group');
-      if (group) {
-        const btn = group.querySelector('.btn-add-info');
-        if (btn) {
-          if (selectEl.value === rules[id]) {
-            btn.style.opacity = '0.3';
-            btn.style.pointerEvents = 'none';
-          } else {
-            btn.style.opacity = '1';
-            btn.style.pointerEvents = 'auto';
+          if (fieldId === 'respTipoTrabalho') {
+            const selectEl = document.getElementById(fieldId);
+            if (selectEl && selectEl.value === 'Servidor público') {
+              showToast('Adição de informações extras bloqueada para Servidor público.');
+              return;
+            }
           }
-        }
-      }
-    });
-  }
 
-  ['respSolicitouBeneficio', 'respJaContribuiu', 'respTipoTrabalho', 'respExerceuAtividadeEspecial'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('change', updateAddInfoButtonsVisibility);
-    }
-  });
-
-  updateAddInfoButtonsVisibility();
-
-  if (closeAddInfoModal) {
-    closeAddInfoModal.addEventListener('click', closeAddInfoModalHandler);
-  }
-  if (confirmAddInfoBtn) {
-    confirmAddInfoBtn.addEventListener('click', () => {
-      if (!addInfoDynamicFields) return;
-
-      const respDetalhes = document.getElementById('respDetalhes');
-      if (!respDetalhes) return;
-
-      let newInfoText = '';
-      let hasEmptyFields = false;
-
-      // Coleta todos os inputs do modal
-      const inputs = addInfoDynamicFields.querySelectorAll('textarea, input');
-
-      inputs.forEach(input => {
-        const val = input.value.trim();
-        if (!val) {
-          hasEmptyFields = true;
-          return;
-        }
-
-        const label = addInfoDynamicFields.querySelector(`label[for="${input.id}"]`);
-        const questionText = label ? label.textContent.trim() : 'Informação Adicional';
-
-        if (newInfoText) newInfoText += '\n\n';
-        newInfoText += `${questionText}\nR: ${val}`;
-      });
-
-      if (!newInfoText && hasEmptyFields) {
-        showToast('Por favor, preencha o campo antes de adicionar.');
-        return;
-      }
-
-      if (newInfoText) {
-        let currentDetalhes = respDetalhes.value.trim();
-        if (currentDetalhes) {
-          respDetalhes.value = currentDetalhes + '\n\n' + newInfoText;
-        } else {
-          respDetalhes.value = newInfoText;
-        }
-
-        showToast('Informação transferida para os detalhes!');
-        closeAddInfoModalHandler();
-      }
-    });
-  }
-
-  // window.addEventListener('click', (e) => {
-  //   if (e.target === modalAddInfo) closeAddInfoModalHandler();
-  // });
-  // window.addEventListener('keydown', (e) => {
-  //   if (e.key === 'Escape' && modalAddInfo && !modalAddInfo.classList.contains('hidden')) {
-  //     closeAddInfoModalHandler();
-  //   }
-  // });
-
-  // ==================== LÓGICA DO MODAL: EXPANDIR DETALHES ====================
-  const btnExpandDetalhes = document.getElementById('btnExpandDetalhes');
-  const modalExpandDetalhes = document.getElementById('modalExpandDetalhes');
-  const closeExpandDetalhesModal = document.getElementById('closeExpandDetalhesModal');
-  const expandedDetalhesTextarea = document.getElementById('expandedDetalhesTextarea');
-  const respDetalhesInput = document.getElementById('respDetalhes');
-
-  function openExpandDetalhesModal() {
-    if (!modalExpandDetalhes || !expandedDetalhesTextarea || !respDetalhesInput) return;
-    expandedDetalhesTextarea.value = respDetalhesInput.value;
-    modalExpandDetalhes.classList.remove('hidden');
-    expandedDetalhesTextarea.focus();
-  }
-
-  function closeExpandDetalhesModalHandler() {
-    if (!modalExpandDetalhes) return;
-    modalExpandDetalhes.classList.add('hidden');
-    // Ensure we save when closing
-    if (respDetalhesInput) {
-      respDetalhesInput.dispatchEvent(new Event('change'));
-    }
-  }
-
-  if (btnExpandDetalhes) {
-    btnExpandDetalhes.addEventListener('click', openExpandDetalhesModal);
-  }
-
-  if (closeExpandDetalhesModal) {
-    closeExpandDetalhesModal.addEventListener('click', closeExpandDetalhesModalHandler);
-  }
-
-  if (expandedDetalhesTextarea && respDetalhesInput) {
-    expandedDetalhesTextarea.addEventListener('input', () => {
-      respDetalhesInput.value = expandedDetalhesTextarea.value;
-    });
-  }
-
-  // window.addEventListener('click', (e) => {
-  //   if (e.target === modalExpandDetalhes) closeExpandDetalhesModalHandler();
-  // });
-  // window.addEventListener('keydown', (e) => {
-  //   if (e.key === 'Escape' && modalExpandDetalhes && !modalExpandDetalhes.classList.contains('hidden')) {
-  //     closeExpandDetalhesModalHandler();
-  //   }
-  // });
-
-  function updateServicoMilitarUI(val) {
-    const btn = document.getElementById('btnServicoMilitar');
-    const label = document.getElementById('labelServicoMilitar');
-    const text = document.getElementById('textServicoMilitar');
-    const input = document.getElementById('respServicoMilitar');
-
-    if (!btn || !label || !text || !input) return;
-
-    if (val === 'Sim') {
-      btn.style.background = 'var(--bg-success)';
-      label.style.color = 'var(--text-success)';
-      text.style.color = 'var(--text-success)';
-      text.textContent = 'Sim';
-      input.value = 'Sim';
-    } else {
-      btn.style.background = '#FEE2E2';
-      label.style.color = '#B91C1C';
-      text.style.color = '#B91C1C';
-      text.textContent = 'Não';
-      input.value = 'Não';
-    }
-  }
-
-  const btnServicoMilitar = document.getElementById('btnServicoMilitar');
-  if (btnServicoMilitar) {
-    btnServicoMilitar.addEventListener('click', () => {
-      const input = document.getElementById('respServicoMilitar');
-      const newVal = input && input.value === 'Sim' ? 'Não' : 'Sim';
-      updateServicoMilitarUI(newVal);
-      saveClientData(true);
-    });
-  }
-
-
-
-  // --- Aes dos botes no rodap do modal ---
-  const modalBtnEnviarMensagem = document.getElementById('modalBtnEnviarMensagem');
-  if (modalBtnEnviarMensagem) {
-    modalBtnEnviarMensagem.addEventListener('click', () => {
-      if (!currentActiveCard || !currentActiveCard.telefone) {
-        showToast('Telefone no informado.');
-        return;
-      }
-      const digits = currentActiveCard.telefone.replace(/\D/g, '');
-      if (digits) {
-        window.open(`https://web.whatsapp.com/send/?phone=55${digits}`, '_blank');
-      } else {
-        showToast('Telefone invlido.');
-      }
-    });
-  }
-
-  // ==============================================================================
-  // AGENDAMENTO DE REUNIÃO (INTEGRAÇÃO VIA N8N + GOOGLE CALENDAR)
-  // ==============================================================================
-  const N8N_CONSULTA_URL = 'https://n8n.srv1077266.hstgr.cloud/webhook/consultar_disponibilidade_agenda';
-  const N8N_AGENDAMENTO_URL = 'https://n8n.srv1077266.hstgr.cloud/webhook/agendamento_reuniao';
-  const REUNIAO_CONVIDADOS = ['caiomvigreja@gmail.com', 'carlasovie@gmail.com'];
-
-  const modalBtnAgendarReuniao = document.getElementById('modalBtnAgendarReuniao');
-  const modalAgendarReuniao = document.getElementById('modalAgendarReuniao');
-  const closeAgendarReuniaoModal = document.getElementById('closeAgendarReuniaoModal');
-  const cancelAgendarReuniaoBtn = document.getElementById('cancelAgendarReuniaoBtn');
-  const agendarReuniaoForm = document.getElementById('agendarReuniaoForm');
-  const agendarReuniaoData = document.getElementById('agendarReuniaoData');
-  const agendarReuniaoHorarioSlot = document.getElementById('agendarReuniaoHorarioSlot');
-  const agendarReuniaoUsuario = document.getElementById('agendarReuniaoUsuario');
-  const agendarReuniaoLoadingSlots = document.getElementById('agendarReuniaoLoadingSlots');
-  const agendarReuniaoAvisoStatus = document.getElementById('agendarReuniaoAvisoStatus');
-  const agendarReuniaoSubtitulo = document.getElementById('agendarReuniaoSubtitulo');
-
-  function fecharModalAgendamento() {
-    if (modalAgendarReuniao) {
-      modalAgendarReuniao.classList.add('hidden');
-    }
-  }
-
-  async function popularSelectUsuariosAgendamento() {
-    if (!agendarUsuarioDropdownMenu) return;
-
-    // Obter lista de perfis do cache ou banco
-    let profiles = window.crmProfilesCache || cachedProfiles || [];
-    if (profiles.length === 0 && typeof supabase !== 'undefined') {
-      try {
-        const { data } = await supabase.from('profiles').select('*');
-        if (data && data.length > 0) {
-          profiles = data;
-          cachedProfiles = data;
-          window.crmProfilesCache = data;
-        }
-      } catch (err) { }
-    }
-
-    const currentAssignedId = currentActiveCard ? currentActiveCard.user_id : null;
-    let currentAssignedName = 'Não atribuído';
-    if (currentAssignedId) {
-      const p = profiles.find(x => x.id === currentAssignedId);
-      if (p) currentAssignedName = getUserDisplayName(p);
-    }
-
-    if (agendarReuniaoUsuario) agendarReuniaoUsuario.value = '';
-    if (agendarUsuarioTriggerText) {
-      agendarUsuarioTriggerText.textContent = `Manter atual (${currentAssignedName})`;
-      agendarUsuarioTriggerText.style.fontWeight = '500';
-    }
-
-    agendarUsuarioDropdownMenu.innerHTML = '';
-
-    // Opção padrão: Manter atual
-    const defaultOpt = document.createElement('div');
-    defaultOpt.className = 'custom-user-opt selected';
-    defaultOpt.textContent = `Manter atual (${currentAssignedName})`;
-    defaultOpt.style.padding = '10px 14px';
-    defaultOpt.style.fontSize = '0.9rem';
-    defaultOpt.style.fontWeight = '700';
-    defaultOpt.style.color = 'var(--ink)';
-    defaultOpt.style.borderRadius = '10px';
-    defaultOpt.style.backgroundColor = '#f1f5f9';
-    defaultOpt.style.cursor = 'pointer';
-    defaultOpt.style.transition = 'all 0.15s ease';
-
-    defaultOpt.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (agendarReuniaoUsuario) agendarReuniaoUsuario.value = '';
-      if (agendarUsuarioTriggerText) agendarUsuarioTriggerText.textContent = `Manter atual (${currentAssignedName})`;
-
-      Array.from(agendarUsuarioDropdownMenu.children).forEach(c => {
-        c.classList.remove('selected');
-        c.style.backgroundColor = 'transparent';
-        c.style.fontWeight = '500';
-      });
-
-      defaultOpt.classList.add('selected');
-      defaultOpt.style.backgroundColor = '#f1f5f9';
-      defaultOpt.style.fontWeight = '700';
-      agendarUsuarioDropdownMenu.classList.add('hidden');
-    });
-
-    agendarUsuarioDropdownMenu.appendChild(defaultOpt);
-
-    // Listar apenas os outros usuários (evitando duplicar o responsável atual)
-    profiles.forEach(p => {
-      // Se for o responsável atual, ignora pois já está no topo como "Manter atual"
-      if (p.id === currentAssignedId) return;
-
-      const name = getUserDisplayName(p);
-      const userOpt = document.createElement('div');
-      userOpt.className = 'custom-user-opt';
-      userOpt.textContent = name;
-      userOpt.style.padding = '10px 14px';
-      userOpt.style.fontSize = '0.9rem';
-      userOpt.style.fontWeight = '500';
-      userOpt.style.color = 'var(--ink)';
-      userOpt.style.borderRadius = '10px';
-      userOpt.style.cursor = 'pointer';
-      userOpt.style.transition = 'all 0.15s ease';
-
-      userOpt.onmouseover = () => {
-        if (!userOpt.classList.contains('selected')) {
-          userOpt.style.backgroundColor = 'var(--surface-hover)';
-        }
-      };
-      userOpt.onmouseout = () => {
-        if (!userOpt.classList.contains('selected')) {
-          userOpt.style.backgroundColor = 'transparent';
-        }
-      };
-
-      userOpt.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (agendarReuniaoUsuario) agendarReuniaoUsuario.value = p.id;
-        if (agendarUsuarioTriggerText) agendarUsuarioTriggerText.textContent = name;
-
-        Array.from(agendarUsuarioDropdownMenu.children).forEach(c => {
-          c.classList.remove('selected');
-          c.style.backgroundColor = 'transparent';
-          c.style.fontWeight = '500';
+          openAddInfoModal(fieldId, questionText);
         });
-
-        userOpt.classList.add('selected');
-        userOpt.style.backgroundColor = '#f1f5f9';
-        userOpt.style.fontWeight = '700';
-        agendarUsuarioDropdownMenu.classList.add('hidden');
       });
 
-      agendarUsuarioDropdownMenu.appendChild(userOpt);
-    });
-  }
-
-  let calSelectedDate = null;
-  let calViewYear = new Date().getFullYear();
-  let calViewMonth = new Date().getMonth(); // 0 a 11
-
-  const MESES_NOMES = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ];
-
-  function renderInlineCalendar() {
-    const calLabel = document.getElementById('calCurrentMonthLabel');
-    const calGrid = document.getElementById('calDaysGrid');
-    if (!calLabel || !calGrid) return;
-
-    calLabel.textContent = MESES_NOMES[calViewMonth];
-    calGrid.innerHTML = '';
-
-    // Dia 1 do mês atual visualizado
-    const firstDayOfMonth = new Date(calViewYear, calViewMonth, 1);
-    const lastDayOfMonth = new Date(calViewYear, calViewMonth + 1, 0);
-    const totalDays = lastDayOfMonth.getDate();
-
-    // Dia da semana do 1º dia (0 = Domingo, 1 = Segunda ... 6 = Sábado)
-    // No nosso calendário o cabeçalho começa no Domingo (índice 0): Dom, Seg, Ter, Qua, Qui, Sex, Sáb
-    let startingDay = firstDayOfMonth.getDay(); // 0 = Domingo diretamente
-
-    // Preencher espaços vazios antes do 1º dia
-    for (let i = 0; i < startingDay; i++) {
-      const emptyDiv = document.createElement('div');
-      emptyDiv.style.height = '34px';
-      calGrid.appendChild(emptyDiv);
-    }
-
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    for (let day = 1; day <= totalDays; day++) {
-      const currentDayDate = new Date(calViewYear, calViewMonth, day);
-      const isPast = currentDayDate < hoje;
-      const dayOfWeek = currentDayDate.getDay(); // 0 = Domingo, 6 = Sábado
-      const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-      const isBlocked = isPast || isWeekend;
-
-      const dayBtn = document.createElement('button');
-      dayBtn.type = 'button';
-      dayBtn.textContent = day;
-      dayBtn.style.height = '34px';
-      dayBtn.style.border = 'none';
-      dayBtn.style.borderRadius = '10px';
-      dayBtn.style.fontFamily = 'inherit';
-      dayBtn.style.fontSize = '0.88rem';
-      dayBtn.style.fontWeight = '500';
-      dayBtn.style.display = 'flex';
-      dayBtn.style.alignItems = 'center';
-      dayBtn.style.justifyContent = 'center';
-      dayBtn.style.transition = 'all 0.15s ease';
-
-      // Verificar se é o dia selecionado
-      const dateStr = `${calViewYear}-${String(calViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const isSelected = calSelectedDate === dateStr;
-
-      if (isSelected) {
-        dayBtn.style.background = '#0a0a0a';
-        dayBtn.style.color = '#ffffff';
-        dayBtn.style.fontWeight = '700';
-        dayBtn.style.cursor = 'pointer';
-      } else if (isBlocked) {
-        dayBtn.style.background = 'transparent';
-        dayBtn.style.color = 'var(--line-strong)';
-        dayBtn.style.opacity = '0.25';
-        dayBtn.style.cursor = 'not-allowed';
-      } else {
-        dayBtn.style.background = 'transparent';
-        dayBtn.style.color = 'var(--ink)';
-        dayBtn.style.cursor = 'pointer';
-
-        dayBtn.onmouseover = () => {
-          if (calSelectedDate !== dateStr) dayBtn.style.background = 'var(--surface-hover)';
+      function updateAddInfoButtonsVisibility() {
+        const rules = {
+          'respSolicitouBeneficio': 'Não - nunca tentei aposentar.',
+          'respJaContribuiu': 'Sim - e continuo contribuindo.',
+          'respTipoTrabalho': 'Outro',
+          'respExerceuAtividadeEspecial': 'Não - nunca trabalhei com isso.'
         };
-        dayBtn.onmouseout = () => {
-          if (calSelectedDate !== dateStr) dayBtn.style.background = 'transparent';
-        };
-      }
 
-      if (!isBlocked) {
-        dayBtn.addEventListener('click', () => {
-          calSelectedDate = dateStr;
-          if (agendarReuniaoData) agendarReuniaoData.value = dateStr;
-          renderInlineCalendar();
-          carregarHorariosDisponiveis(dateStr);
+        Object.keys(rules).forEach(id => {
+          const selectEl = document.getElementById(id);
+          if (!selectEl) return;
+          const group = selectEl.closest('.sheet-field-group');
+          if (group) {
+            const btn = group.querySelector('.btn-add-info');
+            if (btn) {
+              if (selectEl.value === rules[id]) {
+                btn.style.opacity = '0.3';
+                btn.style.pointerEvents = 'none';
+              } else {
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+              }
+            }
+          }
         });
       }
 
-      calGrid.appendChild(dayBtn);
-    }
-  }
-
-  // Navegação do calendário
-  const calPrevMonthBtn = document.getElementById('calPrevMonthBtn');
-  const calNextMonthBtn = document.getElementById('calNextMonthBtn');
-  if (calPrevMonthBtn) {
-    calPrevMonthBtn.addEventListener('click', () => {
-      calViewMonth--;
-      if (calViewMonth < 0) {
-        calViewMonth = 11;
-        calViewYear--;
-      }
-      renderInlineCalendar();
-    });
-  }
-  if (calNextMonthBtn) {
-    calNextMonthBtn.addEventListener('click', () => {
-      calViewMonth++;
-      if (calViewMonth > 11) {
-        calViewMonth = 0;
-        calViewYear++;
-      }
-      renderInlineCalendar();
-    });
-  }
-
-  const agendarHorarioDropdownTrigger = document.getElementById('agendarHorarioDropdownTrigger');
-  const agendarHorarioTriggerText = document.getElementById('agendarHorarioTriggerText');
-  const agendarHorarioDropdownMenu = document.getElementById('agendarHorarioDropdownMenu');
-
-  const agendarUsuarioDropdownTrigger = document.getElementById('agendarUsuarioDropdownTrigger');
-  const agendarUsuarioTriggerText = document.getElementById('agendarUsuarioTriggerText');
-  const agendarUsuarioDropdownMenu = document.getElementById('agendarUsuarioDropdownMenu');
-
-  if (agendarHorarioDropdownTrigger) {
-    agendarHorarioDropdownTrigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (agendarHorarioDropdownTrigger.style.cursor === 'not-allowed') return;
-      if (agendarUsuarioDropdownMenu) agendarUsuarioDropdownMenu.classList.add('hidden');
-      const isHidden = agendarHorarioDropdownMenu.classList.contains('hidden');
-      if (isHidden) {
-        agendarHorarioDropdownMenu.classList.remove('hidden');
-      } else {
-        agendarHorarioDropdownMenu.classList.add('hidden');
-      }
-    });
-  }
-
-  if (agendarUsuarioDropdownTrigger) {
-    agendarUsuarioDropdownTrigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (agendarHorarioDropdownMenu) agendarHorarioDropdownMenu.classList.add('hidden');
-      const isHidden = agendarUsuarioDropdownMenu.classList.contains('hidden');
-      if (isHidden) {
-        agendarUsuarioDropdownMenu.classList.remove('hidden');
-      } else {
-        agendarUsuarioDropdownMenu.classList.add('hidden');
-      }
-    });
-  }
-
-  document.addEventListener('click', () => {
-    if (agendarHorarioDropdownMenu) {
-      agendarHorarioDropdownMenu.classList.add('hidden');
-    }
-    if (agendarUsuarioDropdownMenu) {
-      agendarUsuarioDropdownMenu.classList.add('hidden');
-    }
-  });
-
-  function resetarCamposAgendamento() {
-    calSelectedDate = null;
-    calViewYear = new Date().getFullYear();
-    calViewMonth = new Date().getMonth();
-    renderInlineCalendar();
-
-    if (agendarReuniaoData) agendarReuniaoData.value = '';
-    if (agendarReuniaoHorarioSlot) agendarReuniaoHorarioSlot.value = '';
-
-    if (agendarHorarioTriggerText) agendarHorarioTriggerText.textContent = 'Selecione primeiro uma data acima...';
-    if (agendarHorarioDropdownTrigger) {
-      agendarHorarioDropdownTrigger.style.cursor = 'not-allowed';
-      agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface-muted)';
-      agendarHorarioDropdownTrigger.style.color = 'var(--ink-muted)';
-    }
-    if (agendarHorarioDropdownMenu) {
-      agendarHorarioDropdownMenu.innerHTML = '';
-      agendarHorarioDropdownMenu.classList.add('hidden');
-    }
-
-    if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.add('hidden');
-    if (agendarReuniaoAvisoStatus) agendarReuniaoAvisoStatus.textContent = '';
-  }
-
-  // Gera slots padrão de 30min entre 09:00 e 16:00 (último horário de início é 15:30 às 16:00)
-  function gerarSlotsBase(dataStr) {
-    const slots = [];
-    for (let h = 9; h <= 15; h++) {
-      ['00', '30'].forEach(min => {
-        const horaStr = String(h).padStart(2, '0');
-        const start = `${dataStr}T${horaStr}:${min}:00`;
-        let fimHora = h;
-        let fimMin = '30';
-        if (min === '30') {
-          fimHora = h + 1;
-          fimMin = '00';
+      ['respSolicitouBeneficio', 'respJaContribuiu', 'respTipoTrabalho', 'respExerceuAtividadeEspecial'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('change', updateAddInfoButtonsVisibility);
         }
-        const end = `${dataStr}T${String(fimHora).padStart(2, '0')}:${fimMin}:00`;
-        slots.push({
-          label: `${horaStr}:${min} às ${String(fimHora).padStart(2, '0')}:${fimMin}`,
-          hora: horaStr,
-          minuto: min,
-          start,
-          end
-        });
-      });
-    }
-    return slots;
-  }
-
-  async function carregarHorariosDisponiveis(dataEscolhida) {
-    if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.remove('hidden');
-    if (agendarReuniaoAvisoStatus) agendarReuniaoAvisoStatus.textContent = '';
-
-    if (agendarHorarioTriggerText) agendarHorarioTriggerText.textContent = 'Consultando horários livres...';
-    if (agendarHorarioDropdownTrigger) {
-      agendarHorarioDropdownTrigger.style.cursor = 'wait';
-      agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface-muted)';
-    }
-    if (agendarHorarioDropdownMenu) {
-      agendarHorarioDropdownMenu.innerHTML = '';
-      agendarHorarioDropdownMenu.classList.add('hidden');
-    }
-
-    const slots = gerarSlotsBase(dataEscolhida);
-    let busyList = [];
-
-    try {
-      const resp = await fetch(N8N_CONSULTA_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          data: dataEscolhida,
-          timeMin: `${dataEscolhida}T00:00:00-03:00`,
-          timeMax: `${dataEscolhida}T23:59:59-03:00`
-        })
       });
 
-      if (resp.ok) {
-        const data = await resp.json();
-        if (Array.isArray(data.busy)) {
-          busyList = data.busy;
-        } else if (Array.isArray(data)) {
-          busyList = data;
-        }
+      updateAddInfoButtonsVisibility();
+
+      if (closeAddInfoModal) {
+        closeAddInfoModal.addEventListener('click', closeAddInfoModalHandler);
       }
-    } catch (err) {
-      console.warn('Aviso: n8n indisponível para FreeBusy, liberando horários padrão:', err);
-    } finally {
-      if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.add('hidden');
-    }
+      if (confirmAddInfoBtn) {
+        confirmAddInfoBtn.addEventListener('click', () => {
+          if (!addInfoDynamicFields) return;
 
-    // Exibir apenas os horários realmente DISPONÍVEIS e que ainda NÃO passaram (futuros)
-    let countDisponiveis = 0;
-    const agoraTime = Date.now();
+          const respDetalhes = document.getElementById('respDetalhes');
+          if (!respDetalhes) return;
 
-    if (agendarHorarioDropdownMenu) {
-      agendarHorarioDropdownMenu.innerHTML = '';
+          let newInfoText = '';
+          let hasEmptyFields = false;
 
-      slots.forEach(slot => {
-        const slotStart = new Date(slot.start).getTime();
-        const slotEnd = new Date(slot.end).getTime();
+          // Coleta todos os inputs do modal
+          const inputs = addInfoDynamicFields.querySelectorAll('textarea, input');
 
-        // 1. Desconsiderar horários que já passaram hoje
-        const jaPassou = slotStart <= agoraTime;
-
-        // 2. Desconsiderar horários ocupados na agenda do Google
-        const isBusy = busyList.some(b => {
-          const bStart = new Date(b.start).getTime();
-          const bEnd = new Date(b.end).getTime();
-          return (slotStart < bEnd && slotEnd > bStart);
-        });
-
-        if (!jaPassou && !isBusy) {
-          countDisponiveis++;
-          const optDiv = document.createElement('div');
-          optDiv.className = 'custom-horario-opt';
-          optDiv.textContent = slot.label;
-          optDiv.style.padding = '10px 14px';
-          optDiv.style.fontSize = '0.9rem';
-          optDiv.style.fontWeight = '500';
-          optDiv.style.color = 'var(--ink)';
-          optDiv.style.borderRadius = '10px';
-          optDiv.style.cursor = 'pointer';
-          optDiv.style.transition = 'all 0.15s ease';
-
-          optDiv.onmouseover = () => {
-            if (!optDiv.classList.contains('selected')) {
-              optDiv.style.backgroundColor = 'var(--surface-hover)';
-            }
-          };
-          optDiv.onmouseout = () => {
-            if (!optDiv.classList.contains('selected')) {
-              optDiv.style.backgroundColor = 'transparent';
-            }
-          };
-
-          optDiv.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (agendarReuniaoHorarioSlot) agendarReuniaoHorarioSlot.value = `${slot.hora}:${slot.minuto}`;
-            if (agendarHorarioTriggerText) {
-              agendarHorarioTriggerText.textContent = slot.label;
-              agendarHorarioTriggerText.style.color = 'var(--ink)';
-              agendarHorarioTriggerText.style.fontWeight = '600';
+          inputs.forEach(input => {
+            const val = input.value.trim();
+            if (!val) {
+              hasEmptyFields = true;
+              return;
             }
 
-            Array.from(agendarHorarioDropdownMenu.children).forEach(child => {
-              child.classList.remove('selected');
-              child.style.backgroundColor = 'transparent';
-              child.style.fontWeight = '500';
-            });
+            const label = addInfoDynamicFields.querySelector(`label[for="${input.id}"]`);
+            const questionText = label ? label.textContent.trim() : 'Informação Adicional';
 
-            optDiv.classList.add('selected');
-            optDiv.style.backgroundColor = '#f1f5f9';
-            optDiv.style.fontWeight = '700';
-
-            agendarHorarioDropdownMenu.classList.add('hidden');
+            if (newInfoText) newInfoText += '\n\n';
+            newInfoText += `${questionText}\nR: ${val}`;
           });
 
-          agendarHorarioDropdownMenu.appendChild(optDiv);
+          if (!newInfoText && hasEmptyFields) {
+            showToast('Por favor, preencha o campo antes de adicionar.');
+            return;
+          }
+
+          if (newInfoText) {
+            let currentDetalhes = respDetalhes.value.trim();
+            if (currentDetalhes) {
+              respDetalhes.value = currentDetalhes + '\n\n' + newInfoText;
+            } else {
+              respDetalhes.value = newInfoText;
+            }
+
+            showToast('Informação transferida para os detalhes!');
+            closeAddInfoModalHandler();
+          }
+        });
+      }
+
+      // window.addEventListener('click', (e) => {
+      //   if (e.target === modalAddInfo) closeAddInfoModalHandler();
+      // });
+      // window.addEventListener('keydown', (e) => {
+      //   if (e.key === 'Escape' && modalAddInfo && !modalAddInfo.classList.contains('hidden')) {
+      //     closeAddInfoModalHandler();
+      //   }
+      // });
+
+      // ==================== LÓGICA DO MODAL: EXPANDIR DETALHES ====================
+      const btnExpandDetalhes = document.getElementById('btnExpandDetalhes');
+      const modalExpandDetalhes = document.getElementById('modalExpandDetalhes');
+      const closeExpandDetalhesModal = document.getElementById('closeExpandDetalhesModal');
+      const expandedDetalhesTextarea = document.getElementById('expandedDetalhesTextarea');
+      const respDetalhesInput = document.getElementById('respDetalhes');
+
+      function openExpandDetalhesModal() {
+        if (!modalExpandDetalhes || !expandedDetalhesTextarea || !respDetalhesInput) return;
+        expandedDetalhesTextarea.value = respDetalhesInput.value;
+        modalExpandDetalhes.classList.remove('hidden');
+        expandedDetalhesTextarea.focus();
+      }
+
+      function closeExpandDetalhesModalHandler() {
+        if (!modalExpandDetalhes) return;
+        modalExpandDetalhes.classList.add('hidden');
+        // Ensure we save when closing
+        if (respDetalhesInput) {
+          respDetalhesInput.dispatchEvent(new Event('change'));
+        }
+      }
+
+      if (btnExpandDetalhes) {
+        btnExpandDetalhes.addEventListener('click', openExpandDetalhesModal);
+      }
+
+      if (closeExpandDetalhesModal) {
+        closeExpandDetalhesModal.addEventListener('click', closeExpandDetalhesModalHandler);
+      }
+
+      if (expandedDetalhesTextarea && respDetalhesInput) {
+        expandedDetalhesTextarea.addEventListener('input', () => {
+          respDetalhesInput.value = expandedDetalhesTextarea.value;
+        });
+      }
+
+      // window.addEventListener('click', (e) => {
+      //   if (e.target === modalExpandDetalhes) closeExpandDetalhesModalHandler();
+      // });
+      // window.addEventListener('keydown', (e) => {
+      //   if (e.key === 'Escape' && modalExpandDetalhes && !modalExpandDetalhes.classList.contains('hidden')) {
+      //     closeExpandDetalhesModalHandler();
+      //   }
+      // });
+
+      function updateServicoMilitarUI(val) {
+        const btn = document.getElementById('btnServicoMilitar');
+        const label = document.getElementById('labelServicoMilitar');
+        const text = document.getElementById('textServicoMilitar');
+        const input = document.getElementById('respServicoMilitar');
+
+        if (!btn || !label || !text || !input) return;
+
+        if (val === 'Sim') {
+          btn.style.background = 'var(--bg-success)';
+          label.style.color = 'var(--text-success)';
+          text.style.color = 'var(--text-success)';
+          text.textContent = 'Sim';
+          input.value = 'Sim';
+        } else {
+          btn.style.background = '#FEE2E2';
+          label.style.color = '#B91C1C';
+          text.style.color = '#B91C1C';
+          text.textContent = 'Não';
+          input.value = 'Não';
+        }
+      }
+
+      const btnServicoMilitar = document.getElementById('btnServicoMilitar');
+      if (btnServicoMilitar) {
+        btnServicoMilitar.addEventListener('click', () => {
+          const input = document.getElementById('respServicoMilitar');
+          const newVal = input && input.value === 'Sim' ? 'Não' : 'Sim';
+          updateServicoMilitarUI(newVal);
+          saveClientData(true);
+        });
+      }
+
+
+
+      // --- Aes dos botes no rodap do modal ---
+      const modalBtnEnviarMensagem = document.getElementById('modalBtnEnviarMensagem');
+      if (modalBtnEnviarMensagem) {
+        modalBtnEnviarMensagem.addEventListener('click', () => {
+          if (!currentActiveCard || !currentActiveCard.telefone) {
+            showToast('Telefone no informado.');
+            return;
+          }
+          const digits = currentActiveCard.telefone.replace(/\D/g, '');
+          if (digits) {
+            window.open(`https://web.whatsapp.com/send/?phone=55${digits}`, '_blank');
+          } else {
+            showToast('Telefone invlido.');
+          }
+        });
+      }
+
+      // ==============================================================================
+      // AGENDAMENTO DE REUNIÃO (INTEGRAÇÃO VIA N8N + GOOGLE CALENDAR)
+      // ==============================================================================
+      const N8N_CONSULTA_URL = 'https://n8n.srv1077266.hstgr.cloud/webhook/consultar_disponibilidade_agenda';
+      const N8N_AGENDAMENTO_URL = 'https://n8n.srv1077266.hstgr.cloud/webhook/agendamento_reuniao';
+      const REUNIAO_CONVIDADOS = ['caiomvigreja@gmail.com', 'carlasovie@gmail.com'];
+
+      const modalBtnAgendarReuniao = document.getElementById('modalBtnAgendarReuniao');
+      const modalAgendarReuniao = document.getElementById('modalAgendarReuniao');
+      const closeAgendarReuniaoModal = document.getElementById('closeAgendarReuniaoModal');
+      const cancelAgendarReuniaoBtn = document.getElementById('cancelAgendarReuniaoBtn');
+      const agendarReuniaoForm = document.getElementById('agendarReuniaoForm');
+      const agendarReuniaoData = document.getElementById('agendarReuniaoData');
+      const agendarReuniaoHorarioSlot = document.getElementById('agendarReuniaoHorarioSlot');
+      const agendarReuniaoUsuario = document.getElementById('agendarReuniaoUsuario');
+      const agendarReuniaoLoadingSlots = document.getElementById('agendarReuniaoLoadingSlots');
+      const agendarReuniaoAvisoStatus = document.getElementById('agendarReuniaoAvisoStatus');
+      const agendarReuniaoSubtitulo = document.getElementById('agendarReuniaoSubtitulo');
+
+      function fecharModalAgendamento() {
+        if (modalAgendarReuniao) {
+          modalAgendarReuniao.classList.add('hidden');
+        }
+      }
+
+      async function popularSelectUsuariosAgendamento() {
+        if (!agendarUsuarioDropdownMenu) return;
+
+        // Obter lista de perfis do cache ou banco
+        let profiles = window.crmProfilesCache || cachedProfiles || [];
+        if (profiles.length === 0 && typeof supabase !== 'undefined') {
+          try {
+            const { data } = await supabase.from('profiles').select('*');
+            if (data && data.length > 0) {
+              profiles = data;
+              cachedProfiles = data;
+              window.crmProfilesCache = data;
+            }
+          } catch (err) { }
+        }
+
+        const currentAssignedId = currentActiveCard ? currentActiveCard.user_id : null;
+        let currentAssignedName = 'Não atribuído';
+        if (currentAssignedId) {
+          const p = profiles.find(x => x.id === currentAssignedId);
+          if (p) currentAssignedName = getUserDisplayName(p);
+        }
+
+        if (agendarReuniaoUsuario) agendarReuniaoUsuario.value = '';
+        if (agendarUsuarioTriggerText) {
+          agendarUsuarioTriggerText.textContent = `Manter atual (${currentAssignedName})`;
+          agendarUsuarioTriggerText.style.fontWeight = '500';
+        }
+
+        agendarUsuarioDropdownMenu.innerHTML = '';
+
+        // Opção padrão: Manter atual
+        const defaultOpt = document.createElement('div');
+        defaultOpt.className = 'custom-user-opt selected';
+        defaultOpt.textContent = `Manter atual (${currentAssignedName})`;
+        defaultOpt.style.padding = '10px 14px';
+        defaultOpt.style.fontSize = '0.9rem';
+        defaultOpt.style.fontWeight = '700';
+        defaultOpt.style.color = 'var(--ink)';
+        defaultOpt.style.borderRadius = '10px';
+        defaultOpt.style.backgroundColor = '#f1f5f9';
+        defaultOpt.style.cursor = 'pointer';
+        defaultOpt.style.transition = 'all 0.15s ease';
+
+        defaultOpt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (agendarReuniaoUsuario) agendarReuniaoUsuario.value = '';
+          if (agendarUsuarioTriggerText) agendarUsuarioTriggerText.textContent = `Manter atual (${currentAssignedName})`;
+
+          Array.from(agendarUsuarioDropdownMenu.children).forEach(c => {
+            c.classList.remove('selected');
+            c.style.backgroundColor = 'transparent';
+            c.style.fontWeight = '500';
+          });
+
+          defaultOpt.classList.add('selected');
+          defaultOpt.style.backgroundColor = '#f1f5f9';
+          defaultOpt.style.fontWeight = '700';
+          agendarUsuarioDropdownMenu.classList.add('hidden');
+        });
+
+        agendarUsuarioDropdownMenu.appendChild(defaultOpt);
+
+        // Listar apenas os outros usuários (evitando duplicar o responsável atual)
+        profiles.forEach(p => {
+          // Se for o responsável atual, ignora pois já está no topo como "Manter atual"
+          if (p.id === currentAssignedId) return;
+
+          const name = getUserDisplayName(p);
+          const userOpt = document.createElement('div');
+          userOpt.className = 'custom-user-opt';
+          userOpt.textContent = name;
+          userOpt.style.padding = '10px 14px';
+          userOpt.style.fontSize = '0.9rem';
+          userOpt.style.fontWeight = '500';
+          userOpt.style.color = 'var(--ink)';
+          userOpt.style.borderRadius = '10px';
+          userOpt.style.cursor = 'pointer';
+          userOpt.style.transition = 'all 0.15s ease';
+
+          userOpt.onmouseover = () => {
+            if (!userOpt.classList.contains('selected')) {
+              userOpt.style.backgroundColor = 'var(--surface-hover)';
+            }
+          };
+          userOpt.onmouseout = () => {
+            if (!userOpt.classList.contains('selected')) {
+              userOpt.style.backgroundColor = 'transparent';
+            }
+          };
+
+          userOpt.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (agendarReuniaoUsuario) agendarReuniaoUsuario.value = p.id;
+            if (agendarUsuarioTriggerText) agendarUsuarioTriggerText.textContent = name;
+
+            Array.from(agendarUsuarioDropdownMenu.children).forEach(c => {
+              c.classList.remove('selected');
+              c.style.backgroundColor = 'transparent';
+              c.style.fontWeight = '500';
+            });
+
+            userOpt.classList.add('selected');
+            userOpt.style.backgroundColor = '#f1f5f9';
+            userOpt.style.fontWeight = '700';
+            agendarUsuarioDropdownMenu.classList.add('hidden');
+          });
+
+          agendarUsuarioDropdownMenu.appendChild(userOpt);
+        });
+      }
+
+      let calSelectedDate = null;
+      let calViewYear = new Date().getFullYear();
+      let calViewMonth = new Date().getMonth(); // 0 a 11
+
+      const MESES_NOMES = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      ];
+
+      function renderInlineCalendar() {
+        const calLabel = document.getElementById('calCurrentMonthLabel');
+        const calGrid = document.getElementById('calDaysGrid');
+        if (!calLabel || !calGrid) return;
+
+        calLabel.textContent = MESES_NOMES[calViewMonth];
+        calGrid.innerHTML = '';
+
+        // Dia 1 do mês atual visualizado
+        const firstDayOfMonth = new Date(calViewYear, calViewMonth, 1);
+        const lastDayOfMonth = new Date(calViewYear, calViewMonth + 1, 0);
+        const totalDays = lastDayOfMonth.getDate();
+
+        // Dia da semana do 1º dia (0 = Domingo, 1 = Segunda ... 6 = Sábado)
+        // No nosso calendário o cabeçalho começa no Domingo (índice 0): Dom, Seg, Ter, Qua, Qui, Sex, Sáb
+        let startingDay = firstDayOfMonth.getDay(); // 0 = Domingo diretamente
+
+        // Preencher espaços vazios antes do 1º dia
+        for (let i = 0; i < startingDay; i++) {
+          const emptyDiv = document.createElement('div');
+          emptyDiv.style.height = '34px';
+          calGrid.appendChild(emptyDiv);
+        }
+
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        for (let day = 1; day <= totalDays; day++) {
+          const currentDayDate = new Date(calViewYear, calViewMonth, day);
+          const isPast = currentDayDate < hoje;
+          const dayOfWeek = currentDayDate.getDay(); // 0 = Domingo, 6 = Sábado
+          const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+          const isBlocked = isPast || isWeekend;
+
+          const dayBtn = document.createElement('button');
+          dayBtn.type = 'button';
+          dayBtn.textContent = day;
+          dayBtn.style.height = '34px';
+          dayBtn.style.border = 'none';
+          dayBtn.style.borderRadius = '10px';
+          dayBtn.style.fontFamily = 'inherit';
+          dayBtn.style.fontSize = '0.88rem';
+          dayBtn.style.fontWeight = '500';
+          dayBtn.style.display = 'flex';
+          dayBtn.style.alignItems = 'center';
+          dayBtn.style.justifyContent = 'center';
+          dayBtn.style.transition = 'all 0.15s ease';
+
+          // Verificar se é o dia selecionado
+          const dateStr = `${calViewYear}-${String(calViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const isSelected = calSelectedDate === dateStr;
+
+          if (isSelected) {
+            dayBtn.style.background = '#0a0a0a';
+            dayBtn.style.color = '#ffffff';
+            dayBtn.style.fontWeight = '700';
+            dayBtn.style.cursor = 'pointer';
+          } else if (isBlocked) {
+            dayBtn.style.background = 'transparent';
+            dayBtn.style.color = 'var(--line-strong)';
+            dayBtn.style.opacity = '0.25';
+            dayBtn.style.cursor = 'not-allowed';
+          } else {
+            dayBtn.style.background = 'transparent';
+            dayBtn.style.color = 'var(--ink)';
+            dayBtn.style.cursor = 'pointer';
+
+            dayBtn.onmouseover = () => {
+              if (calSelectedDate !== dateStr) dayBtn.style.background = 'var(--surface-hover)';
+            };
+            dayBtn.onmouseout = () => {
+              if (calSelectedDate !== dateStr) dayBtn.style.background = 'transparent';
+            };
+          }
+
+          if (!isBlocked) {
+            dayBtn.addEventListener('click', () => {
+              calSelectedDate = dateStr;
+              if (agendarReuniaoData) agendarReuniaoData.value = dateStr;
+              renderInlineCalendar();
+              carregarHorariosDisponiveis(dateStr);
+            });
+          }
+
+          calGrid.appendChild(dayBtn);
+        }
+      }
+
+      // Navegação do calendário
+      const calPrevMonthBtn = document.getElementById('calPrevMonthBtn');
+      const calNextMonthBtn = document.getElementById('calNextMonthBtn');
+      if (calPrevMonthBtn) {
+        calPrevMonthBtn.addEventListener('click', () => {
+          calViewMonth--;
+          if (calViewMonth < 0) {
+            calViewMonth = 11;
+            calViewYear--;
+          }
+          renderInlineCalendar();
+        });
+      }
+      if (calNextMonthBtn) {
+        calNextMonthBtn.addEventListener('click', () => {
+          calViewMonth++;
+          if (calViewMonth > 11) {
+            calViewMonth = 0;
+            calViewYear++;
+          }
+          renderInlineCalendar();
+        });
+      }
+
+      const agendarHorarioDropdownTrigger = document.getElementById('agendarHorarioDropdownTrigger');
+      const agendarHorarioTriggerText = document.getElementById('agendarHorarioTriggerText');
+      const agendarHorarioDropdownMenu = document.getElementById('agendarHorarioDropdownMenu');
+
+      const agendarUsuarioDropdownTrigger = document.getElementById('agendarUsuarioDropdownTrigger');
+      const agendarUsuarioTriggerText = document.getElementById('agendarUsuarioTriggerText');
+      const agendarUsuarioDropdownMenu = document.getElementById('agendarUsuarioDropdownMenu');
+
+      if (agendarHorarioDropdownTrigger) {
+        agendarHorarioDropdownTrigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (agendarHorarioDropdownTrigger.style.cursor === 'not-allowed') return;
+          if (agendarUsuarioDropdownMenu) agendarUsuarioDropdownMenu.classList.add('hidden');
+          const isHidden = agendarHorarioDropdownMenu.classList.contains('hidden');
+          if (isHidden) {
+            agendarHorarioDropdownMenu.classList.remove('hidden');
+          } else {
+            agendarHorarioDropdownMenu.classList.add('hidden');
+          }
+        });
+      }
+
+      if (agendarUsuarioDropdownTrigger) {
+        agendarUsuarioDropdownTrigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (agendarHorarioDropdownMenu) agendarHorarioDropdownMenu.classList.add('hidden');
+          const isHidden = agendarUsuarioDropdownMenu.classList.contains('hidden');
+          if (isHidden) {
+            agendarUsuarioDropdownMenu.classList.remove('hidden');
+          } else {
+            agendarUsuarioDropdownMenu.classList.add('hidden');
+          }
+        });
+      }
+
+      document.addEventListener('click', () => {
+        if (agendarHorarioDropdownMenu) {
+          agendarHorarioDropdownMenu.classList.add('hidden');
+        }
+        if (agendarUsuarioDropdownMenu) {
+          agendarUsuarioDropdownMenu.classList.add('hidden');
         }
       });
-    }
 
-    if (countDisponiveis > 0) {
-      if (agendarHorarioTriggerText) {
-        agendarHorarioTriggerText.textContent = 'Selecione o horário desejado...';
-        agendarHorarioTriggerText.style.color = 'var(--ink-muted)';
-        agendarHorarioTriggerText.style.fontWeight = '400';
-      }
-      if (agendarHorarioDropdownTrigger) {
-        agendarHorarioDropdownTrigger.style.cursor = 'pointer';
-        agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface)';
-        agendarHorarioDropdownTrigger.style.color = 'var(--ink)';
-      }
-      if (agendarReuniaoAvisoStatus) {
-        agendarReuniaoAvisoStatus.textContent = `${countDisponiveis} horários livres encontrados.`;
-        agendarReuniaoAvisoStatus.style.color = '#10B981';
-      }
-    } else {
-      if (agendarHorarioTriggerText) {
-        agendarHorarioTriggerText.textContent = 'Nenhum horário livre nesta data';
-        agendarHorarioTriggerText.style.color = '#ef4444';
-      }
-      if (agendarHorarioDropdownTrigger) {
-        agendarHorarioDropdownTrigger.style.cursor = 'not-allowed';
-        agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface-muted)';
-      }
-      if (agendarReuniaoAvisoStatus) {
-        agendarReuniaoAvisoStatus.textContent = 'Não há horários livres nesta data.';
-        agendarReuniaoAvisoStatus.style.color = '#ef4444';
-      }
-    }
-  }
+      function resetarCamposAgendamento() {
+        calSelectedDate = null;
+        calViewYear = new Date().getFullYear();
+        calViewMonth = new Date().getMonth();
+        renderInlineCalendar();
 
-  if (agendarReuniaoData) {
-    agendarReuniaoData.addEventListener('change', () => {
-      const val = agendarReuniaoData.value;
-      if (val) {
-        carregarHorariosDisponiveis(val);
-      } else {
-        resetarCamposAgendamento();
-      }
-    });
-  }
+        if (agendarReuniaoData) agendarReuniaoData.value = '';
+        if (agendarReuniaoHorarioSlot) agendarReuniaoHorarioSlot.value = '';
 
-  if (modalBtnAgendarReuniao) {
-    modalBtnAgendarReuniao.addEventListener('click', () => {
-      if (!currentActiveCard) {
-        showToast('Nenhum card selecionado.');
-        return;
-      }
-      if (agendarReuniaoSubtitulo) {
-        agendarReuniaoSubtitulo.textContent = currentActiveCard.nome
-          ? `Cliente: ${currentActiveCard.nome}`
-          : 'Selecione data e horário para a reunião';
-      }
-      resetarCamposAgendamento();
-      popularSelectUsuariosAgendamento();
-      if (modalAgendarReuniao) {
-        modalAgendarReuniao.classList.remove('hidden');
-        if (agendarReuniaoData) agendarReuniaoData.focus();
-      }
-    });
-  }
-
-  if (closeAgendarReuniaoModal) {
-    closeAgendarReuniaoModal.addEventListener('click', fecharModalAgendamento);
-  }
-  if (cancelAgendarReuniaoBtn) {
-    cancelAgendarReuniaoBtn.addEventListener('click', fecharModalAgendamento);
-  }
-  if (modalAgendarReuniao) {
-    modalAgendarReuniao.addEventListener('click', (e) => {
-      if (e.target === modalAgendarReuniao) {
-        fecharModalAgendamento();
-      }
-    });
-  }
-
-  if (agendarReuniaoForm) {
-    agendarReuniaoForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentActiveCard) {
-        showToast('Nenhum card ativo.');
-        return;
-      }
-
-      const dataVal = agendarReuniaoData ? agendarReuniaoData.value.trim() : '';
-      const horarioSlotVal = agendarReuniaoHorarioSlot ? agendarReuniaoHorarioSlot.value.trim() : '';
-
-      if (!dataVal || !horarioSlotVal) {
-        showToast('Por favor, selecione data e um horário disponível.');
-        return;
-      }
-
-      const [horaVal, minVal] = horarioSlotVal.split(':');
-      const horarioFormatado = `${horaVal}:${minVal}`;
-
-      // Formatar exibição no botão: dd/mm - 23:59
-      let formatted = `${dataVal} - ${horarioFormatado}`;
-      const parts = dataVal.split('-');
-      if (parts.length === 3) {
-        const [ano, mes, dia] = parts;
-        formatted = `${dia}/${mes} - ${horarioFormatado}`;
-      }
-
-      // Duração de 30 minutos
-      let fimHora = parseInt(horaVal, 10);
-      let fimMin = '30';
-      if (minVal === '30') {
-        fimHora = fimHora + 1;
-        fimMin = '00';
-      }
-      const fimHorarioFormatado = `${String(fimHora).padStart(2, '0')}:${fimMin}`;
-
-      // Montar timestamps ISO com timezone local (ex: 2026-10-30T14:30:00.000-03:00)
-      const dataHoraObj = new Date(`${dataVal}T${horarioFormatado}:00`);
-      let isoComTimezone = '';
-      let isoFimComTimezone = '';
-      if (!isNaN(dataHoraObj.getTime())) {
-        const tzo = -dataHoraObj.getTimezoneOffset();
-        const dif = tzo >= 0 ? '+' : '-';
-        const pad = (num) => String(Math.floor(Math.abs(num))).padStart(2, '0');
-        const tzString = `${dif}${pad(tzo / 60)}:${pad(tzo % 60)}`;
-        isoComTimezone = `${dataVal}T${horarioFormatado}:00.000${tzString}`;
-        isoFimComTimezone = `${dataVal}T${fimHorarioFormatado}:00.000${tzString}`;
-      } else {
-        isoComTimezone = `${dataVal}T${horarioFormatado}:00.000-03:00`;
-        isoFimComTimezone = `${dataVal}T${fimHorarioFormatado}:00.000-03:00`;
-      }
-
-      const submitBtn = document.getElementById('confirmAgendarReuniaoBtn');
-      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<i class="ti ti-loader" style="animation: spin 1s linear infinite;" aria-hidden="true"></i> Agendando...`;
-      }
-
-      // 1. Disparar Webhook do n8n para criar na Google Agenda com convidados
-      const clientName = (currentActiveCard.nome || 'Cliente').trim();
-      const payload = {
-        id: currentActiveCard.id,
-        nome: clientName,
-        titulo: clientName,
-        telefone: currentActiveCard.telefone || '',
-        data_reuniao: isoComTimezone,
-        data_fim_reuniao: isoFimComTimezone,
-        data_hora: isoComTimezone,
-        data_horario_formatado: formatted,
-        convidados: REUNIAO_CONVIDADOS,
-        descricao: `Reunião agendada com o cliente ${clientName}.\nTelefone: ${currentActiveCard.telefone || 'Não informado'}\nID CRM: ${currentActiveCard.id || ''}`
-      };
-
-      try {
-        await fetch(N8N_AGENDAMENTO_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      } catch (err) {
-        console.warn('Webhook agendamento enviado com aviso de rede:', err);
-      }
-
-      // 2. Persistir na tabela crm no Supabase (data_reuniao, status 'reuniao' e novo responsável se selecionado)
-      const novoUserId = agendarReuniaoUsuario && agendarReuniaoUsuario.value ? agendarReuniaoUsuario.value : null;
-      const updatePayload = {
-        data_reuniao: isoComTimezone,
-        status: 'reuniao',
-        atualizado_em: new Date().toISOString()
-      };
-      if (novoUserId) {
-        updatePayload.user_id = novoUserId;
-      }
-
-      try {
-        if (typeof supabase !== 'undefined' && currentActiveCard.id) {
-          await supabase
-            .from('crm')
-            .update(updatePayload)
-            .eq('id', currentActiveCard.id);
+        if (agendarHorarioTriggerText) agendarHorarioTriggerText.textContent = 'Selecione primeiro uma data acima...';
+        if (agendarHorarioDropdownTrigger) {
+          agendarHorarioDropdownTrigger.style.cursor = 'not-allowed';
+          agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface-muted)';
+          agendarHorarioDropdownTrigger.style.color = 'var(--ink-muted)';
         }
-      } catch (dbErr) {
-        console.warn('Erro ao atualizar card na tabela crm:', dbErr);
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = originalBtnHtml;
+        if (agendarHorarioDropdownMenu) {
+          agendarHorarioDropdownMenu.innerHTML = '';
+          agendarHorarioDropdownMenu.classList.add('hidden');
         }
+
+        if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.add('hidden');
+        if (agendarReuniaoAvisoStatus) agendarReuniaoAvisoStatus.textContent = '';
       }
 
-      // 3. Atualizar objeto e interface local
-      currentActiveCard._reuniaoAgendada = formatted;
-      currentActiveCard._reuniaoIso = isoComTimezone;
-      currentActiveCard.data_reuniao = isoComTimezone;
-      currentActiveCard.status = 'reuniao';
-      if (novoUserId) {
-        currentActiveCard.user_id = novoUserId;
+      // Gera slots padrão de 30min entre 09:00 e 16:00 (último horário de início é 15:30 às 16:00)
+      function gerarSlotsBase(dataStr) {
+        const slots = [];
+        for (let h = 9; h <= 15; h++) {
+          ['00', '30'].forEach(min => {
+            const horaStr = String(h).padStart(2, '0');
+            const start = `${dataStr}T${horaStr}:${min}:00`;
+            let fimHora = h;
+            let fimMin = '30';
+            if (min === '30') {
+              fimHora = h + 1;
+              fimMin = '00';
+            }
+            const end = `${dataStr}T${String(fimHora).padStart(2, '0')}:${fimMin}:00`;
+            slots.push({
+              label: `${horaStr}:${min} às ${String(fimHora).padStart(2, '0')}:${fimMin}`,
+              hora: horaStr,
+              minuto: min,
+              start,
+              end
+            });
+          });
+        }
+        return slots;
       }
 
-      // Atualizar badge de status na ficha
-      if (typeof updateStatusTagUI === 'function') {
-        updateStatusTagUI('reuniao');
-      }
+      async function carregarHorariosDisponiveis(dataEscolhida) {
+        if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.remove('hidden');
+        if (agendarReuniaoAvisoStatus) agendarReuniaoAvisoStatus.textContent = '';
 
-      // Atualizar responsável no botão de atribuição da ficha
-      if (novoUserId) {
-        const profiles = window.crmProfilesCache || cachedProfiles || [];
-        const p = profiles.find(x => x.id === novoUserId);
-        const displayName = p ? getUserDisplayName(p) : 'Atribuído';
-        const sheetAssigneeName = document.getElementById('sheetAssigneeName');
-        const sheetAssigneeAvatar = document.getElementById('sheetAssigneeAvatar');
-        const sheetReassignBtnEl = document.getElementById('sheetReassignBtn');
-        if (sheetAssigneeName) {
-          sheetAssigneeName.textContent = displayName;
-          if (sheetAssigneeAvatar) {
-            sheetAssigneeAvatar.textContent = displayName.charAt(0).toUpperCase();
+        if (agendarHorarioTriggerText) agendarHorarioTriggerText.textContent = 'Consultando horários livres...';
+        if (agendarHorarioDropdownTrigger) {
+          agendarHorarioDropdownTrigger.style.cursor = 'wait';
+          agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface-muted)';
+        }
+        if (agendarHorarioDropdownMenu) {
+          agendarHorarioDropdownMenu.innerHTML = '';
+          agendarHorarioDropdownMenu.classList.add('hidden');
+        }
+
+        const slots = gerarSlotsBase(dataEscolhida);
+        let busyList = [];
+
+        try {
+          const resp = await fetch(N8N_CONSULTA_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              data: dataEscolhida,
+              timeMin: `${dataEscolhida}T00:00:00-03:00`,
+              timeMax: `${dataEscolhida}T23:59:59-03:00`
+            })
+          });
+
+          if (resp.ok) {
+            const data = await resp.json();
+            if (Array.isArray(data.busy)) {
+              busyList = data.busy;
+            } else if (Array.isArray(data)) {
+              busyList = data;
+            }
           }
-          if (sheetReassignBtnEl) sheetReassignBtnEl.title = `Atribuído a: ${displayName} (Clique para alterar)`;
+        } catch (err) {
+          console.warn('Aviso: n8n indisponível para FreeBusy, liberando horários padrão:', err);
+        } finally {
+          if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.add('hidden');
         }
+
+        // Exibir apenas os horários realmente DISPONÍVEIS e que ainda NÃO passaram (futuros)
+        let countDisponiveis = 0;
+        const agoraTime = Date.now();
+
+        if (agendarHorarioDropdownMenu) {
+          agendarHorarioDropdownMenu.innerHTML = '';
+
+          slots.forEach(slot => {
+            const slotStart = new Date(slot.start).getTime();
+            const slotEnd = new Date(slot.end).getTime();
+
+            // 1. Desconsiderar horários que já passaram hoje
+            const jaPassou = slotStart <= agoraTime;
+
+            // 2. Desconsiderar horários ocupados na agenda do Google
+            const isBusy = busyList.some(b => {
+              const bStart = new Date(b.start).getTime();
+              const bEnd = new Date(b.end).getTime();
+              return (slotStart < bEnd && slotEnd > bStart);
+            });
+
+            if (!jaPassou && !isBusy) {
+              countDisponiveis++;
+              const optDiv = document.createElement('div');
+              optDiv.className = 'custom-horario-opt';
+              optDiv.textContent = slot.label;
+              optDiv.style.padding = '10px 14px';
+              optDiv.style.fontSize = '0.9rem';
+              optDiv.style.fontWeight = '500';
+              optDiv.style.color = 'var(--ink)';
+              optDiv.style.borderRadius = '10px';
+              optDiv.style.cursor = 'pointer';
+              optDiv.style.transition = 'all 0.15s ease';
+
+              optDiv.onmouseover = () => {
+                if (!optDiv.classList.contains('selected')) {
+                  optDiv.style.backgroundColor = 'var(--surface-hover)';
+                }
+              };
+              optDiv.onmouseout = () => {
+                if (!optDiv.classList.contains('selected')) {
+                  optDiv.style.backgroundColor = 'transparent';
+                }
+              };
+
+              optDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (agendarReuniaoHorarioSlot) agendarReuniaoHorarioSlot.value = `${slot.hora}:${slot.minuto}`;
+                if (agendarHorarioTriggerText) {
+                  agendarHorarioTriggerText.textContent = slot.label;
+                  agendarHorarioTriggerText.style.color = 'var(--ink)';
+                  agendarHorarioTriggerText.style.fontWeight = '600';
+                }
+
+                Array.from(agendarHorarioDropdownMenu.children).forEach(child => {
+                  child.classList.remove('selected');
+                  child.style.backgroundColor = 'transparent';
+                  child.style.fontWeight = '500';
+                });
+
+                optDiv.classList.add('selected');
+                optDiv.style.backgroundColor = '#f1f5f9';
+                optDiv.style.fontWeight = '700';
+
+                agendarHorarioDropdownMenu.classList.add('hidden');
+              });
+
+              agendarHorarioDropdownMenu.appendChild(optDiv);
+            }
+          });
+        }
+
+        if (countDisponiveis > 0) {
+          if (agendarHorarioTriggerText) {
+            agendarHorarioTriggerText.textContent = 'Selecione o horário desejado...';
+            agendarHorarioTriggerText.style.color = 'var(--ink-muted)';
+            agendarHorarioTriggerText.style.fontWeight = '400';
+          }
+          if (agendarHorarioDropdownTrigger) {
+            agendarHorarioDropdownTrigger.style.cursor = 'pointer';
+            agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface)';
+            agendarHorarioDropdownTrigger.style.color = 'var(--ink)';
+          }
+          if (agendarReuniaoAvisoStatus) {
+            agendarReuniaoAvisoStatus.textContent = `${countDisponiveis} horários livres encontrados.`;
+            agendarReuniaoAvisoStatus.style.color = '#10B981';
+          }
+        } else {
+          if (agendarHorarioTriggerText) {
+            agendarHorarioTriggerText.textContent = 'Nenhum horário livre nesta data';
+            agendarHorarioTriggerText.style.color = '#ef4444';
+          }
+          if (agendarHorarioDropdownTrigger) {
+            agendarHorarioDropdownTrigger.style.cursor = 'not-allowed';
+            agendarHorarioDropdownTrigger.style.backgroundColor = 'var(--surface-muted)';
+          }
+          if (agendarReuniaoAvisoStatus) {
+            agendarReuniaoAvisoStatus.textContent = 'Não há horários livres nesta data.';
+            agendarReuniaoAvisoStatus.style.color = '#ef4444';
+          }
+        }
+      }
+
+      if (agendarReuniaoData) {
+        agendarReuniaoData.addEventListener('change', () => {
+          const val = agendarReuniaoData.value;
+          if (val) {
+            carregarHorariosDisponiveis(val);
+          } else {
+            resetarCamposAgendamento();
+          }
+        });
       }
 
       if (modalBtnAgendarReuniao) {
-        modalBtnAgendarReuniao.innerHTML = `<i class="ti ti-calendar-check" style="font-size:16px" aria-hidden="true"></i>${formatted}`;
-        modalBtnAgendarReuniao.title = `Reunião agendada para: ${formatted}`;
-        modalBtnAgendarReuniao.classList.add('btn-reuniao-agendada');
+        modalBtnAgendarReuniao.addEventListener('click', () => {
+          if (!currentActiveCard) {
+            showToast('Nenhum card selecionado.');
+            return;
+          }
+          if (agendarReuniaoSubtitulo) {
+            agendarReuniaoSubtitulo.textContent = currentActiveCard.nome
+              ? `Cliente: ${currentActiveCard.nome}`
+              : 'Selecione data e horário para a reunião';
+          }
+          resetarCamposAgendamento();
+          popularSelectUsuariosAgendamento();
+          if (modalAgendarReuniao) {
+            modalAgendarReuniao.classList.remove('hidden');
+            if (agendarReuniaoData) agendarReuniaoData.focus();
+          }
+        });
       }
 
-      fecharModalAgendamento();
-      if (typeof loadUserCards === 'function') {
-        loadUserCards(); // Move o card para a coluna Reunião no Kanban em tempo real
+      if (closeAgendarReuniaoModal) {
+        closeAgendarReuniaoModal.addEventListener('click', fecharModalAgendamento);
       }
-      showToast('Reunião agendada e card movido para "Reunião" com sucesso!');
-    });
-  }
-
-  const modalBtnMoverEtapa = document.getElementById('modalBtnMoverEtapa');
-  if (modalBtnMoverEtapa) {
-    modalBtnMoverEtapa.addEventListener('click', async () => {
-      if (!currentActiveCard) return;
-
-      let stages = [];
-      if (window.currentTab === 'comercial') {
-        stages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
-      } else if (window.currentTab === 'operacao') {
-        stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
-      } else if (window.currentTab === 'judicial') {
-        stages = ['negado', 'planejamento'];
+      if (cancelAgendarReuniaoBtn) {
+        cancelAgendarReuniaoBtn.addEventListener('click', fecharModalAgendamento);
+      }
+      if (modalAgendarReuniao) {
+        modalAgendarReuniao.addEventListener('click', (e) => {
+          if (e.target === modalAgendarReuniao) {
+            fecharModalAgendamento();
+          }
+        });
       }
 
-      const currentIndex = stages.indexOf(currentActiveCard.status);
-      if (currentIndex === -1 || currentIndex === stages.length - 1) {
-        showToast('O card j est na ltima etapa.');
-        return;
+      if (agendarReuniaoForm) {
+        agendarReuniaoForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (!currentActiveCard) {
+            showToast('Nenhum card ativo.');
+            return;
+          }
+
+          const dataVal = agendarReuniaoData ? agendarReuniaoData.value.trim() : '';
+          const horarioSlotVal = agendarReuniaoHorarioSlot ? agendarReuniaoHorarioSlot.value.trim() : '';
+
+          if (!dataVal || !horarioSlotVal) {
+            showToast('Por favor, selecione data e um horário disponível.');
+            return;
+          }
+
+          const [horaVal, minVal] = horarioSlotVal.split(':');
+          const horarioFormatado = `${horaVal}:${minVal}`;
+
+          // Formatar exibição no botão: dd/mm - 23:59
+          let formatted = `${dataVal} - ${horarioFormatado}`;
+          const parts = dataVal.split('-');
+          if (parts.length === 3) {
+            const [ano, mes, dia] = parts;
+            formatted = `${dia}/${mes} - ${horarioFormatado}`;
+          }
+
+          // Duração de 30 minutos
+          let fimHora = parseInt(horaVal, 10);
+          let fimMin = '30';
+          if (minVal === '30') {
+            fimHora = fimHora + 1;
+            fimMin = '00';
+          }
+          const fimHorarioFormatado = `${String(fimHora).padStart(2, '0')}:${fimMin}`;
+
+          // Montar timestamps ISO com timezone local (ex: 2026-10-30T14:30:00.000-03:00)
+          const dataHoraObj = new Date(`${dataVal}T${horarioFormatado}:00`);
+          let isoComTimezone = '';
+          let isoFimComTimezone = '';
+          if (!isNaN(dataHoraObj.getTime())) {
+            const tzo = -dataHoraObj.getTimezoneOffset();
+            const dif = tzo >= 0 ? '+' : '-';
+            const pad = (num) => String(Math.floor(Math.abs(num))).padStart(2, '0');
+            const tzString = `${dif}${pad(tzo / 60)}:${pad(tzo % 60)}`;
+            isoComTimezone = `${dataVal}T${horarioFormatado}:00.000${tzString}`;
+            isoFimComTimezone = `${dataVal}T${fimHorarioFormatado}:00.000${tzString}`;
+          } else {
+            isoComTimezone = `${dataVal}T${horarioFormatado}:00.000-03:00`;
+            isoFimComTimezone = `${dataVal}T${fimHorarioFormatado}:00.000-03:00`;
+          }
+
+          const submitBtn = document.getElementById('confirmAgendarReuniaoBtn');
+          const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="ti ti-loader" style="animation: spin 1s linear infinite;" aria-hidden="true"></i> Agendando...`;
+          }
+
+          // 1. Disparar Webhook do n8n para criar na Google Agenda com convidados
+          const clientName = (currentActiveCard.nome || 'Cliente').trim();
+          const payload = {
+            id: currentActiveCard.id,
+            nome: clientName,
+            titulo: clientName,
+            telefone: currentActiveCard.telefone || '',
+            data_reuniao: isoComTimezone,
+            data_fim_reuniao: isoFimComTimezone,
+            data_hora: isoComTimezone,
+            data_horario_formatado: formatted,
+            convidados: REUNIAO_CONVIDADOS,
+            descricao: `Reunião agendada com o cliente ${clientName}.\nTelefone: ${currentActiveCard.telefone || 'Não informado'}\nID CRM: ${currentActiveCard.id || ''}`
+          };
+
+          try {
+            await fetch(N8N_AGENDAMENTO_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+          } catch (err) {
+            console.warn('Webhook agendamento enviado com aviso de rede:', err);
+          }
+
+          // 2. Persistir na tabela crm no Supabase (data_reuniao, status 'reuniao' e novo responsável se selecionado)
+          const novoUserId = agendarReuniaoUsuario && agendarReuniaoUsuario.value ? agendarReuniaoUsuario.value : null;
+          const updatePayload = {
+            data_reuniao: isoComTimezone,
+            status: 'reuniao',
+            atualizado_em: new Date().toISOString()
+          };
+          if (novoUserId) {
+            updatePayload.user_id = novoUserId;
+          }
+
+          try {
+            if (typeof supabase !== 'undefined' && currentActiveCard.id) {
+              await supabase
+                .from('crm')
+                .update(updatePayload)
+                .eq('id', currentActiveCard.id);
+            }
+          } catch (dbErr) {
+            console.warn('Erro ao atualizar card na tabela crm:', dbErr);
+          } finally {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalBtnHtml;
+            }
+          }
+
+          // 3. Atualizar objeto e interface local
+          currentActiveCard._reuniaoAgendada = formatted;
+          currentActiveCard._reuniaoIso = isoComTimezone;
+          currentActiveCard.data_reuniao = isoComTimezone;
+          currentActiveCard.status = 'reuniao';
+          if (novoUserId) {
+            currentActiveCard.user_id = novoUserId;
+          }
+
+          // Atualizar badge de status na ficha
+          if (typeof updateStatusTagUI === 'function') {
+            updateStatusTagUI('reuniao');
+          }
+
+          // Atualizar responsável no botão de atribuição da ficha
+          if (novoUserId) {
+            const profiles = window.crmProfilesCache || cachedProfiles || [];
+            const p = profiles.find(x => x.id === novoUserId);
+            const displayName = p ? getUserDisplayName(p) : 'Atribuído';
+            const sheetAssigneeName = document.getElementById('sheetAssigneeName');
+            const sheetAssigneeAvatar = document.getElementById('sheetAssigneeAvatar');
+            const sheetReassignBtnEl = document.getElementById('sheetReassignBtn');
+            if (sheetAssigneeName) {
+              sheetAssigneeName.textContent = displayName;
+              if (sheetAssigneeAvatar) {
+                sheetAssigneeAvatar.textContent = displayName.charAt(0).toUpperCase();
+              }
+              if (sheetReassignBtnEl) sheetReassignBtnEl.title = `Atribuído a: ${displayName} (Clique para alterar)`;
+            }
+          }
+
+          if (modalBtnAgendarReuniao) {
+            modalBtnAgendarReuniao.innerHTML = `<i class="ti ti-calendar-check" style="font-size:16px" aria-hidden="true"></i>${formatted}`;
+            modalBtnAgendarReuniao.title = `Reunião agendada para: ${formatted}`;
+            modalBtnAgendarReuniao.classList.add('btn-reuniao-agendada');
+          }
+
+          fecharModalAgendamento();
+          if (typeof loadUserCards === 'function') {
+            loadUserCards(); // Move o card para a coluna Reunião no Kanban em tempo real
+          }
+          showToast('Reunião agendada e card movido para "Reunião" com sucesso!');
+        });
       }
 
-      const targetStage = stages[currentIndex + 1];
+      const modalBtnMoverEtapa = document.getElementById('modalBtnMoverEtapa');
+      if (modalBtnMoverEtapa) {
+        modalBtnMoverEtapa.addEventListener('click', async () => {
+          if (!currentActiveCard) return;
 
-      if (targetStage === 'proposta') {
-        openProposalModal(currentActiveCard, targetStage);
-        closeModal(modalClientSheet);
-        return;
+          let stages = [];
+          if (window.currentTab === 'comercial') {
+            stages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
+          } else if (window.currentTab === 'operacao') {
+            stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
+          } else if (window.currentTab === 'judicial') {
+            stages = ['negado', 'planejamento'];
+          }
+
+          const currentIndex = stages.indexOf(currentActiveCard.status);
+          if (currentIndex === -1 || currentIndex === stages.length - 1) {
+            showToast('O card j est na ltima etapa.');
+            return;
+          }
+
+          const targetStage = stages[currentIndex + 1];
+
+          if (targetStage === 'proposta') {
+            openProposalModal(currentActiveCard, targetStage);
+            closeModal(modalClientSheet);
+            return;
+          }
+          if (targetStage === 'concedido' && window.currentTab === 'operacao') {
+            openConcedidoModal(currentActiveCard, targetStage);
+            closeModal(modalClientSheet);
+            return;
+          }
+
+          await changeCardStatus(currentActiveCard, targetStage);
+          closeModal(modalClientSheet);
+        });
       }
-      if (targetStage === 'concedido' && window.currentTab === 'operacao') {
-        openConcedidoModal(currentActiveCard, targetStage);
-        closeModal(modalClientSheet);
-        return;
-      }
-
-      await changeCardStatus(currentActiveCard, targetStage);
-      closeModal(modalClientSheet);
-    });
-  }
 
 
-  // --- Custom Select para Formulrio de Qualificao ---
-  function initCustomSelects() {
-    const selects = document.querySelectorAll('#clientAnswersForm select');
-    if (selects.length === 0) return;
+      // --- Custom Select para Formulrio de Qualificao ---
+      function initCustomSelects() {
+        const selects = document.querySelectorAll('#clientAnswersForm select');
+        if (selects.length === 0) return;
 
-    if (!document.getElementById('custom-select-styles')) {
-      const style = document.createElement('style');
-      style.id = 'custom-select-styles';
-      style.innerHTML = `
+        if (!document.getElementById('custom-select-styles')) {
+          const style = document.createElement('style');
+          style.id = 'custom-select-styles';
+          style.innerHTML = `
         .custom-select-container { position: relative; width: 100%; cursor: pointer; }
         .custom-select-trigger {
           display: flex; justify-content: space-between; align-items: center;
@@ -8353,1105 +8582,1105 @@ document.addEventListener('DOMContentLoaded', async () => {
           background-color: var(--color-primary-light); color: var(--color-primary); font-weight: 600;
         }
       `;
-      document.head.appendChild(style);
-    }
+          document.head.appendChild(style);
+        }
 
-    selects.forEach(select => {
-      if (select.dataset.customized) return;
-      select.dataset.customized = 'true';
-      select.style.display = 'none';
+        selects.forEach(select => {
+          if (select.dataset.customized) return;
+          select.dataset.customized = 'true';
+          select.style.display = 'none';
 
-      const container = document.createElement('div');
-      container.className = 'custom-select-container';
+          const container = document.createElement('div');
+          container.className = 'custom-select-container';
 
-      const trigger = document.createElement('div');
-      trigger.className = 'custom-select-trigger';
+          const trigger = document.createElement('div');
+          trigger.className = 'custom-select-trigger';
 
-      const textSpan = document.createElement('span');
-      textSpan.textContent = select.options[select.selectedIndex]?.text || 'Selecione...';
+          const textSpan = document.createElement('span');
+          textSpan.textContent = select.options[select.selectedIndex]?.text || 'Selecione...';
 
-      trigger.appendChild(textSpan);
+          trigger.appendChild(textSpan);
 
-      const menu = document.createElement('div');
-      menu.className = 'custom-select-menu';
+          const menu = document.createElement('div');
+          menu.className = 'custom-select-menu';
 
-      Array.from(select.options).forEach((opt, idx) => {
-        const optionEl = document.createElement('div');
-        optionEl.className = 'custom-select-option';
-        optionEl.textContent = opt.text;
-        if (select.selectedIndex === idx) optionEl.classList.add('selected');
+          Array.from(select.options).forEach((opt, idx) => {
+            const optionEl = document.createElement('div');
+            optionEl.className = 'custom-select-option';
+            optionEl.textContent = opt.text;
+            if (select.selectedIndex === idx) optionEl.classList.add('selected');
 
-        optionEl.addEventListener('click', (e) => {
-          e.stopPropagation();
-          select.value = opt.value;
-          textSpan.textContent = opt.text;
+            optionEl.addEventListener('click', (e) => {
+              e.stopPropagation();
+              select.value = opt.value;
+              textSpan.textContent = opt.text;
 
-          Array.from(menu.children).forEach(c => c.classList.remove('selected'));
-          optionEl.classList.add('selected');
+              Array.from(menu.children).forEach(c => c.classList.remove('selected'));
+              optionEl.classList.add('selected');
 
-          menu.classList.remove('show');
-          select.dispatchEvent(new Event('change', { bubbles: true }));
+              menu.classList.remove('show');
+              select.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+            menu.appendChild(optionEl);
+          });
+
+          container.appendChild(trigger);
+          container.appendChild(menu);
+          select.parentNode.insertBefore(container, select.nextSibling);
+
+          trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isShowing = menu.classList.contains('show');
+            document.querySelectorAll('.custom-select-menu').forEach(m => m.classList.remove('show'));
+            if (!isShowing) {
+              menu.classList.add('show');
+              setTimeout(() => {
+                const form = document.getElementById('clientAnswersForm');
+                if (form && menu.classList.contains('show')) {
+                  const menuRect = menu.getBoundingClientRect();
+                  const formRect = form.getBoundingClientRect();
+                  if (menuRect.bottom > formRect.bottom) {
+                    form.scrollBy({ top: (menuRect.bottom - formRect.bottom) + 30, behavior: 'smooth' });
+                  }
+                }
+              }, 60);
+            }
+          });
+
+          select.addEventListener('change', () => {
+            textSpan.textContent = select.options[select.selectedIndex]?.text || 'Selecione...';
+            Array.from(menu.children).forEach((c, idx) => {
+              c.classList.toggle('selected', idx === select.selectedIndex);
+            });
+          });
         });
-        menu.appendChild(optionEl);
-      });
 
-      container.appendChild(trigger);
-      container.appendChild(menu);
-      select.parentNode.insertBefore(container, select.nextSibling);
+        document.addEventListener('click', () => {
+          document.querySelectorAll('.custom-select-menu').forEach(m => m.classList.remove('show'));
+        });
+      }
 
-      trigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isShowing = menu.classList.contains('show');
-        document.querySelectorAll('.custom-select-menu').forEach(m => m.classList.remove('show'));
-        if (!isShowing) {
-          menu.classList.add('show');
-          setTimeout(() => {
-            const form = document.getElementById('clientAnswersForm');
-            if (form && menu.classList.contains('show')) {
-              const menuRect = menu.getBoundingClientRect();
-              const formRect = form.getBoundingClientRect();
-              if (menuRect.bottom > formRect.bottom) {
-                form.scrollBy({ top: (menuRect.bottom - formRect.bottom) + 30, behavior: 'smooth' });
+      initCustomSelects();
+
+      const btnVoltarQualificacao = document.getElementById('btnVoltarQualificacao');
+      if (btnVoltarQualificacao) {
+        btnVoltarQualificacao.addEventListener('click', () => {
+          const qView = document.getElementById('qualificacaoView');
+          const pView = document.getElementById('perguntasView');
+          if (qView && pView) {
+            pView.style.display = 'none';
+            qView.style.display = 'block';
+          }
+        });
+      }
+
+      document.querySelectorAll('.sheet-field-group label').forEach(label => {
+        label.addEventListener('click', (e) => {
+          const group = label.closest('.sheet-field-group');
+          if (group) {
+            const btn = group.querySelector('.btn-add-info');
+            if (btn && btn.style.pointerEvents !== 'none') {
+              e.preventDefault();
+              const fieldId = label.getAttribute('for');
+              if (window.openAddInfoModal) {
+                window.openAddInfoModal(fieldId, label.textContent);
               }
             }
-          }, 60);
-        }
-      });
-
-      select.addEventListener('change', () => {
-        textSpan.textContent = select.options[select.selectedIndex]?.text || 'Selecione...';
-        Array.from(menu.children).forEach((c, idx) => {
-          c.classList.toggle('selected', idx === select.selectedIndex);
+          }
         });
       });
-    });
 
-    document.addEventListener('click', () => {
-      document.querySelectorAll('.custom-select-menu').forEach(m => m.classList.remove('show'));
-    });
-  }
+      const originalOpenAddInfoModal = typeof openAddInfoModal !== 'undefined' ? openAddInfoModal : null;
 
-  initCustomSelects();
+      const customTitles = {
+        'respJaContribuiu': 'Qualidade de Segurado'
+      };
 
-  const btnVoltarQualificacao = document.getElementById('btnVoltarQualificacao');
-  if (btnVoltarQualificacao) {
-    btnVoltarQualificacao.addEventListener('click', () => {
-      const qView = document.getElementById('qualificacaoView');
-      const pView = document.getElementById('perguntasView');
-      if (qView && pView) {
-        pView.style.display = 'none';
-        qView.style.display = 'block';
+      const questionsConfigOverride = {
+        'respTempoContribuicao': [
+          { id: 'addInfoMilitar', label: 'Prestou serviço militar?', type: 'textarea' }
+        ],
+        'respSolicitouBeneficio': [
+          { id: 'addInfoMotivoNegativa', label: 'Se tentou e foi negado, qual foi o motivo da negativa?', type: 'textarea' },
+          { id: 'addInfoNovoPedido', label: 'Foi feito um novo pedido ou protocolado algum processo?', type: 'textarea' }
+        ],
+        'respJaContribuiu': [
+          { id: 'addInfoTempoParou', label: 'Há quanto tempo parou de contribuir?', type: 'textarea' },
+          { id: 'addInfoQualidadeSegurado', label: 'Você sabe se ainda tem qualidade de segurado?', type: 'textarea' },
+          { id: 'addInfo120Contribuicoes', label: 'Sabe se fez mais de 120 contribuições sem interrupção?', type: 'textarea' },
+          { id: 'addInfo12MesesSem', label: 'Sabe se ficou um período maior que 12 meses sem contribuir?', type: 'textarea' }
+        ],
+        'respExerceuAtividadeEspecial': [
+          { id: 'addInfoAtivEspecial1', label: 'Por quanto tempo, e qual era a atividade?', type: 'textarea' },
+          { id: 'addInfoAtivEspecial2', label: 'As empresas ainda existem, caso precise fazer alguma correção ou pedir documentos?', type: 'textarea' },
+          { id: 'addInfoAtivEspecial3', label: 'Sabe a classificação de exposição aos agentes nocivos?', type: 'textarea' },
+          { id: 'addInfoAtivEspecial4', label: 'Sabe se o uso de EPIs neutraliza a exposição a ponto de anular o direito?', type: 'textarea' }
+        ]
+      };
+
+      window.openAddInfoModal = function (fieldId, originalLabel) {
+        const qView = document.getElementById('qualificacaoView');
+        const pView = document.getElementById('perguntasView');
+        const pTitle = document.getElementById('perguntasViewTitle');
+        const pList = document.getElementById('perguntasViewList');
+
+        if (qView && pView && pTitle && pList) {
+          qView.style.display = 'none';
+          pView.style.display = 'flex';
+
+          const btnVoltar = document.getElementById('btnVoltarPerguntas');
+          if (btnVoltar) {
+            btnVoltar.onclick = () => {
+              qView.style.display = 'block';
+              pView.style.display = 'none';
+            };
+          }
+
+          // Set Title
+          if (customTitles[fieldId]) {
+            pTitle.querySelector('span').textContent = customTitles[fieldId];
+          } else {
+            pTitle.querySelector('span').textContent = 'Perguntas';
+          }
+
+          // Populate list
+          pList.innerHTML = '';
+          const questions = questionsConfigOverride[fieldId] || [];
+
+          if (questions.length === 0) {
+            const div = document.createElement('div');
+            div.style.padding = '10px 14px';
+            div.style.border = '1px solid var(--border)';
+            div.style.borderRadius = '8px';
+            div.style.fontSize = '13px';
+            div.style.color = 'var(--text-secondary)';
+            div.textContent = 'Nenhuma pergunta adicional para este campo.';
+            pList.appendChild(div);
+          } else {
+            let activeItem = null;
+            questions.forEach((q, idx) => {
+              const container = document.createElement('div');
+              container.style.marginBottom = '8px';
+              container.style.border = '1px solid var(--border)';
+              container.style.borderRadius = '8px';
+              container.style.overflow = 'hidden';
+              container.style.transition = 'all 0.2s';
+
+              const header = document.createElement('div');
+              header.style.padding = '10px 14px';
+              header.style.cursor = 'pointer';
+              header.style.fontSize = '13px';
+              header.style.color = 'var(--text-primary)';
+              header.style.transition = 'all 0.2s';
+              header.style.whiteSpace = 'nowrap';
+              header.style.overflow = 'hidden';
+              header.style.textOverflow = 'ellipsis';
+              header.textContent = q.label;
+
+              header.onmouseover = () => {
+                if (activeItem !== container) {
+                  container.style.background = 'var(--surface-hover)';
+                  container.style.borderColor = 'var(--primary)';
+                }
+              };
+              header.onmouseout = () => {
+                if (activeItem !== container) {
+                  container.style.background = 'transparent';
+                  container.style.borderColor = 'var(--border)';
+                }
+              };
+
+              const body = document.createElement('div');
+              body.style.display = 'none';
+              body.style.padding = '0 14px 14px 14px';
+              body.style.flexDirection = 'column';
+
+              const inputCont = document.createElement('div');
+              inputCont.style.display = 'flex';
+              inputCont.style.alignItems = 'center';
+              inputCont.style.border = '1px solid #cbd5e1';
+              inputCont.style.borderRadius = '6px';
+              inputCont.style.padding = '4px 4px 4px 12px';
+              inputCont.style.background = 'white';
+
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.placeholder = 'Nova observação...';
+              input.style.flexGrow = '1';
+              input.style.border = 'none';
+              input.style.outline = 'none';
+              input.style.fontSize = '13px';
+              input.style.fontFamily = 'inherit';
+              input.style.background = 'transparent';
+              input.style.color = 'var(--text-primary)';
+
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.title = 'Enviar para Detalhes do caso';
+              btn.style.background = '#2563eb'; // blue
+              btn.style.color = 'white';
+              btn.style.border = 'none';
+              btn.style.borderRadius = '4px';
+              btn.style.width = '32px';
+              btn.style.height = '32px';
+              btn.style.display = 'flex';
+              btn.style.alignItems = 'center';
+              btn.style.justifyContent = 'center';
+              btn.style.cursor = 'pointer';
+              btn.style.transition = '0.2s';
+              btn.innerHTML = '<i class="ti ti-send" style="font-size: 16px;"></i>';
+
+              btn.onclick = (e) => {
+                e.stopPropagation();
+                const respDetalhes = document.getElementById('respDetalhes');
+                const textVal = input.value.trim();
+
+                if (textVal) {
+                  let currentVal = respDetalhes.value;
+                  if (currentVal && !currentVal.endsWith('\n\n')) {
+                    currentVal += '\n\n';
+                  }
+                  respDetalhes.value = currentVal + "P: " + q.label + "\nR: " + textVal + "\n";
+
+                  const icon = btn.querySelector('i');
+                  icon.className = 'ti ti-check';
+                  setTimeout(() => {
+                    icon.className = 'ti ti-send';
+                    input.value = '';
+                  }, 1000);
+                }
+              };
+
+              inputCont.appendChild(input);
+              inputCont.appendChild(btn);
+              body.appendChild(inputCont);
+
+              container.appendChild(header);
+              container.appendChild(body);
+
+              header.onclick = () => {
+                if (activeItem && activeItem !== container) {
+                  activeItem.querySelector('div:nth-child(2)').style.display = 'none';
+                  activeItem.querySelector('div:first-child').style.whiteSpace = 'nowrap';
+                  activeItem.style.borderColor = 'var(--border)';
+                  activeItem.style.background = 'transparent';
+                }
+
+                if (body.style.display === 'none') {
+                  body.style.display = 'flex';
+                  header.style.whiteSpace = 'normal'; // Expand text
+                  container.style.borderColor = 'var(--primary)';
+                  container.style.background = 'var(--surface-hover)';
+                  activeItem = container;
+                } else {
+                  body.style.display = 'none';
+                  header.style.whiteSpace = 'nowrap';
+                  container.style.borderColor = 'var(--border)';
+                  container.style.background = 'transparent';
+                  activeItem = null;
+                }
+              };
+
+              pList.appendChild(container);
+            });
+          }
+        } else if (originalOpenAddInfoModal) {
+          originalOpenAddInfoModal(fieldId, originalLabel);
+        }
+      };
+
+
+      // --- Ajuda Detalhes Modal Logic ---
+      const btnAjudaDetalhes = document.getElementById('btnAjudaDetalhes');
+      const modalAjudaDetalhes = document.getElementById('modalAjudaDetalhes');
+      const closeAjudaDetalhesModal = document.getElementById('closeAjudaDetalhesModal');
+
+      if (btnAjudaDetalhes && modalAjudaDetalhes) {
+        btnAjudaDetalhes.addEventListener('click', () => {
+          modalAjudaDetalhes.classList.remove('hidden');
+        });
       }
-    });
-  }
 
-  document.querySelectorAll('.sheet-field-group label').forEach(label => {
-    label.addEventListener('click', (e) => {
-      const group = label.closest('.sheet-field-group');
-      if (group) {
-        const btn = group.querySelector('.btn-add-info');
-        if (btn && btn.style.pointerEvents !== 'none') {
-          e.preventDefault();
-          const fieldId = label.getAttribute('for');
-          if (window.openAddInfoModal) {
-            window.openAddInfoModal(fieldId, label.textContent);
+      if (closeAjudaDetalhesModal && modalAjudaDetalhes) {
+        closeAjudaDetalhesModal.addEventListener('click', () => {
+          modalAjudaDetalhes.classList.add('hidden');
+        });
+      }
+
+      if (modalAjudaDetalhes) {
+        modalAjudaDetalhes.addEventListener('click', (e) => {
+          if (e.target === modalAjudaDetalhes) {
+            modalAjudaDetalhes.classList.add('hidden');
+          }
+        });
+      }
+
+    });
+
+    // ==================== LÓGICA DO FORMULÁRIO DE QUALIFICAÇÃO (TELA ÚNICA COM EVOLUÇÃO %) ====================
+
+    // Função para atualizar a barra de progresso única e o badge em porcentagem
+    function updateTrackingBar() {
+      updateQualificationProgress();
+    }
+
+    function updateQualificationProgress() {
+      const form = document.getElementById('clientAnswersForm');
+      if (!form) return;
+
+      // Perguntas base (10 perguntas / subperguntas principais)
+      const baseQuestions = [
+        document.getElementById('respJaContribuiu'),
+        document.getElementById('respRecebeBeneficio'),
+        document.getElementById('respSolicitouBeneficio'),
+        document.getElementById('respSabeAposentar'),
+        document.getElementById('respPrioridade'),
+        document.getElementById('respModalidade'),
+        document.getElementById('respTipoTrabalho'),
+        document.getElementById('respExerceuAtividadeEspecial'),
+        document.getElementById('respConsequencias'),
+        document.getElementById('respFazerSozinho')
+      ];
+
+      let totalCount = 0;
+      let filledCount = 0;
+
+      baseQuestions.forEach(el => {
+        if (el) {
+          totalCount += 1;
+          if (el.value && el.value.trim() !== '') {
+            filledCount += 1;
           }
         }
+      });
+
+      // Campos condicionais atualmente ativos/visíveis
+      const visibleConditionals = form.querySelectorAll('.qual-conditional-block, .qual-nested-conditional');
+      visibleConditionals.forEach(block => {
+        if (block.style.display !== 'none' && window.getComputedStyle(block).display !== 'none') {
+          const inputs = block.querySelectorAll('textarea, select, input:not([type="hidden"])');
+          inputs.forEach(input => {
+            totalCount += 1;
+            if (input.value && input.value.trim() !== '') {
+              filledCount += 1;
+            }
+          });
+        }
+      });
+
+      const pct = totalCount > 0 ? Math.round((filledCount / totalCount) * 100) : 0;
+
+      const badge = document.getElementById('stepCounterBadge');
+      if (badge) {
+        badge.textContent = `${pct}%`;
       }
-    });
-  });
 
-  const originalOpenAddInfoModal = typeof openAddInfoModal !== 'undefined' ? openAddInfoModal : null;
+      const fill = document.getElementById('formProgressBarFill');
+      if (fill) {
+        fill.style.width = `${pct}%`;
+        if (pct === 100) {
+          fill.style.background = '#10b981';
+        } else {
+          fill.style.background = 'var(--fill-accent)';
+        }
+      }
 
-  const customTitles = {
-    'respJaContribuiu': 'Qualidade de Segurado'
-  };
+      updateSubquestionToggleIndicators();
+    }
 
-  const questionsConfigOverride = {
-    'respTempoContribuicao': [
-      { id: 'addInfoMilitar', label: 'Prestou serviço militar?', type: 'textarea' }
-    ],
-    'respSolicitouBeneficio': [
-      { id: 'addInfoMotivoNegativa', label: 'Se tentou e foi negado, qual foi o motivo da negativa?', type: 'textarea' },
-      { id: 'addInfoNovoPedido', label: 'Foi feito um novo pedido ou protocolado algum processo?', type: 'textarea' }
-    ],
-    'respJaContribuiu': [
-      { id: 'addInfoTempoParou', label: 'Há quanto tempo parou de contribuir?', type: 'textarea' },
-      { id: 'addInfoQualidadeSegurado', label: 'Você sabe se ainda tem qualidade de segurado?', type: 'textarea' },
-      { id: 'addInfo120Contribuicoes', label: 'Sabe se fez mais de 120 contribuições sem interrupção?', type: 'textarea' },
-      { id: 'addInfo12MesesSem', label: 'Sabe se ficou um período maior que 12 meses sem contribuir?', type: 'textarea' }
-    ],
-    'respExerceuAtividadeEspecial': [
-      { id: 'addInfoAtivEspecial1', label: 'Por quanto tempo, e qual era a atividade?', type: 'textarea' },
-      { id: 'addInfoAtivEspecial2', label: 'As empresas ainda existem, caso precise fazer alguma correção ou pedir documentos?', type: 'textarea' },
-      { id: 'addInfoAtivEspecial3', label: 'Sabe a classificação de exposição aos agentes nocivos?', type: 'textarea' },
-      { id: 'addInfoAtivEspecial4', label: 'Sabe se o uso de EPIs neutraliza a exposição a ponto de anular o direito?', type: 'textarea' }
-    ]
-  };
+    // Mantido para compatibilidade se invocado externamente
+    function updateStepView() {
+      updateQualificationProgress();
+    }
 
-  window.openAddInfoModal = function (fieldId, originalLabel) {
-    const qView = document.getElementById('qualificacaoView');
-    const pView = document.getElementById('perguntasView');
-    const pTitle = document.getElementById('perguntasViewTitle');
-    const pList = document.getElementById('perguntasViewList');
+    function goToStep(step) {
+      // Tela única: rolagem para o início ou foco
+      const formEl = document.getElementById('clientAnswersForm');
+      if (formEl) formEl.scrollTop = 0;
+      updateQualificationProgress();
+    }
 
-    if (qView && pView && pTitle && pList) {
-      qView.style.display = 'none';
-      pView.style.display = 'flex';
+    // Atualização e descarte imediato dos blocos condicionais
+    function updateAllConditionals() {
+      updateQ1Conditionals();
+      updateQ2Conditionals();
+      updateQ3Conditionals();
+      updateQ4Conditionals();
+      updateQ7Conditionals();
+      updateQ8Conditionals();
+      updateQ9Conditionals();
+      updateQualificationProgress();
+    }
 
-      const btnVoltar = document.getElementById('btnVoltarPerguntas');
-      if (btnVoltar) {
-        btnVoltar.onclick = () => {
-          qView.style.display = 'block';
-          pView.style.display = 'none';
+    // 1: Já contribuiu?
+    function updateQ1Conditionals() {
+      const val = document.getElementById('respJaContribuiu')?.value || '';
+      const simBox = document.getElementById('cond_q1_sim_box');
+      const outroBox = document.getElementById('cond_q1_outro_box');
+      const faz = document.getElementById('cond_q1_faz');
+      const tempo = document.getElementById('cond_q1_tempo');
+      const qualidade = document.getElementById('cond_q1_qualidade');
+
+      if (val === 'Sim - e continuo contribuindo.') {
+        if (simBox) simBox.style.display = 'block';
+        if (outroBox) outroBox.style.display = 'none';
+        if (tempo) tempo.value = '';
+        if (qualidade) qualidade.value = '';
+      } else if (val !== '') {
+        if (simBox) simBox.style.display = 'none';
+        if (outroBox) outroBox.style.display = 'flex';
+        if (faz) faz.value = '';
+      } else {
+        if (simBox) simBox.style.display = 'none';
+        if (outroBox) outroBox.style.display = 'none';
+        if (faz) faz.value = '';
+        if (tempo) tempo.value = '';
+        if (qualidade) qualidade.value = '';
+      }
+      updateQualificationProgress();
+    }
+
+    // Subpergunta: Recebe algum benefício?
+    function updateQ2Conditionals() {
+      const val = document.getElementById('respRecebeBeneficio')?.value || '';
+      const box = document.getElementById('cond_q2_box');
+      const qual = document.getElementById('cond_q2_qual');
+      const vantagem = document.getElementById('cond_q2_vantagem');
+
+      if (val === 'Sim') {
+        if (box) box.style.display = 'flex';
+      } else {
+        if (box) box.style.display = 'none';
+        if (qual) qual.value = '';
+        if (vantagem) vantagem.value = '';
+      }
+      updateQualificationProgress();
+    }
+
+    // 2: Já solicitou?
+    function updateQ3Conditionals() {
+      const val = document.getElementById('respSolicitouBeneficio')?.value || '';
+      const box = document.getElementById('cond_q3_box');
+      const judicial = document.getElementById('cond_q3_judicial');
+
+      if (val && val !== 'Não - nunca tentei aposentar.') {
+        if (box) box.style.display = 'block';
+      } else {
+        if (box) box.style.display = 'none';
+        if (judicial) judicial.value = '';
+      }
+      updateQualificationProgress();
+    }
+
+    // Subpergunta: Já sabe quando vai poder se aposentar e quanto vai receber?
+    function updateQ4Conditionals() {
+      const val = document.getElementById('respSabeAposentar')?.value || '';
+      const box = document.getElementById('cond_q4_box');
+      const quem = document.getElementById('cond_q4_quem_falou');
+      const contratou = document.getElementById('cond_q4_contratou');
+      const carac = document.getElementById('cond_q4_caracteristica');
+
+      if (val === 'Sim') {
+        if (box) box.style.display = 'flex';
+      } else {
+        if (box) box.style.display = 'none';
+        if (quem) quem.value = '';
+        if (contratou) contratou.value = '';
+        if (carac) carac.value = '';
+      }
+      updateQualificationProgress();
+    }
+
+    // 3: Tipo de trabalho:
+    function updateQ7Conditionals() {
+      const val = document.getElementById('respTipoTrabalho')?.value || '';
+      const cltBox = document.getElementById('cond_q7_clt_box');
+      const meiBox = document.getElementById('cond_q7_mei_box');
+      const ruralBox = document.getElementById('cond_q7_rural_box');
+
+      const cltCnis = document.getElementById('cond_q7_clt_cnis');
+      const cltAliq = document.getElementById('cond_q7_clt_aliquota');
+      const cltErro = document.getElementById('cond_q7_clt_erro');
+
+      const meiCarne = document.getElementById('cond_q7_mei_carne');
+      const meiCod = document.getElementById('cond_q7_mei_codigo');
+      const meiDup = document.getElementById('cond_q7_mei_duplicada');
+      const meiLac = document.getElementById('cond_q7_mei_lacuna');
+
+      const ruralTerra = document.getElementById('cond_q7_rural_terra');
+      const ruralHec = document.getElementById('cond_q7_rural_hectares');
+      const ruralDocsProd = document.getElementById('cond_q7_rural_docs_prod');
+      const ruralDocsFam = document.getElementById('cond_q7_rural_docs_fam');
+      const ruralTest = document.getElementById('cond_q7_rural_testemunhas');
+
+      if (val === 'Emprego de carteira assinada (CLT)') {
+        if (cltBox) cltBox.style.display = 'flex';
+        if (meiBox) meiBox.style.display = 'none';
+        if (ruralBox) ruralBox.style.display = 'none';
+        if (meiCarne) meiCarne.value = '';
+        if (meiCod) meiCod.value = '';
+        if (meiDup) meiDup.value = '';
+        if (meiLac) meiLac.value = '';
+        if (ruralTerra) ruralTerra.value = '';
+        if (ruralHec) ruralHec.value = '';
+        if (ruralDocsProd) ruralDocsProd.value = '';
+        if (ruralDocsFam) ruralDocsFam.value = '';
+        if (ruralTest) ruralTest.value = '';
+      } else if (val === 'Empresário / Autônomo / MEI') {
+        if (cltBox) cltBox.style.display = 'none';
+        if (meiBox) meiBox.style.display = 'flex';
+        if (ruralBox) ruralBox.style.display = 'none';
+        if (cltCnis) cltCnis.value = '';
+        if (cltAliq) cltAliq.value = '';
+        if (cltErro) cltErro.value = '';
+        if (ruralTerra) ruralTerra.value = '';
+        if (ruralHec) ruralHec.value = '';
+        if (ruralDocsProd) ruralDocsProd.value = '';
+        if (ruralDocsFam) ruralDocsFam.value = '';
+        if (ruralTest) ruralTest.value = '';
+      } else if (val === 'Trabalhador rural') {
+        if (cltBox) cltBox.style.display = 'none';
+        if (meiBox) meiBox.style.display = 'none';
+        if (ruralBox) ruralBox.style.display = 'flex';
+        if (cltCnis) cltCnis.value = '';
+        if (cltAliq) cltAliq.value = '';
+        if (cltErro) cltErro.value = '';
+        if (meiCarne) meiCarne.value = '';
+        if (meiCod) meiCod.value = '';
+        if (meiDup) meiDup.value = '';
+        if (meiLac) meiLac.value = '';
+      } else {
+        if (cltBox) cltBox.style.display = 'none';
+        if (meiBox) meiBox.style.display = 'none';
+        if (ruralBox) ruralBox.style.display = 'none';
+        if (cltCnis) cltCnis.value = '';
+        if (cltAliq) cltAliq.value = '';
+        if (cltErro) cltErro.value = '';
+        if (meiCarne) meiCarne.value = '';
+        if (meiCod) meiCod.value = '';
+        if (meiDup) meiDup.value = '';
+        if (meiLac) meiLac.value = '';
+        if (ruralTerra) ruralTerra.value = '';
+        if (ruralHec) ruralHec.value = '';
+        if (ruralDocsProd) ruralDocsProd.value = '';
+        if (ruralDocsFam) ruralDocsFam.value = '';
+        if (ruralTest) ruralTest.value = '';
+      }
+      updateQualificationProgress();
+    }
+
+    // 4: Atividade especial?
+    function updateQ8Conditionals() {
+      const val = document.getElementById('respExerceuAtividadeEspecial')?.value || '';
+      const box = document.getElementById('cond_q8_box');
+      const tempo = document.getElementById('cond_q8_tempo');
+      const ppps = document.getElementById('cond_q8_ppps');
+      const emp = document.getElementById('cond_q8_empresas');
+      const ag = document.getElementById('cond_q8_agentes');
+
+      if (val === 'Sim - já trabalhei nessas atividades.') {
+        if (box) box.style.display = 'flex';
+      } else {
+        if (box) box.style.display = 'none';
+        if (tempo) tempo.value = '';
+        if (ppps) ppps.value = '';
+        if (emp) emp.value = '';
+        if (ag) ag.value = '';
+      }
+      updateQualificationProgress();
+    }
+
+    // Subpergunta Outros: Consequências
+    function updateQ9Conditionals() {
+      const val = document.getElementById('respConsequencias')?.value || '';
+      const simBox = document.getElementById('cond_q9_sim_box');
+      const naoBox = document.getElementById('cond_q9_nao_box');
+      const simFuturo = document.getElementById('cond_q9_sim_futuro');
+      const naoAtraso = document.getElementById('cond_q9_nao_atraso');
+      const naoRenda = document.getElementById('cond_q9_nao_renda_menor');
+
+      if (val === 'Sim') {
+        if (simBox) simBox.style.display = 'flex';
+        if (naoBox) naoBox.style.display = 'none';
+        if (naoAtraso) naoAtraso.value = '';
+        if (naoRenda) naoRenda.value = '';
+      } else if (val === 'Não') {
+        if (simBox) simBox.style.display = 'none';
+        if (naoBox) naoBox.style.display = 'flex';
+        if (simFuturo) simFuturo.value = '';
+      } else {
+        if (simBox) simBox.style.display = 'none';
+        if (naoBox) naoBox.style.display = 'none';
+        if (simFuturo) simFuturo.value = '';
+        if (naoAtraso) naoAtraso.value = '';
+        if (naoRenda) naoRenda.value = '';
+      }
+      updateQualificationProgress();
+    }
+
+    // Inicializar ou resetar o formulário de qualificação
+    function initQualificationForm() {
+      updateAllConditionals();
+      updateQualificationProgress();
+    }
+
+    // Compilar todas as respostas respondidas com a nova hierarquia (1, Sub / 2, Subs / 3 / 4 / Outros: Subs)
+    function compileQualificationSummary() {
+      const blocks = [];
+
+      // 1. Já contribuiu?
+      const q1 = document.getElementById('respJaContribuiu');
+      if (q1 && q1.value) {
+        let block = `1. Já contribuiu?\nR: ${q1.value}`;
+        if (q1.value === 'Sim - e continuo contribuindo.') {
+          const faz = document.getElementById('cond_q1_faz')?.value.trim();
+          if (faz) {
+            block += `\n- O que você faz?\nR: ${faz}`;
+          }
+        } else {
+          const tempo = document.getElementById('cond_q1_tempo')?.value.trim();
+          if (tempo) {
+            block += `\n- Quanto tempo sem contribuir?\nR: ${tempo}`;
+          }
+          const qual = document.getElementById('cond_q1_qualidade')?.value.trim();
+          if (qual) {
+            block += `\n- Sabe se tem qualidade de segurado?\nR: ${qual}`;
+          }
+        }
+        blocks.push(block);
+      }
+
+      // Subpergunta: Recebe algum benefício?
+      const q1a = document.getElementById('respRecebeBeneficio');
+      if (q1a && q1a.value) {
+        let block = `- Recebe algum benefício?\nR: ${q1a.value}`;
+        if (q1a.value === 'Sim') {
+          const qual = document.getElementById('cond_q2_qual')?.value.trim();
+          if (qual) {
+            block += `\n  - Qual?\n  R: ${qual}`;
+          }
+          const vantagem = document.getElementById('cond_q2_vantagem')?.value.trim();
+          if (vantagem) {
+            block += `\n  - Entende a vantagem da aposentadoria em relação a esse benefício?\n  R: ${vantagem}`;
+          }
+        }
+        blocks.push(block);
+      }
+
+      // 2. Já solicitou?
+      const q2 = document.getElementById('respSolicitouBeneficio');
+      if (q2 && q2.value) {
+        let block = `2. Já solicitou?\nR: ${q2.value}`;
+        if (q2.value !== 'Não - nunca tentei aposentar.') {
+          const judicial = document.getElementById('cond_q3_judicial')?.value.trim();
+          if (judicial) {
+            block += `\n- E levou pro judicial ou fez uma nova tentativa?\nR: ${judicial}`;
+          }
+        }
+        blocks.push(block);
+      }
+
+      // Subpergunta: Já sabe quando vai poder se aposentar e quanto vai receber?
+      const q2a = document.getElementById('respSabeAposentar');
+      if (q2a && q2a.value) {
+        let block = `- Já sabe quando vai poder se aposentar e quanto vai receber?\nR: ${q2a.value}`;
+        if (q2a.value === 'Sim') {
+          const quem = document.getElementById('cond_q4_quem_falou')?.value.trim();
+          if (quem) {
+            block += `\n  - Quem te falou?\n  R: ${quem}`;
+          }
+          const contratou = document.getElementById('cond_q4_contratou')?.value.trim();
+          if (contratou) {
+            block += `\n  - E você já contratou essa pessoa para cuidar da sua aposentadoria?\n  R: ${contratou}`;
+          }
+          const carac = document.getElementById('cond_q4_caracteristica')?.value.trim();
+          if (carac) {
+            block += `\n  - E qual a característica mais importante que um profissional tem que ter pra você deixar ele cuidar da sua aposentadoria?\n  R: ${carac}`;
+          }
+        }
+        blocks.push(block);
+      }
+
+      // Subpergunta: O que é mais importante para você: se aposentar mais rápido ou se aposentar com uma renda maior?
+      const q2b = document.getElementById('respPrioridade');
+      if (q2b && q2b.value.trim()) {
+        blocks.push(`- O que é mais importante para você: se aposentar mais rápido ou se aposentar com uma renda maior?\nR: ${q2b.value.trim()}`);
+      }
+
+      // Subpergunta: O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)?
+      const q2c = document.getElementById('respModalidade');
+      if (q2c && q2c.value.trim()) {
+        blocks.push(`- O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)?\nR: ${q2c.value.trim()}`);
+      }
+
+      // 3. Tipo de trabalho:
+      const q3 = document.getElementById('respTipoTrabalho');
+      if (q3 && q3.value) {
+        let block = `3. Tipo de trabalho:\nR: ${q3.value}`;
+        if (q3.value === 'Emprego de carteira assinada (CLT)') {
+          const cnis = document.getElementById('cond_q7_clt_cnis')?.value.trim();
+          if (cnis) block += `\n- E você sabe se todos os registros constam no CNIS?\nR: ${cnis}`;
+          const aliq = document.getElementById('cond_q7_clt_aliquota')?.value.trim();
+          if (aliq) block += `\n- Sabe se as empresas fizeram as contribuições na alíquota correta?\nR: ${aliq}`;
+          const erro = document.getElementById('cond_q7_clt_erro')?.value.trim();
+          if (erro) block += `\n- Sabe se tem algum dado que foi inserido errado no CNIS, como valor ou data?\nR: ${erro}`;
+        } else if (q3.value === 'Empresário / Autônomo / MEI') {
+          const carne = document.getElementById('cond_q7_mei_carne')?.value.trim();
+          if (carne) block += `\n- Contribuiu no carnê ou MEI?\nR: ${carne}`;
+          const cod = document.getElementById('cond_q7_mei_codigo')?.value.trim();
+          if (cod) block += `\n- Sabe se todas as contribuições foram no código e na alíquota corretas?\nR: ${cod}`;
+          const dup = document.getElementById('cond_q7_mei_duplicada')?.value.trim();
+          if (dup) block += `\n- Alguém já analisou se tem alguma contribuição duplicada?\nR: ${dup}`;
+          const lac = document.getElementById('cond_q7_mei_lacuna')?.value.trim();
+          if (lac) block += `\n- Sabe se tem alguma lacuna contributiva ou se o INSS está considerando mesmo todas as suas contribuições?\nR: ${lac}`;
+        } else if (q3.value === 'Trabalhador rural') {
+          const terra = document.getElementById('cond_q7_rural_terra')?.value.trim();
+          if (terra) block += `\n- De quem era a terra?\nR: ${terra}`;
+          const hec = document.getElementById('cond_q7_rural_hectares')?.value.trim();
+          if (hec) block += `\n- Quantos hectares a terra tinha?\nR: ${hec}`;
+          const prod = document.getElementById('cond_q7_rural_docs_prod')?.value.trim();
+          if (prod) block += `\n- Você tem documentos que comprovem a sua atividade produtiva?\nR: ${prod}`;
+          const fam = document.getElementById('cond_q7_rural_docs_fam')?.value.trim();
+          if (fam) block += `\n- Você tem documentos que comprovem a relação da sua família com a terra?\nR: ${fam}`;
+          const test = document.getElementById('cond_q7_rural_testemunhas')?.value.trim();
+          if (test) block += `\n- Existem testemunhas vivas se for necessário?\nR: ${test}`;
+        }
+        blocks.push(block);
+      }
+
+      // 4. Atividade especial?
+      const q4 = document.getElementById('respExerceuAtividadeEspecial');
+      if (q4 && q4.value) {
+        let block = `4. Atividade especial?\nR: ${q4.value}`;
+        if (q4.value === 'Sim - já trabalhei nessas atividades.') {
+          const tempo = document.getElementById('cond_q8_tempo')?.value.trim();
+          if (tempo) block += `\n- Por quanto tempo exerceu?\nR: ${tempo}`;
+          const ppps = document.getElementById('cond_q8_ppps')?.value.trim();
+          if (ppps) block += `\n- Você tem os PPPs ou LTCATs?\nR: ${ppps}`;
+          const emp = document.getElementById('cond_q8_empresas')?.value.trim();
+          if (emp) block += `\n- As empresas ainda existem caso precise pedir ou complementar documentação?\nR: ${emp}`;
+          const ag = document.getElementById('cond_q8_agentes')?.value.trim();
+          if (ag) block += `\n- Alguém já analisou a classificação dos agentes nocivos, impacto do exercício da função, uso de EPIs e etc?\nR: ${ag}`;
+        }
+        blocks.push(block);
+      }
+
+      // 5. Outros: (Consequências e Apoio Profissional)
+      const q5SubA = document.getElementById('respConsequencias');
+      const q5SubB = document.getElementById('respFazerSozinho');
+      const hasOutrosAnswers = !!(q5SubA?.value || q5SubB?.value?.trim());
+
+      if (hasOutrosAnswers) {
+        let outrosBlock = '5. Outros:';
+        if (q5SubA && q5SubA.value) {
+          outrosBlock += `\n- Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?\nR: ${q5SubA.value}`;
+          if (q5SubA.value === 'Sim') {
+            const fut = document.getElementById('cond_q9_sim_futuro')?.value.trim();
+            if (fut) outrosBlock += `\n  - E como isso mudaria os seus planos de futuro?\n  R: ${fut}`;
+          } else if (q5SubA.value === 'Não') {
+            const atr = document.getElementById('cond_q9_nao_atraso')?.value.trim();
+            if (atr) outrosBlock += `\n  - Sua aposentadoria pode atrasar por no mínimo mais 6 meses depois de completar a idade, podendo chegar a 3, 4 anos de atraso, como isso mudaria os seus planos?\n  R: ${atr}`;
+            const ren = document.getElementById('cond_q9_nao_renda_menor')?.value.trim();
+            if (ren) outrosBlock += `\n  - Se você descobrisse que sua renda pode ser menor do que você tem direito por alguma informação ter sido enviada errada pro INSS, como você se sentiria?\n  R: ${ren}`;
+          }
+        }
+        if (q5SubB && q5SubB.value.trim()) {
+          outrosBlock += `\n- Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai ter negativa do INSS?\nR: ${q5SubB.value.trim()}`;
+        }
+        blocks.push(outrosBlock);
+      }
+
+      if (blocks.length === 0) return '';
+      return `=== QUALIFICAÇÃO DO CLIENTE ===\n\n` + blocks.join('\n\n');
+    }
+
+
+    // Sincronizar as respostas da qualificação na caixa de texto 'Detalhes do caso'
+    function syncQualificationToDetails(isFinal = false) {
+      const detalhesField = document.getElementById('respDetalhes');
+      if (!detalhesField) return;
+
+      const summary = compileQualificationSummary();
+      if (!summary) {
+        if (isFinal && typeof showToast === 'function') {
+          showToast('Nenhuma resposta preenchida para salvar.');
+        }
+        return;
+      }
+
+      let currentVal = detalhesField.value.trim();
+      const qualRegex = /=== QUALIFICAÇÃO DO CLIENTE ===[\s\S]*?(?=\n\n===|\n\n[A-Z]|$)/;
+
+      if (qualRegex.test(currentVal)) {
+        currentVal = currentVal.replace(qualRegex, summary).trim();
+      } else if (currentVal) {
+        currentVal = currentVal + '\n\n' + summary;
+      } else {
+        currentVal = summary;
+      }
+
+      detalhesField.value = currentVal;
+      detalhesField.dispatchEvent(new Event('input', { bubbles: true }));
+      detalhesField.dispatchEvent(new Event('change', { bubbles: true }));
+
+      if (typeof saveClientData === 'function') {
+        saveClientData(true);
+      }
+
+      if (isFinal) {
+        if (typeof showToast === 'function') {
+          showToast('Qualificação salva em Detalhes do caso!');
+        }
+        const btnFin = document.getElementById('btnFinalizarStep');
+        if (btnFin) {
+          const originalHtml = btnFin.innerHTML;
+          btnFin.innerHTML = '<i class="ti ti-check" style="font-size: 16px;"></i>Salvo!';
+          btnFin.style.background = '#059669';
+          setTimeout(() => {
+            btnFin.innerHTML = originalHtml;
+            btnFin.style.background = '#10b981';
+          }, 2000);
+        }
+      }
+    }
+
+    // Atualizar indicadores visuais dos toggles de subperguntas
+    function updateSubquestionToggleIndicators() {
+      // Q1 (Subperguntas: Recebe benefício? + Condicionais de Q1)
+      const btnQ1 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q1"]');
+      if (btnQ1) {
+        const q1Ans = document.getElementById('respRecebeBeneficio')?.value;
+        const q1Qual = document.getElementById('cond_q2_qual')?.value?.trim();
+        const q1Vant = document.getElementById('cond_q2_vantagem')?.value?.trim();
+        const q1Faz = document.getElementById('cond_q1_faz')?.value?.trim();
+        const q1Tempo = document.getElementById('cond_q1_tempo')?.value?.trim();
+        const q1Qualidade = document.getElementById('cond_q1_qualidade')?.value?.trim();
+        const hasQ1 = !!(q1Ans || q1Qual || q1Vant || q1Faz || q1Tempo || q1Qualidade);
+        // btnQ1.classList.toggle('has-answers', hasQ1);
+      }
+
+      // Q2 (Subperguntas: Aposentadoria, Prioridade, Modalidade + Condicional Q2)
+      const btnQ2 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q2"]');
+      if (btnQ2) {
+        const q2Apos = document.getElementById('respSabeAposentar')?.value;
+        const q2Prio = document.getElementById('respPrioridade')?.value?.trim();
+        const q2Mod = document.getElementById('respModalidade')?.value?.trim();
+        const q2Quem = document.getElementById('cond_q4_quem_falou')?.value?.trim();
+        const q2Judicial = document.getElementById('cond_q3_judicial')?.value?.trim();
+        const hasQ2 = !!(q2Apos || q2Prio || q2Mod || q2Quem || q2Judicial);
+        // btnQ2.classList.toggle('has-answers', hasQ2);
+      }
+
+      // Q3 (Subperguntas: Condicionais de CLT, MEI, Rural)
+      const btnQ3 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q3"]');
+      if (btnQ3) {
+        const q3Cnis = document.getElementById('cond_q7_clt_cnis')?.value?.trim();
+        const q3Aliq = document.getElementById('cond_q7_clt_aliquota')?.value?.trim();
+        const q3Erro = document.getElementById('cond_q7_clt_erro')?.value?.trim();
+        const q3Carne = document.getElementById('cond_q7_mei_carne')?.value?.trim();
+        const q3Codigo = document.getElementById('cond_q7_mei_codigo')?.value?.trim();
+        const q3Dup = document.getElementById('cond_q7_mei_duplicada')?.value?.trim();
+        const q3Lac = document.getElementById('cond_q7_mei_lacuna')?.value?.trim();
+        const q3Terra = document.getElementById('cond_q7_rural_terra')?.value?.trim();
+        const q3Hec = document.getElementById('cond_q7_rural_hectares')?.value?.trim();
+        const q3Prod = document.getElementById('cond_q7_rural_docs_prod')?.value?.trim();
+        const q3Fam = document.getElementById('cond_q7_rural_docs_fam')?.value?.trim();
+        const q3Test = document.getElementById('cond_q7_rural_testemunhas')?.value?.trim();
+        const hasQ3 = !!(q3Cnis || q3Aliq || q3Erro || q3Carne || q3Codigo || q3Dup || q3Lac || q3Terra || q3Hec || q3Prod || q3Fam || q3Test);
+        // btnQ3.classList.toggle('has-answers', hasQ3);
+      }
+
+      // Q4 (Subperguntas: Condicionais de Atividade Especial)
+      const btnQ4 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q4"]');
+      if (btnQ4) {
+        const q4Tempo = document.getElementById('cond_q8_tempo')?.value?.trim();
+        const q4Ppps = document.getElementById('cond_q8_ppps')?.value?.trim();
+        const q4Empresas = document.getElementById('cond_q8_empresas')?.value?.trim();
+        const q4Agentes = document.getElementById('cond_q8_agentes')?.value?.trim();
+        const hasQ4 = !!(q4Tempo || q4Ppps || q4Empresas || q4Agentes);
+        // btnQ4.classList.toggle('has-answers', hasQ4);
+      }
+
+      // Q5 (Subperguntas: Consequências e Apoio Profissional)
+      const btnQ5 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q5"]');
+      if (btnQ5) {
+        const q5Cons = document.getElementById('respConsequencias')?.value;
+        const q5Faz = document.getElementById('respFazerSozinho')?.value?.trim();
+        const q5Fut = document.getElementById('cond_q9_sim_futuro')?.value?.trim();
+        const q5Atr = document.getElementById('cond_q9_nao_atraso')?.value?.trim();
+        const q5Renda = document.getElementById('cond_q9_nao_renda_menor')?.value?.trim();
+        const hasQ5 = !!(q5Cons || q5Faz || q5Fut || q5Atr || q5Renda);
+        // btnQ5.classList.toggle('has-answers', hasQ5);
+      }
+    }
+
+    // Configurar o comportamento de acordeão exclusivo dos toggles (quando um abre, os outros recolhem)
+    function setupSubquestionToggles() {
+      const toggles = document.querySelectorAll('.qual-sub-toggle');
+      toggles.forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const targetId = btn.getAttribute('data-target');
+          const target = document.getElementById(targetId);
+          if (!target) return;
+
+          const isCurrentlyCollapsed = target.classList.contains('collapsed');
+
+          // Fechar todos os contêineres e desativar todos os botões de toggle (comportamento acordeão exclusivo)
+          document.querySelectorAll('.qual-subquestions-container').forEach(c => {
+            c.classList.add('collapsed');
+          });
+          toggles.forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-expanded', 'false');
+          });
+
+          // Se estava recolhido, abrir apenas este
+          if (isCurrentlyCollapsed) {
+            target.classList.remove('collapsed');
+            btn.classList.add('active');
+            btn.setAttribute('aria-expanded', 'true');
+          }
+        };
+      });
+    }
+
+    // Salvar em Detalhes do caso e limpar o formulário (preservando as perguntas numeradas pré-preenchidas 1, 2, 3 e 4)
+    function saveAndClearQualificationForm() {
+      // 1. Sincronizar respostas preenchidas para 'Detalhes do caso'
+      syncQualificationToDetails(true);
+
+      // 2. Limpar todas as sub-perguntas e campos condicionais, mantendo as perguntas numeradas pré-preenchidas
+      const preservedNumberedIds = [
+        'respJaContribuiu',
+        'respSolicitouBeneficio',
+        'respTipoTrabalho',
+        'respExerceuAtividadeEspecial'
+      ];
+
+      const form = document.getElementById('clientAnswersForm');
+      if (form) {
+        // Limpar selects que NÃO são perguntas numeradas
+        form.querySelectorAll('select').forEach(sel => {
+          if (!preservedNumberedIds.includes(sel.id)) {
+            sel.value = '';
+          }
+        });
+
+        // Limpar todos os textareas
+        form.querySelectorAll('textarea').forEach(tx => {
+          tx.value = '';
+        });
+
+        // Limpar inputs de texto extras (se houver)
+        form.querySelectorAll('input:not([type="hidden"])').forEach(inp => {
+          if (!preservedNumberedIds.includes(inp.id)) {
+            inp.value = '';
+          }
+        });
+      }
+
+      // 3. Atualizar condicionais (os selects preservados manterão seus blocos abertos se aplicável, sub-condicionais fecharão)
+      updateAllConditionals();
+
+      // 4. Atualizar barra de porcentagem e indicadores dos toggles
+      updateQualificationProgress();
+
+      // Recolher todos os contêineres de subperguntas (acordeão fechado por padrão)
+      document.querySelectorAll('.qual-subquestions-container').forEach(c => c.classList.add('collapsed'));
+      document.querySelectorAll('.qual-sub-toggle').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-expanded', 'false'); });
+
+      // 5. Salvar ficha do cliente no banco
+      if (typeof saveClientData === 'function') {
+        saveClientData(true);
+      }
+
+      // 6. Feedback visual no botão de reload
+      const btn = document.getElementById('btnReloadForm') || document.getElementById('btnConfirmQual');
+      if (btn) {
+        const icon = btn.querySelector('i');
+        if (icon) {
+          icon.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+          icon.style.transform = 'rotate(360deg)';
+          setTimeout(() => {
+            icon.style.transition = 'none';
+            icon.style.transform = 'none';
+          }, 500);
+        }
+        btn.style.transform = 'scale(0.9)';
+        btn.style.borderColor = 'var(--text-accent)';
+        setTimeout(() => {
+          btn.style.transform = 'none';
+          btn.style.borderColor = 'var(--border)';
+        }, 250);
+      }
+
+      if (typeof showToast === 'function') {
+        showToast('Respostas inseridas em Detalhes do caso e formulário limpo!');
+      }
+    }
+
+    // Mantido para compatibilidade
+    function finalizeQualificationForm() {
+      saveAndClearQualificationForm();
+    }
+    function resetQualificationFormAnswers() {
+      saveAndClearQualificationForm();
+    }
+
+    // Configuração dos Event Listeners do formulário de qualificação
+    function setupQualificationEventListeners() {
+      const btnConfirm = document.getElementById('btnConfirmQual') || document.getElementById('btnReloadForm');
+      const btnFinLegacy = document.getElementById('btnFinalizarStep');
+      const form = document.getElementById('clientAnswersForm');
+
+      if (btnConfirm) {
+        btnConfirm.onclick = () => {
+          saveAndClearQualificationForm();
         };
       }
 
-      // Set Title
-      if (customTitles[fieldId]) {
-        pTitle.querySelector('span').textContent = customTitles[fieldId];
-      } else {
-        pTitle.querySelector('span').textContent = 'Perguntas';
+      if (btnFinLegacy) {
+        btnFinLegacy.onclick = () => {
+          saveAndClearQualificationForm();
+        };
       }
 
-      // Populate list
-      pList.innerHTML = '';
-      const questions = questionsConfigOverride[fieldId] || [];
+      // Inicializar toggles das subperguntas
+      setupSubquestionToggles();
 
-      if (questions.length === 0) {
-        const div = document.createElement('div');
-        div.style.padding = '10px 14px';
-        div.style.border = '1px solid var(--border)';
-        div.style.borderRadius = '8px';
-        div.style.fontSize = '13px';
-        div.style.color = 'var(--text-secondary)';
-        div.textContent = 'Nenhuma pergunta adicional para este campo.';
-        pList.appendChild(div);
-      } else {
-        let activeItem = null;
-        questions.forEach((q, idx) => {
-          const container = document.createElement('div');
-          container.style.marginBottom = '8px';
-          container.style.border = '1px solid var(--border)';
-          container.style.borderRadius = '8px';
-          container.style.overflow = 'hidden';
-          container.style.transition = 'all 0.2s';
-
-          const header = document.createElement('div');
-          header.style.padding = '10px 14px';
-          header.style.cursor = 'pointer';
-          header.style.fontSize = '13px';
-          header.style.color = 'var(--text-primary)';
-          header.style.transition = 'all 0.2s';
-          header.style.whiteSpace = 'nowrap';
-          header.style.overflow = 'hidden';
-          header.style.textOverflow = 'ellipsis';
-          header.textContent = q.label;
-
-          header.onmouseover = () => {
-            if (activeItem !== container) {
-              container.style.background = 'var(--surface-hover)';
-              container.style.borderColor = 'var(--primary)';
-            }
-          };
-          header.onmouseout = () => {
-            if (activeItem !== container) {
-              container.style.background = 'transparent';
-              container.style.borderColor = 'var(--border)';
-            }
-          };
-
-          const body = document.createElement('div');
-          body.style.display = 'none';
-          body.style.padding = '0 14px 14px 14px';
-          body.style.flexDirection = 'column';
-
-          const inputCont = document.createElement('div');
-          inputCont.style.display = 'flex';
-          inputCont.style.alignItems = 'center';
-          inputCont.style.border = '1px solid #cbd5e1';
-          inputCont.style.borderRadius = '6px';
-          inputCont.style.padding = '4px 4px 4px 12px';
-          inputCont.style.background = 'white';
-
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.placeholder = 'Nova observação...';
-          input.style.flexGrow = '1';
-          input.style.border = 'none';
-          input.style.outline = 'none';
-          input.style.fontSize = '13px';
-          input.style.fontFamily = 'inherit';
-          input.style.background = 'transparent';
-          input.style.color = 'var(--text-primary)';
-
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.title = 'Enviar para Detalhes do caso';
-          btn.style.background = '#2563eb'; // blue
-          btn.style.color = 'white';
-          btn.style.border = 'none';
-          btn.style.borderRadius = '4px';
-          btn.style.width = '32px';
-          btn.style.height = '32px';
-          btn.style.display = 'flex';
-          btn.style.alignItems = 'center';
-          btn.style.justifyContent = 'center';
-          btn.style.cursor = 'pointer';
-          btn.style.transition = '0.2s';
-          btn.innerHTML = '<i class="ti ti-send" style="font-size: 16px;"></i>';
-
-          btn.onclick = (e) => {
-            e.stopPropagation();
-            const respDetalhes = document.getElementById('respDetalhes');
-            const textVal = input.value.trim();
-
-            if (textVal) {
-              let currentVal = respDetalhes.value;
-              if (currentVal && !currentVal.endsWith('\n\n')) {
-                currentVal += '\n\n';
-              }
-              respDetalhes.value = currentVal + "P: " + q.label + "\nR: " + textVal + "\n";
-
-              const icon = btn.querySelector('i');
-              icon.className = 'ti ti-check';
-              setTimeout(() => {
-                icon.className = 'ti ti-send';
-                input.value = '';
-              }, 1000);
-            }
-          };
-
-          inputCont.appendChild(input);
-          inputCont.appendChild(btn);
-          body.appendChild(inputCont);
-
-          container.appendChild(header);
-          container.appendChild(body);
-
-          header.onclick = () => {
-            if (activeItem && activeItem !== container) {
-              activeItem.querySelector('div:nth-child(2)').style.display = 'none';
-              activeItem.querySelector('div:first-child').style.whiteSpace = 'nowrap';
-              activeItem.style.borderColor = 'var(--border)';
-              activeItem.style.background = 'transparent';
-            }
-
-            if (body.style.display === 'none') {
-              body.style.display = 'flex';
-              header.style.whiteSpace = 'normal'; // Expand text
-              container.style.borderColor = 'var(--primary)';
-              container.style.background = 'var(--surface-hover)';
-              activeItem = container;
-            } else {
-              body.style.display = 'none';
-              header.style.whiteSpace = 'nowrap';
-              container.style.borderColor = 'var(--border)';
-              container.style.background = 'transparent';
-              activeItem = null;
-            }
-          };
-
-          pList.appendChild(container);
+      // Atualização em tempo real de progresso e sincronização
+      if (form) {
+        form.addEventListener('input', () => {
+          updateQualificationProgress();
+        });
+        form.addEventListener('change', () => {
+          updateQualificationProgress();
         });
       }
-    } else if (originalOpenAddInfoModal) {
-      originalOpenAddInfoModal(fieldId, originalLabel);
-    }
-  };
 
+      // Listeners de mudança nas perguntas condicionais
+      const conditionMap = {
+        'respJaContribuiu': updateQ1Conditionals,
+        'respRecebeBeneficio': updateQ2Conditionals,
+        'respSolicitouBeneficio': updateQ3Conditionals,
+        'respSabeAposentar': updateQ4Conditionals,
+        'respTipoTrabalho': updateQ7Conditionals,
+        'respExerceuAtividadeEspecial': updateQ8Conditionals,
+        'respConsequencias': updateQ9Conditionals
+      };
 
-  // --- Ajuda Detalhes Modal Logic ---
-  const btnAjudaDetalhes = document.getElementById('btnAjudaDetalhes');
-  const modalAjudaDetalhes = document.getElementById('modalAjudaDetalhes');
-  const closeAjudaDetalhesModal = document.getElementById('closeAjudaDetalhesModal');
-
-  if (btnAjudaDetalhes && modalAjudaDetalhes) {
-    btnAjudaDetalhes.addEventListener('click', () => {
-      modalAjudaDetalhes.classList.remove('hidden');
-    });
-  }
-
-  if (closeAjudaDetalhesModal && modalAjudaDetalhes) {
-    closeAjudaDetalhesModal.addEventListener('click', () => {
-      modalAjudaDetalhes.classList.add('hidden');
-    });
-  }
-
-  if (modalAjudaDetalhes) {
-    modalAjudaDetalhes.addEventListener('click', (e) => {
-      if (e.target === modalAjudaDetalhes) {
-        modalAjudaDetalhes.classList.add('hidden');
-      }
-    });
-  }
-
-});
-
-// ==================== LÓGICA DO FORMULÁRIO DE QUALIFICAÇÃO (TELA ÚNICA COM EVOLUÇÃO %) ====================
-
-// Função para atualizar a barra de progresso única e o badge em porcentagem
-function updateTrackingBar() {
-  updateQualificationProgress();
-}
-
-function updateQualificationProgress() {
-  const form = document.getElementById('clientAnswersForm');
-  if (!form) return;
-
-  // Perguntas base (10 perguntas / subperguntas principais)
-  const baseQuestions = [
-    document.getElementById('respJaContribuiu'),
-    document.getElementById('respRecebeBeneficio'),
-    document.getElementById('respSolicitouBeneficio'),
-    document.getElementById('respSabeAposentar'),
-    document.getElementById('respPrioridade'),
-    document.getElementById('respModalidade'),
-    document.getElementById('respTipoTrabalho'),
-    document.getElementById('respExerceuAtividadeEspecial'),
-    document.getElementById('respConsequencias'),
-    document.getElementById('respFazerSozinho')
-  ];
-
-  let totalCount = 0;
-  let filledCount = 0;
-
-  baseQuestions.forEach(el => {
-    if (el) {
-      totalCount += 1;
-      if (el.value && el.value.trim() !== '') {
-        filledCount += 1;
-      }
-    }
-  });
-
-  // Campos condicionais atualmente ativos/visíveis
-  const visibleConditionals = form.querySelectorAll('.qual-conditional-block, .qual-nested-conditional');
-  visibleConditionals.forEach(block => {
-    if (block.style.display !== 'none' && window.getComputedStyle(block).display !== 'none') {
-      const inputs = block.querySelectorAll('textarea, select, input:not([type="hidden"])');
-      inputs.forEach(input => {
-        totalCount += 1;
-        if (input.value && input.value.trim() !== '') {
-          filledCount += 1;
+      Object.entries(conditionMap).forEach(([id, handler]) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('change', handler);
         }
       });
+
+      initQualificationForm();
     }
-  });
 
-  const pct = totalCount > 0 ? Math.round((filledCount / totalCount) * 100) : 0;
-
-  const badge = document.getElementById('stepCounterBadge');
-  if (badge) {
-    badge.textContent = `${pct}%`;
-  }
-
-  const fill = document.getElementById('formProgressBarFill');
-  if (fill) {
-    fill.style.width = `${pct}%`;
-    if (pct === 100) {
-      fill.style.background = '#10b981';
-    } else {
-      fill.style.background = 'var(--fill-accent)';
-    }
-  }
-
-  updateSubquestionToggleIndicators();
-}
-
-// Mantido para compatibilidade se invocado externamente
-function updateStepView() {
-  updateQualificationProgress();
-}
-
-function goToStep(step) {
-  // Tela única: rolagem para o início ou foco
-  const formEl = document.getElementById('clientAnswersForm');
-  if (formEl) formEl.scrollTop = 0;
-  updateQualificationProgress();
-}
-
-// Atualização e descarte imediato dos blocos condicionais
-function updateAllConditionals() {
-  updateQ1Conditionals();
-  updateQ2Conditionals();
-  updateQ3Conditionals();
-  updateQ4Conditionals();
-  updateQ7Conditionals();
-  updateQ8Conditionals();
-  updateQ9Conditionals();
-  updateQualificationProgress();
-}
-
-// 1: Já contribuiu?
-function updateQ1Conditionals() {
-  const val = document.getElementById('respJaContribuiu')?.value || '';
-  const simBox = document.getElementById('cond_q1_sim_box');
-  const outroBox = document.getElementById('cond_q1_outro_box');
-  const faz = document.getElementById('cond_q1_faz');
-  const tempo = document.getElementById('cond_q1_tempo');
-  const qualidade = document.getElementById('cond_q1_qualidade');
-
-  if (val === 'Sim - e continuo contribuindo.') {
-    if (simBox) simBox.style.display = 'block';
-    if (outroBox) outroBox.style.display = 'none';
-    if (tempo) tempo.value = '';
-    if (qualidade) qualidade.value = '';
-  } else if (val !== '') {
-    if (simBox) simBox.style.display = 'none';
-    if (outroBox) outroBox.style.display = 'flex';
-    if (faz) faz.value = '';
-  } else {
-    if (simBox) simBox.style.display = 'none';
-    if (outroBox) outroBox.style.display = 'none';
-    if (faz) faz.value = '';
-    if (tempo) tempo.value = '';
-    if (qualidade) qualidade.value = '';
-  }
-  updateQualificationProgress();
-}
-
-// Subpergunta: Recebe algum benefício?
-function updateQ2Conditionals() {
-  const val = document.getElementById('respRecebeBeneficio')?.value || '';
-  const box = document.getElementById('cond_q2_box');
-  const qual = document.getElementById('cond_q2_qual');
-  const vantagem = document.getElementById('cond_q2_vantagem');
-
-  if (val === 'Sim') {
-    if (box) box.style.display = 'flex';
-  } else {
-    if (box) box.style.display = 'none';
-    if (qual) qual.value = '';
-    if (vantagem) vantagem.value = '';
-  }
-  updateQualificationProgress();
-}
-
-// 2: Já solicitou?
-function updateQ3Conditionals() {
-  const val = document.getElementById('respSolicitouBeneficio')?.value || '';
-  const box = document.getElementById('cond_q3_box');
-  const judicial = document.getElementById('cond_q3_judicial');
-
-  if (val && val !== 'Não - nunca tentei aposentar.') {
-    if (box) box.style.display = 'block';
-  } else {
-    if (box) box.style.display = 'none';
-    if (judicial) judicial.value = '';
-  }
-  updateQualificationProgress();
-}
-
-// Subpergunta: Já sabe quando vai poder se aposentar e quanto vai receber?
-function updateQ4Conditionals() {
-  const val = document.getElementById('respSabeAposentar')?.value || '';
-  const box = document.getElementById('cond_q4_box');
-  const quem = document.getElementById('cond_q4_quem_falou');
-  const contratou = document.getElementById('cond_q4_contratou');
-  const carac = document.getElementById('cond_q4_caracteristica');
-
-  if (val === 'Sim') {
-    if (box) box.style.display = 'flex';
-  } else {
-    if (box) box.style.display = 'none';
-    if (quem) quem.value = '';
-    if (contratou) contratou.value = '';
-    if (carac) carac.value = '';
-  }
-  updateQualificationProgress();
-}
-
-// 3: Tipo de trabalho:
-function updateQ7Conditionals() {
-  const val = document.getElementById('respTipoTrabalho')?.value || '';
-  const cltBox = document.getElementById('cond_q7_clt_box');
-  const meiBox = document.getElementById('cond_q7_mei_box');
-  const ruralBox = document.getElementById('cond_q7_rural_box');
-
-  const cltCnis = document.getElementById('cond_q7_clt_cnis');
-  const cltAliq = document.getElementById('cond_q7_clt_aliquota');
-  const cltErro = document.getElementById('cond_q7_clt_erro');
-
-  const meiCarne = document.getElementById('cond_q7_mei_carne');
-  const meiCod = document.getElementById('cond_q7_mei_codigo');
-  const meiDup = document.getElementById('cond_q7_mei_duplicada');
-  const meiLac = document.getElementById('cond_q7_mei_lacuna');
-
-  const ruralTerra = document.getElementById('cond_q7_rural_terra');
-  const ruralHec = document.getElementById('cond_q7_rural_hectares');
-  const ruralDocsProd = document.getElementById('cond_q7_rural_docs_prod');
-  const ruralDocsFam = document.getElementById('cond_q7_rural_docs_fam');
-  const ruralTest = document.getElementById('cond_q7_rural_testemunhas');
-
-  if (val === 'Emprego de carteira assinada (CLT)') {
-    if (cltBox) cltBox.style.display = 'flex';
-    if (meiBox) meiBox.style.display = 'none';
-    if (ruralBox) ruralBox.style.display = 'none';
-    if (meiCarne) meiCarne.value = '';
-    if (meiCod) meiCod.value = '';
-    if (meiDup) meiDup.value = '';
-    if (meiLac) meiLac.value = '';
-    if (ruralTerra) ruralTerra.value = '';
-    if (ruralHec) ruralHec.value = '';
-    if (ruralDocsProd) ruralDocsProd.value = '';
-    if (ruralDocsFam) ruralDocsFam.value = '';
-    if (ruralTest) ruralTest.value = '';
-  } else if (val === 'Empresário / Autônomo / MEI') {
-    if (cltBox) cltBox.style.display = 'none';
-    if (meiBox) meiBox.style.display = 'flex';
-    if (ruralBox) ruralBox.style.display = 'none';
-    if (cltCnis) cltCnis.value = '';
-    if (cltAliq) cltAliq.value = '';
-    if (cltErro) cltErro.value = '';
-    if (ruralTerra) ruralTerra.value = '';
-    if (ruralHec) ruralHec.value = '';
-    if (ruralDocsProd) ruralDocsProd.value = '';
-    if (ruralDocsFam) ruralDocsFam.value = '';
-    if (ruralTest) ruralTest.value = '';
-  } else if (val === 'Trabalhador rural') {
-    if (cltBox) cltBox.style.display = 'none';
-    if (meiBox) meiBox.style.display = 'none';
-    if (ruralBox) ruralBox.style.display = 'flex';
-    if (cltCnis) cltCnis.value = '';
-    if (cltAliq) cltAliq.value = '';
-    if (cltErro) cltErro.value = '';
-    if (meiCarne) meiCarne.value = '';
-    if (meiCod) meiCod.value = '';
-    if (meiDup) meiDup.value = '';
-    if (meiLac) meiLac.value = '';
-  } else {
-    if (cltBox) cltBox.style.display = 'none';
-    if (meiBox) meiBox.style.display = 'none';
-    if (ruralBox) ruralBox.style.display = 'none';
-    if (cltCnis) cltCnis.value = '';
-    if (cltAliq) cltAliq.value = '';
-    if (cltErro) cltErro.value = '';
-    if (meiCarne) meiCarne.value = '';
-    if (meiCod) meiCod.value = '';
-    if (meiDup) meiDup.value = '';
-    if (meiLac) meiLac.value = '';
-    if (ruralTerra) ruralTerra.value = '';
-    if (ruralHec) ruralHec.value = '';
-    if (ruralDocsProd) ruralDocsProd.value = '';
-    if (ruralDocsFam) ruralDocsFam.value = '';
-    if (ruralTest) ruralTest.value = '';
-  }
-  updateQualificationProgress();
-}
-
-// 4: Atividade especial?
-function updateQ8Conditionals() {
-  const val = document.getElementById('respExerceuAtividadeEspecial')?.value || '';
-  const box = document.getElementById('cond_q8_box');
-  const tempo = document.getElementById('cond_q8_tempo');
-  const ppps = document.getElementById('cond_q8_ppps');
-  const emp = document.getElementById('cond_q8_empresas');
-  const ag = document.getElementById('cond_q8_agentes');
-
-  if (val === 'Sim - já trabalhei nessas atividades.') {
-    if (box) box.style.display = 'flex';
-  } else {
-    if (box) box.style.display = 'none';
-    if (tempo) tempo.value = '';
-    if (ppps) ppps.value = '';
-    if (emp) emp.value = '';
-    if (ag) ag.value = '';
-  }
-  updateQualificationProgress();
-}
-
-// Subpergunta Outros: Consequências
-function updateQ9Conditionals() {
-  const val = document.getElementById('respConsequencias')?.value || '';
-  const simBox = document.getElementById('cond_q9_sim_box');
-  const naoBox = document.getElementById('cond_q9_nao_box');
-  const simFuturo = document.getElementById('cond_q9_sim_futuro');
-  const naoAtraso = document.getElementById('cond_q9_nao_atraso');
-  const naoRenda = document.getElementById('cond_q9_nao_renda_menor');
-
-  if (val === 'Sim') {
-    if (simBox) simBox.style.display = 'flex';
-    if (naoBox) naoBox.style.display = 'none';
-    if (naoAtraso) naoAtraso.value = '';
-    if (naoRenda) naoRenda.value = '';
-  } else if (val === 'Não') {
-    if (simBox) simBox.style.display = 'none';
-    if (naoBox) naoBox.style.display = 'flex';
-    if (simFuturo) simFuturo.value = '';
-  } else {
-    if (simBox) simBox.style.display = 'none';
-    if (naoBox) naoBox.style.display = 'none';
-    if (simFuturo) simFuturo.value = '';
-    if (naoAtraso) naoAtraso.value = '';
-    if (naoRenda) naoRenda.value = '';
-  }
-  updateQualificationProgress();
-}
-
-// Inicializar ou resetar o formulário de qualificação
-function initQualificationForm() {
-  updateAllConditionals();
-  updateQualificationProgress();
-}
-
-// Compilar todas as respostas respondidas com a nova hierarquia (1, Sub / 2, Subs / 3 / 4 / Outros: Subs)
-function compileQualificationSummary() {
-  const blocks = [];
-
-  // 1. Já contribuiu?
-  const q1 = document.getElementById('respJaContribuiu');
-  if (q1 && q1.value) {
-    let block = `1. Já contribuiu?\nR: ${q1.value}`;
-    if (q1.value === 'Sim - e continuo contribuindo.') {
-      const faz = document.getElementById('cond_q1_faz')?.value.trim();
-      if (faz) {
-        block += `\n- O que você faz?\nR: ${faz}`;
-      }
-    } else {
-      const tempo = document.getElementById('cond_q1_tempo')?.value.trim();
-      if (tempo) {
-        block += `\n- Quanto tempo sem contribuir?\nR: ${tempo}`;
-      }
-      const qual = document.getElementById('cond_q1_qualidade')?.value.trim();
-      if (qual) {
-        block += `\n- Sabe se tem qualidade de segurado?\nR: ${qual}`;
-      }
-    }
-    blocks.push(block);
-  }
-
-  // Subpergunta: Recebe algum benefício?
-  const q1a = document.getElementById('respRecebeBeneficio');
-  if (q1a && q1a.value) {
-    let block = `- Recebe algum benefício?\nR: ${q1a.value}`;
-    if (q1a.value === 'Sim') {
-      const qual = document.getElementById('cond_q2_qual')?.value.trim();
-      if (qual) {
-        block += `\n  - Qual?\n  R: ${qual}`;
-      }
-      const vantagem = document.getElementById('cond_q2_vantagem')?.value.trim();
-      if (vantagem) {
-        block += `\n  - Entende a vantagem da aposentadoria em relação a esse benefício?\n  R: ${vantagem}`;
-      }
-    }
-    blocks.push(block);
-  }
-
-  // 2. Já solicitou?
-  const q2 = document.getElementById('respSolicitouBeneficio');
-  if (q2 && q2.value) {
-    let block = `2. Já solicitou?\nR: ${q2.value}`;
-    if (q2.value !== 'Não - nunca tentei aposentar.') {
-      const judicial = document.getElementById('cond_q3_judicial')?.value.trim();
-      if (judicial) {
-        block += `\n- E levou pro judicial ou fez uma nova tentativa?\nR: ${judicial}`;
-      }
-    }
-    blocks.push(block);
-  }
-
-  // Subpergunta: Já sabe quando vai poder se aposentar e quanto vai receber?
-  const q2a = document.getElementById('respSabeAposentar');
-  if (q2a && q2a.value) {
-    let block = `- Já sabe quando vai poder se aposentar e quanto vai receber?\nR: ${q2a.value}`;
-    if (q2a.value === 'Sim') {
-      const quem = document.getElementById('cond_q4_quem_falou')?.value.trim();
-      if (quem) {
-        block += `\n  - Quem te falou?\n  R: ${quem}`;
-      }
-      const contratou = document.getElementById('cond_q4_contratou')?.value.trim();
-      if (contratou) {
-        block += `\n  - E você já contratou essa pessoa para cuidar da sua aposentadoria?\n  R: ${contratou}`;
-      }
-      const carac = document.getElementById('cond_q4_caracteristica')?.value.trim();
-      if (carac) {
-        block += `\n  - E qual a característica mais importante que um profissional tem que ter pra você deixar ele cuidar da sua aposentadoria?\n  R: ${carac}`;
-      }
-    }
-    blocks.push(block);
-  }
-
-  // Subpergunta: O que é mais importante para você: se aposentar mais rápido ou se aposentar com uma renda maior?
-  const q2b = document.getElementById('respPrioridade');
-  if (q2b && q2b.value.trim()) {
-    blocks.push(`- O que é mais importante para você: se aposentar mais rápido ou se aposentar com uma renda maior?\nR: ${q2b.value.trim()}`);
-  }
-
-  // Subpergunta: O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)?
-  const q2c = document.getElementById('respModalidade');
-  if (q2c && q2c.value.trim()) {
-    blocks.push(`- O senhor sabe qual das 8 modalidades de aposentadoria é a ideal para fazer você (prioridade)?\nR: ${q2c.value.trim()}`);
-  }
-
-  // 3. Tipo de trabalho:
-  const q3 = document.getElementById('respTipoTrabalho');
-  if (q3 && q3.value) {
-    let block = `3. Tipo de trabalho:\nR: ${q3.value}`;
-    if (q3.value === 'Emprego de carteira assinada (CLT)') {
-      const cnis = document.getElementById('cond_q7_clt_cnis')?.value.trim();
-      if (cnis) block += `\n- E você sabe se todos os registros constam no CNIS?\nR: ${cnis}`;
-      const aliq = document.getElementById('cond_q7_clt_aliquota')?.value.trim();
-      if (aliq) block += `\n- Sabe se as empresas fizeram as contribuições na alíquota correta?\nR: ${aliq}`;
-      const erro = document.getElementById('cond_q7_clt_erro')?.value.trim();
-      if (erro) block += `\n- Sabe se tem algum dado que foi inserido errado no CNIS, como valor ou data?\nR: ${erro}`;
-    } else if (q3.value === 'Empresário / Autônomo / MEI') {
-      const carne = document.getElementById('cond_q7_mei_carne')?.value.trim();
-      if (carne) block += `\n- Contribuiu no carnê ou MEI?\nR: ${carne}`;
-      const cod = document.getElementById('cond_q7_mei_codigo')?.value.trim();
-      if (cod) block += `\n- Sabe se todas as contribuições foram no código e na alíquota corretas?\nR: ${cod}`;
-      const dup = document.getElementById('cond_q7_mei_duplicada')?.value.trim();
-      if (dup) block += `\n- Alguém já analisou se tem alguma contribuição duplicada?\nR: ${dup}`;
-      const lac = document.getElementById('cond_q7_mei_lacuna')?.value.trim();
-      if (lac) block += `\n- Sabe se tem alguma lacuna contributiva ou se o INSS está considerando mesmo todas as suas contribuições?\nR: ${lac}`;
-    } else if (q3.value === 'Trabalhador rural') {
-      const terra = document.getElementById('cond_q7_rural_terra')?.value.trim();
-      if (terra) block += `\n- De quem era a terra?\nR: ${terra}`;
-      const hec = document.getElementById('cond_q7_rural_hectares')?.value.trim();
-      if (hec) block += `\n- Quantos hectares a terra tinha?\nR: ${hec}`;
-      const prod = document.getElementById('cond_q7_rural_docs_prod')?.value.trim();
-      if (prod) block += `\n- Você tem documentos que comprovem a sua atividade produtiva?\nR: ${prod}`;
-      const fam = document.getElementById('cond_q7_rural_docs_fam')?.value.trim();
-      if (fam) block += `\n- Você tem documentos que comprovem a relação da sua família com a terra?\nR: ${fam}`;
-      const test = document.getElementById('cond_q7_rural_testemunhas')?.value.trim();
-      if (test) block += `\n- Existem testemunhas vivas se for necessário?\nR: ${test}`;
-    }
-    blocks.push(block);
-  }
-
-  // 4. Atividade especial?
-  const q4 = document.getElementById('respExerceuAtividadeEspecial');
-  if (q4 && q4.value) {
-    let block = `4. Atividade especial?\nR: ${q4.value}`;
-    if (q4.value === 'Sim - já trabalhei nessas atividades.') {
-      const tempo = document.getElementById('cond_q8_tempo')?.value.trim();
-      if (tempo) block += `\n- Por quanto tempo exerceu?\nR: ${tempo}`;
-      const ppps = document.getElementById('cond_q8_ppps')?.value.trim();
-      if (ppps) block += `\n- Você tem os PPPs ou LTCATs?\nR: ${ppps}`;
-      const emp = document.getElementById('cond_q8_empresas')?.value.trim();
-      if (emp) block += `\n- As empresas ainda existem caso precise pedir ou complementar documentação?\nR: ${emp}`;
-      const ag = document.getElementById('cond_q8_agentes')?.value.trim();
-      if (ag) block += `\n- Alguém já analisou a classificação dos agentes nocivos, impacto do exercício da função, uso de EPIs e etc?\nR: ${ag}`;
-    }
-    blocks.push(block);
-  }
-
-  // 5. Outros: (Consequências e Apoio Profissional)
-  const q5SubA = document.getElementById('respConsequencias');
-  const q5SubB = document.getElementById('respFazerSozinho');
-  const hasOutrosAnswers = !!(q5SubA?.value || q5SubB?.value?.trim());
-
-  if (hasOutrosAnswers) {
-    let outrosBlock = '5. Outros:';
-    if (q5SubA && q5SubA.value) {
-      outrosBlock += `\n- Após recapitular as pendências, você sabe quais seriam as consequências de fazer isso de forma incorreta?\nR: ${q5SubA.value}`;
-      if (q5SubA.value === 'Sim') {
-        const fut = document.getElementById('cond_q9_sim_futuro')?.value.trim();
-        if (fut) outrosBlock += `\n  - E como isso mudaria os seus planos de futuro?\n  R: ${fut}`;
-      } else if (q5SubA.value === 'Não') {
-        const atr = document.getElementById('cond_q9_nao_atraso')?.value.trim();
-        if (atr) outrosBlock += `\n  - Sua aposentadoria pode atrasar por no mínimo mais 6 meses depois de completar a idade, podendo chegar a 3, 4 anos de atraso, como isso mudaria os seus planos?\n  R: ${atr}`;
-        const ren = document.getElementById('cond_q9_nao_renda_menor')?.value.trim();
-        if (ren) outrosBlock += `\n  - Se você descobrisse que sua renda pode ser menor do que você tem direito por alguma informação ter sido enviada errada pro INSS, como você se sentiria?\n  R: ${ren}`;
-      }
-    }
-    if (q5SubB && q5SubB.value.trim()) {
-      outrosBlock += `\n- Você acha que conseguiria fazer isso sozinho ou precisaria da ajuda de um profissional especialista para antecipar todos esses problemas e garantir que você vai se aposentar o quanto antes, com a maior renda possível, e que não vai ter negativa do INSS?\nR: ${q5SubB.value.trim()}`;
-    }
-    blocks.push(outrosBlock);
-  }
-
-  if (blocks.length === 0) return '';
-  return `=== QUALIFICAÇÃO DO CLIENTE ===\n\n` + blocks.join('\n\n');
-}
-
-
-// Sincronizar as respostas da qualificação na caixa de texto 'Detalhes do caso'
-function syncQualificationToDetails(isFinal = false) {
-  const detalhesField = document.getElementById('respDetalhes');
-  if (!detalhesField) return;
-
-  const summary = compileQualificationSummary();
-  if (!summary) {
-    if (isFinal && typeof showToast === 'function') {
-      showToast('Nenhuma resposta preenchida para salvar.');
-    }
-    return;
-  }
-
-  let currentVal = detalhesField.value.trim();
-  const qualRegex = /=== QUALIFICAÇÃO DO CLIENTE ===[\s\S]*?(?=\n\n===|\n\n[A-Z]|$)/;
-
-  if (qualRegex.test(currentVal)) {
-    currentVal = currentVal.replace(qualRegex, summary).trim();
-  } else if (currentVal) {
-    currentVal = currentVal + '\n\n' + summary;
-  } else {
-    currentVal = summary;
-  }
-
-  detalhesField.value = currentVal;
-  detalhesField.dispatchEvent(new Event('input', { bubbles: true }));
-  detalhesField.dispatchEvent(new Event('change', { bubbles: true }));
-
-  if (typeof saveClientData === 'function') {
-    saveClientData(true);
-  }
-
-  if (isFinal) {
-    if (typeof showToast === 'function') {
-      showToast('Qualificação salva em Detalhes do caso!');
-    }
-    const btnFin = document.getElementById('btnFinalizarStep');
-    if (btnFin) {
-      const originalHtml = btnFin.innerHTML;
-      btnFin.innerHTML = '<i class="ti ti-check" style="font-size: 16px;"></i>Salvo!';
-      btnFin.style.background = '#059669';
-      setTimeout(() => {
-        btnFin.innerHTML = originalHtml;
-        btnFin.style.background = '#10b981';
-      }, 2000);
-    }
-  }
-}
-
-// Atualizar indicadores visuais dos toggles de subperguntas
-function updateSubquestionToggleIndicators() {
-  // Q1 (Subperguntas: Recebe benefício? + Condicionais de Q1)
-  const btnQ1 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q1"]');
-  if (btnQ1) {
-    const q1Ans = document.getElementById('respRecebeBeneficio')?.value;
-    const q1Qual = document.getElementById('cond_q2_qual')?.value?.trim();
-    const q1Vant = document.getElementById('cond_q2_vantagem')?.value?.trim();
-    const q1Faz = document.getElementById('cond_q1_faz')?.value?.trim();
-    const q1Tempo = document.getElementById('cond_q1_tempo')?.value?.trim();
-    const q1Qualidade = document.getElementById('cond_q1_qualidade')?.value?.trim();
-    const hasQ1 = !!(q1Ans || q1Qual || q1Vant || q1Faz || q1Tempo || q1Qualidade);
-    // btnQ1.classList.toggle('has-answers', hasQ1);
-  }
-
-  // Q2 (Subperguntas: Aposentadoria, Prioridade, Modalidade + Condicional Q2)
-  const btnQ2 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q2"]');
-  if (btnQ2) {
-    const q2Apos = document.getElementById('respSabeAposentar')?.value;
-    const q2Prio = document.getElementById('respPrioridade')?.value?.trim();
-    const q2Mod = document.getElementById('respModalidade')?.value?.trim();
-    const q2Quem = document.getElementById('cond_q4_quem_falou')?.value?.trim();
-    const q2Judicial = document.getElementById('cond_q3_judicial')?.value?.trim();
-    const hasQ2 = !!(q2Apos || q2Prio || q2Mod || q2Quem || q2Judicial);
-    // btnQ2.classList.toggle('has-answers', hasQ2);
-  }
-
-  // Q3 (Subperguntas: Condicionais de CLT, MEI, Rural)
-  const btnQ3 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q3"]');
-  if (btnQ3) {
-    const q3Cnis = document.getElementById('cond_q7_clt_cnis')?.value?.trim();
-    const q3Aliq = document.getElementById('cond_q7_clt_aliquota')?.value?.trim();
-    const q3Erro = document.getElementById('cond_q7_clt_erro')?.value?.trim();
-    const q3Carne = document.getElementById('cond_q7_mei_carne')?.value?.trim();
-    const q3Codigo = document.getElementById('cond_q7_mei_codigo')?.value?.trim();
-    const q3Dup = document.getElementById('cond_q7_mei_duplicada')?.value?.trim();
-    const q3Lac = document.getElementById('cond_q7_mei_lacuna')?.value?.trim();
-    const q3Terra = document.getElementById('cond_q7_rural_terra')?.value?.trim();
-    const q3Hec = document.getElementById('cond_q7_rural_hectares')?.value?.trim();
-    const q3Prod = document.getElementById('cond_q7_rural_docs_prod')?.value?.trim();
-    const q3Fam = document.getElementById('cond_q7_rural_docs_fam')?.value?.trim();
-    const q3Test = document.getElementById('cond_q7_rural_testemunhas')?.value?.trim();
-    const hasQ3 = !!(q3Cnis || q3Aliq || q3Erro || q3Carne || q3Codigo || q3Dup || q3Lac || q3Terra || q3Hec || q3Prod || q3Fam || q3Test);
-    // btnQ3.classList.toggle('has-answers', hasQ3);
-  }
-
-  // Q4 (Subperguntas: Condicionais de Atividade Especial)
-  const btnQ4 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q4"]');
-  if (btnQ4) {
-    const q4Tempo = document.getElementById('cond_q8_tempo')?.value?.trim();
-    const q4Ppps = document.getElementById('cond_q8_ppps')?.value?.trim();
-    const q4Empresas = document.getElementById('cond_q8_empresas')?.value?.trim();
-    const q4Agentes = document.getElementById('cond_q8_agentes')?.value?.trim();
-    const hasQ4 = !!(q4Tempo || q4Ppps || q4Empresas || q4Agentes);
-    // btnQ4.classList.toggle('has-answers', hasQ4);
-  }
-
-  // Q5 (Subperguntas: Consequências e Apoio Profissional)
-  const btnQ5 = document.querySelector('.qual-sub-toggle[data-target="subgroup_q5"]');
-  if (btnQ5) {
-    const q5Cons = document.getElementById('respConsequencias')?.value;
-    const q5Faz = document.getElementById('respFazerSozinho')?.value?.trim();
-    const q5Fut = document.getElementById('cond_q9_sim_futuro')?.value?.trim();
-    const q5Atr = document.getElementById('cond_q9_nao_atraso')?.value?.trim();
-    const q5Renda = document.getElementById('cond_q9_nao_renda_menor')?.value?.trim();
-    const hasQ5 = !!(q5Cons || q5Faz || q5Fut || q5Atr || q5Renda);
-    // btnQ5.classList.toggle('has-answers', hasQ5);
-  }
-}
-
-// Configurar o comportamento de acordeão exclusivo dos toggles (quando um abre, os outros recolhem)
-function setupSubquestionToggles() {
-  const toggles = document.querySelectorAll('.qual-sub-toggle');
-  toggles.forEach(btn => {
-    btn.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const targetId = btn.getAttribute('data-target');
-      const target = document.getElementById(targetId);
-      if (!target) return;
-
-      const isCurrentlyCollapsed = target.classList.contains('collapsed');
-
-      // Fechar todos os contêineres e desativar todos os botões de toggle (comportamento acordeão exclusivo)
-      document.querySelectorAll('.qual-subquestions-container').forEach(c => {
-        c.classList.add('collapsed');
-      });
-      toggles.forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-expanded', 'false');
-      });
-
-      // Se estava recolhido, abrir apenas este
-      if (isCurrentlyCollapsed) {
-        target.classList.remove('collapsed');
-        btn.classList.add('active');
-        btn.setAttribute('aria-expanded', 'true');
-      }
-    };
-  });
-}
-
-// Salvar em Detalhes do caso e limpar o formulário (preservando as perguntas numeradas pré-preenchidas 1, 2, 3 e 4)
-function saveAndClearQualificationForm() {
-  // 1. Sincronizar respostas preenchidas para 'Detalhes do caso'
-  syncQualificationToDetails(true);
-
-  // 2. Limpar todas as sub-perguntas e campos condicionais, mantendo as perguntas numeradas pré-preenchidas
-  const preservedNumberedIds = [
-    'respJaContribuiu',
-    'respSolicitouBeneficio',
-    'respTipoTrabalho',
-    'respExerceuAtividadeEspecial'
-  ];
-
-  const form = document.getElementById('clientAnswersForm');
-  if (form) {
-    // Limpar selects que NÃO são perguntas numeradas
-    form.querySelectorAll('select').forEach(sel => {
-      if (!preservedNumberedIds.includes(sel.id)) {
-        sel.value = '';
-      }
+    document.addEventListener('DOMContentLoaded', () => {
+      setupQualificationEventListeners();
     });
-
-    // Limpar todos os textareas
-    form.querySelectorAll('textarea').forEach(tx => {
-      tx.value = '';
-    });
-
-    // Limpar inputs de texto extras (se houver)
-    form.querySelectorAll('input:not([type="hidden"])').forEach(inp => {
-      if (!preservedNumberedIds.includes(inp.id)) {
-        inp.value = '';
-      }
-    });
-  }
-
-  // 3. Atualizar condicionais (os selects preservados manterão seus blocos abertos se aplicável, sub-condicionais fecharão)
-  updateAllConditionals();
-
-  // 4. Atualizar barra de porcentagem e indicadores dos toggles
-  updateQualificationProgress();
-
-  // Recolher todos os contêineres de subperguntas (acordeão fechado por padrão)
-  document.querySelectorAll('.qual-subquestions-container').forEach(c => c.classList.add('collapsed'));
-  document.querySelectorAll('.qual-sub-toggle').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-expanded', 'false'); });
-
-  // 5. Salvar ficha do cliente no banco
-  if (typeof saveClientData === 'function') {
-    saveClientData(true);
-  }
-
-  // 6. Feedback visual no botão de reload
-  const btn = document.getElementById('btnReloadForm') || document.getElementById('btnConfirmQual');
-  if (btn) {
-    const icon = btn.querySelector('i');
-    if (icon) {
-      icon.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-      icon.style.transform = 'rotate(360deg)';
-      setTimeout(() => {
-        icon.style.transition = 'none';
-        icon.style.transform = 'none';
-      }, 500);
-    }
-    btn.style.transform = 'scale(0.9)';
-    btn.style.borderColor = 'var(--text-accent)';
-    setTimeout(() => {
-      btn.style.transform = 'none';
-      btn.style.borderColor = 'var(--border)';
-    }, 250);
-  }
-
-  if (typeof showToast === 'function') {
-    showToast('Respostas inseridas em Detalhes do caso e formulário limpo!');
-  }
-}
-
-// Mantido para compatibilidade
-function finalizeQualificationForm() {
-  saveAndClearQualificationForm();
-}
-function resetQualificationFormAnswers() {
-  saveAndClearQualificationForm();
-}
-
-// Configuração dos Event Listeners do formulário de qualificação
-function setupQualificationEventListeners() {
-  const btnConfirm = document.getElementById('btnConfirmQual') || document.getElementById('btnReloadForm');
-  const btnFinLegacy = document.getElementById('btnFinalizarStep');
-  const form = document.getElementById('clientAnswersForm');
-
-  if (btnConfirm) {
-    btnConfirm.onclick = () => {
-      saveAndClearQualificationForm();
-    };
-  }
-
-  if (btnFinLegacy) {
-    btnFinLegacy.onclick = () => {
-      saveAndClearQualificationForm();
-    };
-  }
-
-  // Inicializar toggles das subperguntas
-  setupSubquestionToggles();
-
-  // Atualização em tempo real de progresso e sincronização
-  if (form) {
-    form.addEventListener('input', () => {
-      updateQualificationProgress();
-    });
-    form.addEventListener('change', () => {
-      updateQualificationProgress();
-    });
-  }
-
-  // Listeners de mudança nas perguntas condicionais
-  const conditionMap = {
-    'respJaContribuiu': updateQ1Conditionals,
-    'respRecebeBeneficio': updateQ2Conditionals,
-    'respSolicitouBeneficio': updateQ3Conditionals,
-    'respSabeAposentar': updateQ4Conditionals,
-    'respTipoTrabalho': updateQ7Conditionals,
-    'respExerceuAtividadeEspecial': updateQ8Conditionals,
-    'respConsequencias': updateQ9Conditionals
-  };
-
-  Object.entries(conditionMap).forEach(([id, handler]) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('change', handler);
-    }
-  });
-
-  initQualificationForm();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  setupQualificationEventListeners();
-});

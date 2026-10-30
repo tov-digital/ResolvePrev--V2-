@@ -1915,86 +1915,100 @@ números">
           </div>
 
           <!-- Conteúdo da Guia: DOCUMENTOS -->
-          <div id="tabContentDocumentos" class="tab-pane hidden" style="padding: 1.5rem; overflow-y: auto;">
-            <div class="docs-tab-header">
-              <div class="docs-tag-row">
-                <a id="docsCardCodeBtn" class="gray-code-tag" target="_blank" rel="noopener noreferrer"
-                  title="Abrir Google Drive">
-                  <img src="assets/images/drive_icon.png" alt="Google Drive" class="drive-icon-img">
-                  <span id="docsCardCodeTag">RP00</span>
-                </a>
+          <div id="tabContentDocumentos" class="tab-pane hidden" style="flex-grow: 1; display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; padding: 0;">
+            <!-- Área com rolagem apenas para os documentos -->
+            <div style="flex: 1; overflow-y: auto; padding: 1.5rem 1.5rem 0.5rem 1.5rem;">
+              <div class="docs-tab-header">
+                <div class="docs-tag-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+                  <a id="docsCardCodeBtn" class="gray-code-tag" target="_blank" rel="noopener noreferrer"
+                    title="Abrir Google Drive">
+                    <img src="assets/images/drive_icon.png" alt="Google Drive" class="drive-icon-img">
+                    <span id="docsCardCodeTag">RP00</span>
+                  </a>
+
+                  <!-- Botão Switch Fechar Pasta / Reabrir Pasta -->
+                  <div class="fechar-pasta-container">
+                    <label id="fecharPastaBtn" class="fechar-pasta-btn" title="Alternar status da pasta">
+                      <span id="fecharPastaLabel" class="fechar-pasta-label">Fechar pasta:</span>
+                      <input type="checkbox" id="fecharPastaSwitch" class="fechar-pasta-checkbox">
+                      <span class="fechar-pasta-slider"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="docs-container">
+                <!-- Lista Consolidada de Documentos -->
+                <div class="docs-category-card" style="border: none; background: transparent; padding: 0;">
+
+                  <div id="listObrigatoriosContent" class="docs-list" style="margin-bottom: 20px;">
+                    <!-- Documento 1 -->
+                    <div class="doc-item">
+                      <span class="doc-name">CNIS</span>
+                      <button class="doc-status-badge badge-pendente" data-doc-key="doc_cnis" data-status="Pendente">
+                        <span class="doc-badge-dot"></span> Pendente
+                      </button>
+                    </div>
+
+                    <!-- Documento 2 -->
+                    <div class="doc-item">
+                      <span class="doc-name">RG ou CNH</span>
+                      <button class="doc-status-badge badge-pendente" data-doc-key="doc_rg_cnh" data-status="Pendente">
+                        <span class="doc-badge-dot"></span> Pendente
+                      </button>
+                    </div>
+
+                    <!-- Documento 3 -->
+                    <div class="doc-item">
+                      <span class="doc-name">Carteira de Trabalho Física</span>
+                      <button class="doc-status-badge badge-pendente" data-doc-key="doc_carteira_trabalho"
+                        data-status="Pendente">
+                        <span class="doc-badge-dot"></span> Pendente
+                      </button>
+                    </div>
+
+                    <!-- Documento 4 -->
+                    <div class="doc-item">
+                      <span class="doc-name">Carteira de Trabalho Digital</span>
+                      <button class="doc-status-badge badge-pendente" data-doc-key="doc_carteira_digital"
+                        data-status="Pendente">
+                        <span class="doc-badge-dot"></span> Pendente
+                      </button>
+                    </div>
+
+                    <!-- Documento 5 -->
+                    <div class="doc-item">
+                      <span class="doc-name">Certidão de Nascimento ou Casamento</span>
+                      <button class="doc-status-badge badge-pendente" data-doc-key="doc_certidao" data-status="Pendente">
+                        <span class="doc-badge-dot"></span> Pendente
+                      </button>
+                    </div>
+                  </div>
+
+                  <div id="listEventuaisContent" class="docs-list">
+                    <!-- Lista Dinâmica de Documentos Eventuais -->
+                    <div id="eventualDocsDynamicList" class="eventual-docs-list">
+                      <!-- Itens injetados via JavaScript -->
+                    </div>
+                  </div>
+
+                </div>
               </div>
             </div>
 
-            <div class="docs-container">
-              <!-- Lista Consolidada de Documentos -->
-              <div class="docs-category-card" style="border: none; background: transparent; padding: 0;">
-
-                <div id="listObrigatoriosContent" class="docs-list" style="margin-bottom: 20px;">
-                  <!-- Documento 1 -->
-                  <div class="doc-item">
-                    <span class="doc-name">CNIS</span>
-                    <button class="doc-status-badge badge-pendente" data-doc-key="doc_cnis" data-status="Pendente">
-                      <span class="doc-badge-dot"></span> Pendente
-                    </button>
-                  </div>
-
-                  <!-- Documento 2 -->
-                  <div class="doc-item">
-                    <span class="doc-name">RG ou CNH</span>
-                    <button class="doc-status-badge badge-pendente" data-doc-key="doc_rg_cnh" data-status="Pendente">
-                      <span class="doc-badge-dot"></span> Pendente
-                    </button>
-                  </div>
-
-                  <!-- Documento 3 -->
-                  <div class="doc-item">
-                    <span class="doc-name">Carteira de Trabalho Física</span>
-                    <button class="doc-status-badge badge-pendente" data-doc-key="doc_carteira_trabalho"
-                      data-status="Pendente">
-                      <span class="doc-badge-dot"></span> Pendente
-                    </button>
-                  </div>
-
-                  <!-- Documento 4 -->
-                  <div class="doc-item">
-                    <span class="doc-name">Carteira de Trabalho Digital</span>
-                    <button class="doc-status-badge badge-pendente" data-doc-key="doc_carteira_digital"
-                      data-status="Pendente">
-                      <span class="doc-badge-dot"></span> Pendente
-                    </button>
-                  </div>
-
-                  <!-- Documento 5 -->
-                  <div class="doc-item">
-                    <span class="doc-name">Certidão de Nascimento ou Casamento</span>
-                    <button class="doc-status-badge badge-pendente" data-doc-key="doc_certidao" data-status="Pendente">
-                      <span class="doc-badge-dot"></span> Pendente
-                    </button>
-                  </div>
-                </div>
-
-                <div id="listEventuaisContent" class="docs-list">
-                  <!-- Lista Dinâmica de Documentos Eventuais -->
-                  <div id="eventualDocsDynamicList" class="eventual-docs-list">
-                    <!-- Itens injetados via JavaScript -->
-                  </div>
-
-                  <!-- Formulário para Adicionar Novo Documento Eventual -->
-                  <div class="add-eventual-doc-row" style="margin-top: 15px;">
-                    <input type="text" id="newEventualDocName" placeholder="Nome do documento eventual..."
-                      class="add-doc-input">
-                    <button type="button" id="addEventualDocBtn" class="btn-add-eventual-doc">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                      </svg>
-                      Adicionar
-                    </button>
-                  </div>
-                </div>
-
+            <!-- Formulário Fixo no Rodapé para Adicionar Novo Documento Eventual -->
+            <div style="flex-shrink: 0; padding: 12px 1.5rem; background: var(--surface); border-top: 1px solid var(--line); z-index: 10;">
+              <div class="add-eventual-doc-row" style="margin: 0;">
+                <input type="text" id="newEventualDocName" placeholder="Nome do documento eventual..."
+                  class="add-doc-input">
+                <button type="button" id="addEventualDocBtn" class="btn-add-eventual-doc">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Adicionar
+                </button>
               </div>
             </div>
           </div>
@@ -2282,6 +2296,30 @@ números">
       <div class="modal-actions-row" style="margin-top: 1.25rem;">
         <button id="cancelDatePickerBtn" class="btn-modal-cancel">Cancelar</button>
         <button id="saveDatePickerBtn" class="btn-modal-primary">Salvar Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: CONFIRMAR FECHAR / REABRIR PASTA ==================== -->
+  <div id="modalFecharPastaConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card modal-confirm-card" style="max-width: 440px;">
+      <button class="modal-close" id="closeFecharPastaModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div id="fecharPastaModalBadge" class="modal-icon-badge" style="background-color: #DCFCE7; color: #16A34A;">
+          <svg id="fecharPastaModalIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <h3 id="fecharPastaModalTitle">Fechar pasta?</h3>
+        <p id="fecharPastaModalDesc" style="margin-top: 8px; line-height: 1.5; color: var(--color-secondary);">
+          O cliente será notificado de que a documentação está completa. Deseja continuar?
+        </p>
+      </div>
+      <div class="modal-actions-row" style="margin-top: 1.5rem;">
+        <button id="cancelFecharPastaBtn" class="btn-modal-cancel">Cancelar</button>
+        <button id="confirmFecharPastaBtn" class="btn-modal-primary">Confirmar</button>
       </div>
     </div>
   </div>

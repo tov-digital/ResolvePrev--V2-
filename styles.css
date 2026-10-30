@@ -7310,4 +7310,105 @@ button:hover[style*="background: white"],
   cursor: not-allowed;
 }
 
+/* ==========================================================================
+   BOTÃO SWITCH FECHAR PASTA / REABRIR PASTA (GUIA DOCUMENTOS)
+   ========================================================================== */
+
+.fechar-pasta-container {
+  display: inline-flex;
+  align-items: center;
+}
+
+.fechar-pasta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--surface-1, #FFFFFF);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-primary);
+  height: 36px;
+  box-sizing: border-box;
+  transition: all var(--transition-fast);
+}
+
+.fechar-pasta-btn:hover {
+  background-color: var(--surface-hover);
+}
+
+.fechar-pasta-label {
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.fechar-pasta-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.fechar-pasta-slider {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+  background-color: #CBD5E1;
+  border-radius: var(--radius-pill);
+  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.fechar-pasta-slider::before {
+  content: "";
+  position: absolute;
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--surface);
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.fechar-pasta-checkbox:checked + .fechar-pasta-slider {
+  background-color: var(--success, #16A34A); /* Verde indicando pasta fechada */
+}
+
+.fechar-pasta-checkbox:checked + .fechar-pasta-slider::before {
+  transform: translateX(14px);
+}
+
+/* Estado de Documentos Bloqueados quando a pasta está fechada */
+.docs-locked .doc-status-badge {
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.75;
+}
+
+.docs-locked .btn-remove-doc {
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.25 !important;
+}
+
+.docs-locked .add-eventual-doc-row {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.docs-locked .add-eventual-doc-row input,
+.docs-locked .add-eventual-doc-row button {
+  cursor: not-allowed !important;
+}
+
+
 
