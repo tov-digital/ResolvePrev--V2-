@@ -7150,106 +7150,71 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       }
 
-      // Confirmar ação no Modal de Fechar/Reabrir Pasta
-      if (confirmFecharPastaBtn) {
-        confirmFecharPastaBtn.addEventListener('click', async () => {
-          if (pendingPastaFechadaState === null || !currentActiveCard) {
-            closeFecharPastaModalFn();
-            return;
-          }
-
-          const isChecked = pendingPastaFechadaState;
-          closeFecharPastaModalFn();
-
-          fecharPastaSwitch.checked = isChecked;
-          if (fecharPastaLabel) {
-            fecharPastaLabel.textContent = isChecked ? 'Reabrir pasta:' : 'Fechar pasta:';
-          }
-          if (fecharPastaBtn) {
-            fecharPastaBtn.title = isChecked ? 'Clique para reabrir a pasta' : 'Clique para fechar a pasta';
-          }
-
-          toggleDocumentsLock(isChecked);
-
-          if (currentActiveCard) {
-            currentActiveCard.pasta_fechada = isChecked;
-            currentActiveCard.pasta_fechada = isChecked;
-
-            // Disparar Webhook do n8n
-            const payload = {
-              id: currentActiveCard.id,
-              codigo: currentActiveCard.codigo || '',
-              nome: currentActiveCard.nome || '',
-              telefone: currentActiveCard.telefone || '',
-              drive_link: currentActiveCard.drive_link || '',
-              acao: isChecked ? 'fechar_pasta' : 'reabrir_pasta',
-              pasta_fechada: isChecked,
-              data_hora: new Date().toISOString()
-            };
-            // Disparar Webhook do n8n
-            const payload = {
-              id: currentActiveCard.id,
-              codigo: currentActiveCard.codigo || '',
-              nome: currentActiveCard.nome || '',
-              telefone: currentActiveCard.telefone || '',
-              drive_link: currentActiveCard.drive_link || '',
-              acao: isChecked ? 'fechar_pasta' : 'reabrir_pasta',
-              pasta_fechada: isChecked,
-              data_hora: new Date().toISOString()
-            };
-
-            try {
-              await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/fechar_pasta', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-              });
-            } catch (webhookErr) {
-              console.warn('Aviso no envio do webhook fechar_pasta:', webhookErr);
-            }
-
-            // Salvar status da pasta no banco Supabase
-            if (supabase) {
-              try {
-                await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/fechar_pasta', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(payload)
-                });
-              } catch (webhookErr) {
-                console.warn('Aviso no envio do webhook fechar_pasta:', webhookErr);
-                await supabase
-                  .from(getCurrentTable())
-                  .update({
-                    pasta_fechada: isChecked,
-                    atualizado_em: new Date().toISOString()
-                  })
-                  .eq('id', currentActiveCard.id);
-              } catch (dbErr) {
-                console.warn('Erro ao atualizar pasta_fechada no Supabase:', dbErr);
-              }
-            }
-
-            // Salvar status da pasta no banco Supabase
-            if (supabase) {
-              try {
-                await supabase
-                  .from(getCurrentTable())
-                  .update({
-                    pasta_fechada: isChecked,
-                    atualizado_em: new Date().toISOString()
-                  })
-                  .eq('id', currentActiveCard.id);
-              } catch (dbErr) {
-                console.warn('Erro ao atualizar pasta_fechada no Supabase:', dbErr);
-              }
-            }
-
-            showToast(isChecked ? 'Pasta fechada e webhook acionado!' : 'Pasta reaberta e webhook acionado!');
-          }
-          showToast(isChecked ? 'Pasta fechada e cliente notificado!' : 'Pasta reaberta e cliente notificado!');
-        });
+  // Confirmar ação no Modal de Fechar/Reabrir Pasta
+  if (confirmFecharPastaBtn) {
+    confirmFecharPastaBtn.addEventListener('click', async () => {
+      if (pendingPastaFechadaState === null || !currentActiveCard) {
+        closeFecharPastaModalFn();
+        return;
       }
+
+      const isChecked = pendingPastaFechadaState;
+      closeFecharPastaModalFn();
+
+      fecharPastaSwitch.checked = isChecked;
+      if (fecharPastaLabel) {
+        fecharPastaLabel.textContent = isChecked ? 'Reabrir pasta:' : 'Fechar pasta:';
+      }
+      if (fecharPastaBtn) {
+        fecharPastaBtn.title = isChecked ? 'Clique para reabrir a pasta' : 'Clique para fechar a pasta';
+      }
+
+      toggleDocumentsLock(isChecked);
+
+      if (currentActiveCard) {
+        currentActiveCard.pasta_fechada = isChecked;
+
+        // Disparar Webhook do n8n
+        const payload = {
+          id: currentActiveCard.id,
+          codigo: currentActiveCard.codigo || '',
+          nome: currentActiveCard.nome || '',
+          telefone: currentActiveCard.telefone || '',
+          drive_link: currentActiveCard.drive_link || '',
+          acao: isChecked ? 'fechar_pasta' : 'reabrir_pasta',
+          pasta_fechada: isChecked,
+          data_hora: new Date().toISOString()
+        };
+
+        try {
+          await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/fechar_pasta', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } catch (webhookErr) {
+          console.warn('Aviso no envio do webhook fechar_pasta:', webhookErr);
+        }
+
+        // Salvar status da pasta no banco Supabase
+        if (supabase) {
+          try {
+            await supabase
+              .from(getCurrentTable())
+              .update({
+                pasta_fechada: isChecked,
+                atualizado_em: new Date().toISOString()
+              })
+              .eq('id', currentActiveCard.id);
+          } catch (dbErr) {
+            console.warn('Erro ao atualizar pasta_fechada no Supabase:', dbErr);
+          }
+        }
+
+        showToast(isChecked ? 'Pasta fechada e cliente notificado!' : 'Pasta reaberta e cliente notificado!');
+      }
+    });
+  }
 
       // Ação de Atribuição a Outro Usuário (Dropdown estilo Print)
       const modalReassignUser = document.getElementById('modalReassignUser');
