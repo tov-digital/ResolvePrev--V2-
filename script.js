@@ -7577,58 +7577,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // ==============================================================================
-  // GOOGLE CALENDAR API INTEGRATION (OAUTH 2.0 GIS & FREEBUSY/EVENTS)
+  // AGENDAMENTO DE REUNIÃO (INTEGRAÇÃO VIA N8N + GOOGLE CALENDAR)
   // ==============================================================================
-  const GOOGLE_CLIENT_ID = '58947434309-oraca3v6agrk7bih5h7kjr01vpqn347b.apps.googleusercontent.com';
-  const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly';
+  const N8N_CONSULTA_URL = 'https://n8n.srv1077266.hstgr.cloud/webhook/consultar_disponibilidade_agenda';
+  const N8N_AGENDAMENTO_URL = 'https://n8n.srv1077266.hstgr.cloud/webhook/agendamento_reuniao';
   const REUNIAO_CONVIDADOS = ['caiomvigreja@gmail.com', 'carlasovie@gmail.com'];
-
-  let googleTokenClient = null;
-  let googleAccessToken = localStorage.getItem('gcal_access_token') || null;
-  let googleTokenExpiresAt = parseInt(localStorage.getItem('gcal_token_expires') || '0', 10);
-
-  function isGoogleTokenValid() {
-    return googleAccessToken && Date.now() < (googleTokenExpiresAt - 60000);
-  }
-
-  function initGoogleTokenClient() {
-    if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
-      return false;
-    }
-    if (!googleTokenClient) {
-      googleTokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: GOOGLE_SCOPES,
-        callback: (tokenResponse) => {
-          if (tokenResponse && tokenResponse.access_token) {
-            googleAccessToken = tokenResponse.access_token;
-            googleTokenExpiresAt = Date.now() + (parseInt(tokenResponse.expires_in, 10) * 1000);
-            localStorage.setItem('gcal_access_token', googleAccessToken);
-            localStorage.setItem('gcal_token_expires', String(googleTokenExpiresAt));
-            if (window._gcalPendingAction) {
-              const action = window._gcalPendingAction;
-              window._gcalPendingAction = null;
-              action(googleAccessToken);
-            }
-          }
-        }
-      });
-    }
-    return true;
-  }
-
-  function getGoogleAccessToken(callback) {
-    if (isGoogleTokenValid()) {
-      callback(googleAccessToken);
-      return;
-    }
-    if (!initGoogleTokenClient()) {
-      showToast('Biblioteca do Google ainda está carregando, tente novamente em instantes.');
-      return;
-    }
-    window._gcalPendingAction = callback;
-    googleTokenClient.requestAccessToken({ prompt: '' });
-  }
 
   const modalBtnAgendarReuniao = document.getElementById('modalBtnAgendarReuniao');
   const modalAgendarReuniao = document.getElementById('modalAgendarReuniao');
@@ -7659,7 +7612,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (agendarReuniaoAvisoStatus) agendarReuniaoAvisoStatus.textContent = '';
   }
 
-  // Gera slots de 30min entre 09:00 e 17:00 (o último slot de início é 16:30 para terminar às 17:00)
+  // Gera slots padrão de 30min entre 09:00 e 17:00
   function gerarSlotsBase(dataStr) {
     const slots = [];
     for (let h = 9; h <= 16; h++) {
@@ -7692,85 +7645,76 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     agendarReuniaoHorarioSlot.disabled = true;
     agendarReuniaoHorarioSlot.style.cursor = 'wait';
-    agendarReuniaoHorarioSlot.innerHTML = '<option value="" disabled selected>Consultando horários livres na Google Agenda...</option>';
+    agendarReuniaoHorarioSlot.innerHTML = '<option value="" disabled selected>Consultando disponibilidade na agenda...</option>';
 
     const slots = gerarSlotsBase(dataEscolhida);
+    let busyList = [];
 
-    getGoogleAccessToken(async (token) => {
-      let busyList = [];
-      try {
-        const timeMin = `${dataEscolhida}T08:00:00Z`;
-        const timeMax = `${dataEscolhida}T23:59:59Z`;
-
-        const resp = await fetch('https://www.googleapis.com/calendar/v3/freeBusy', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            timeMin: new Date(`${dataEscolhida}T00:00:00`).toISOString(),
-            timeMax: new Date(`${dataEscolhida}T23:59:59`).toISOString(),
-            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo',
-            items: [{ id: 'primary' }]
-          })
-        });
-
-        if (resp.ok) {
-          const fbData = await resp.json();
-          if (fbData.calendars && fbData.calendars.primary && fbData.calendars.primary.busy) {
-            busyList = fbData.calendars.primary.busy;
-          }
-        } else {
-          console.warn('Erro ao consultar FreeBusy da Google Agenda:', resp.status);
-        }
-      } catch (err) {
-        console.warn('Falha na requisição FreeBusy:', err);
-      } finally {
-        if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.add('hidden');
-      }
-
-      // Filtrar slots ocupados
-      agendarReuniaoHorarioSlot.innerHTML = '<option value="" disabled selected>Selecione o horário desejado...</option>';
-      let countDisponiveis = 0;
-
-      slots.forEach(slot => {
-        const slotStart = new Date(slot.start).getTime();
-        const slotEnd = new Date(slot.end).getTime();
-
-        const isBusy = busyList.some(b => {
-          const bStart = new Date(b.start).getTime();
-          const bEnd = new Date(b.end).getTime();
-          return (slotStart < bEnd && slotEnd > bStart);
-        });
-
-        const opt = document.createElement('option');
-        opt.value = `${slot.hora}:${slot.minuto}`;
-        if (isBusy) {
-          opt.disabled = true;
-          opt.textContent = `${slot.label} (Ocupado)`;
-          opt.style.color = 'var(--ink-muted)';
-        } else {
-          opt.textContent = `${slot.label} (Disponível)`;
-          countDisponiveis++;
-        }
-        agendarReuniaoHorarioSlot.appendChild(opt);
+    try {
+      const resp = await fetch(N8N_CONSULTA_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data: dataEscolhida,
+          timeMin: `${dataEscolhida}T00:00:00-03:00`,
+          timeMax: `${dataEscolhida}T23:59:59-03:00`
+        })
       });
 
-      agendarReuniaoHorarioSlot.disabled = false;
-      agendarReuniaoHorarioSlot.style.cursor = 'pointer';
-      agendarReuniaoHorarioSlot.style.backgroundColor = 'var(--bg-input)';
-
-      if (agendarReuniaoAvisoStatus) {
-        if (countDisponiveis === 0) {
-          agendarReuniaoAvisoStatus.textContent = 'Não há horários livres nesta data na Google Agenda.';
-          agendarReuniaoAvisoStatus.style.color = '#ef4444';
-        } else {
-          agendarReuniaoAvisoStatus.textContent = `${countDisponiveis} horários livres encontrados.`;
-          agendarReuniaoAvisoStatus.style.color = '#10B981';
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data.busy)) {
+          busyList = data.busy;
+        } else if (Array.isArray(data)) {
+          busyList = data;
         }
       }
+    } catch (err) {
+      console.warn('Aviso: n8n indisponível para FreeBusy, liberando horários padrão:', err);
+    } finally {
+      if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.add('hidden');
+    }
+
+    // Filtrar horários ocupados
+    agendarReuniaoHorarioSlot.innerHTML = '<option value="" disabled selected>Selecione o horário desejado...</option>';
+    let countDisponiveis = 0;
+
+    slots.forEach(slot => {
+      const slotStart = new Date(slot.start).getTime();
+      const slotEnd = new Date(slot.end).getTime();
+
+      const isBusy = busyList.some(b => {
+        const bStart = new Date(b.start).getTime();
+        const bEnd = new Date(b.end).getTime();
+        return (slotStart < bEnd && slotEnd > bStart);
+      });
+
+      const opt = document.createElement('option');
+      opt.value = `${slot.hora}:${slot.minuto}`;
+      if (isBusy) {
+        opt.disabled = true;
+        opt.textContent = `${slot.label} (Ocupado)`;
+        opt.style.color = 'var(--ink-muted)';
+      } else {
+        opt.textContent = `${slot.label} (Disponível)`;
+        countDisponiveis++;
+      }
+      agendarReuniaoHorarioSlot.appendChild(opt);
     });
+
+    agendarReuniaoHorarioSlot.disabled = false;
+    agendarReuniaoHorarioSlot.style.cursor = 'pointer';
+    agendarReuniaoHorarioSlot.style.backgroundColor = 'var(--bg-input)';
+
+    if (agendarReuniaoAvisoStatus) {
+      if (countDisponiveis === 0) {
+        agendarReuniaoAvisoStatus.textContent = 'Não há horários livres nesta data.';
+        agendarReuniaoAvisoStatus.style.color = '#ef4444';
+      } else {
+        agendarReuniaoAvisoStatus.textContent = `${countDisponiveis} horários livres encontrados.`;
+        agendarReuniaoAvisoStatus.style.color = '#10B981';
+      }
+    }
   }
 
   if (agendarReuniaoData) {
@@ -7873,109 +7817,62 @@ document.addEventListener('DOMContentLoaded', async () => {
       const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `<i class="ti ti-loader" style="animation: spin 1s linear infinite;" aria-hidden="true"></i> Criando evento...`;
+        submitBtn.innerHTML = `<i class="ti ti-loader" style="animation: spin 1s linear infinite;" aria-hidden="true"></i> Agendando...`;
       }
 
-      // 1. Criar Evento diretamente na Google Calendar API
-      getGoogleAccessToken(async (token) => {
-        let googleEventCreated = false;
-        let meetLink = '';
-        try {
-          const clientName = (currentActiveCard.nome || 'Cliente').trim();
-          const eventPayload = {
-            summary: clientName,
-            description: `Reunião agendada com o cliente ${clientName}.\nTelefone: ${currentActiveCard.telefone || 'Não informado'}\nID CRM: ${currentActiveCard.id || ''}`,
-            start: {
-              dateTime: isoComTimezone,
-              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo'
-            },
-            end: {
-              dateTime: isoFimComTimezone,
-              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo'
-            },
-            attendees: REUNIAO_CONVIDADOS.map(email => ({ email })),
-            conferenceData: {
-              createRequest: {
-                requestId: `req-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
-                conferenceSolutionKey: { type: 'hangoutsMeet' }
-              }
-            }
-          };
+      // 1. Disparar Webhook do n8n para criar na Google Agenda com convidados
+      const clientName = (currentActiveCard.nome || 'Cliente').trim();
+      const payload = {
+        id: currentActiveCard.id,
+        nome: clientName,
+        titulo: clientName,
+        telefone: currentActiveCard.telefone || '',
+        data_reuniao: isoComTimezone,
+        data_fim_reuniao: isoFimComTimezone,
+        data_hora: isoComTimezone,
+        data_horario_formatado: formatted,
+        convidados: REUNIAO_CONVIDADOS,
+        descricao: `Reunião agendada com o cliente ${clientName}.\nTelefone: ${currentActiveCard.telefone || 'Não informado'}\nID CRM: ${currentActiveCard.id || ''}`
+      };
 
-          const eventResp = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(eventPayload)
-          });
+      try {
+        await fetch(N8N_AGENDAMENTO_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn('Webhook agendamento enviado com aviso de rede:', err);
+      }
 
-          if (eventResp.ok) {
-            const evData = await eventResp.json();
-            googleEventCreated = true;
-            meetLink = evData.hangoutLink || (evData.conferenceData && evData.conferenceData.entryPoints ? evData.conferenceData.entryPoints[0]?.uri : '');
-          } else {
-            const evErr = await eventResp.json().catch(() => ({}));
-            console.warn('Erro ao criar evento na Google Agenda:', eventResp.status, evErr);
-          }
-        } catch (gErr) {
-          console.warn('Erro na chamada Google Calendar create event:', gErr);
+      // 2. Persistir na tabela crm no Supabase
+      try {
+        if (typeof supabase !== 'undefined' && currentActiveCard.id) {
+          await supabase
+            .from('crm')
+            .update({ data_reuniao: isoComTimezone })
+            .eq('id', currentActiveCard.id);
         }
-
-        // 2. Disparar Webhook do n8n com dados completos
-        const payload = {
-          id: currentActiveCard.id,
-          nome: currentActiveCard.nome || '',
-          telefone: currentActiveCard.telefone || '',
-          data_reuniao: isoComTimezone,
-          data_fim_reuniao: isoFimComTimezone,
-          data_hora: isoComTimezone,
-          data_horario_formatado: formatted,
-          convidados: REUNIAO_CONVIDADOS,
-          meet_link: meetLink,
-          google_agenda_evento_criado: googleEventCreated
-        };
-
-        try {
-          await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/agendamento_reuniao', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-        } catch (err) {
-          console.warn('Webhook agendamento enviado com aviso de rede:', err);
+      } catch (dbErr) {
+        console.warn('Erro ao salvar data_reuniao na tabela crm:', dbErr);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
         }
+      }
 
-        // 3. Persistir na tabela crm no Supabase
-        try {
-          if (typeof supabase !== 'undefined' && currentActiveCard.id) {
-            await supabase
-              .from('crm')
-              .update({ data_reuniao: isoComTimezone })
-              .eq('id', currentActiveCard.id);
-          }
-        } catch (dbErr) {
-          console.warn('Erro ao salvar data_reuniao na tabela crm:', dbErr);
-        } finally {
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnHtml;
-          }
-        }
+      // 3. Atualizar objeto e interface
+      currentActiveCard._reuniaoAgendada = formatted;
+      currentActiveCard.data_reuniao = isoComTimezone;
+      if (modalBtnAgendarReuniao) {
+        modalBtnAgendarReuniao.innerHTML = `<i class="ti ti-calendar-check" style="font-size:16px" aria-hidden="true"></i>${formatted}`;
+        modalBtnAgendarReuniao.title = `Reunião agendada para: ${formatted}`;
+        modalBtnAgendarReuniao.classList.add('btn-reuniao-agendada');
+      }
 
-        // 4. Atualizar objeto e interface
-        currentActiveCard._reuniaoAgendada = formatted;
-        currentActiveCard.data_reuniao = isoComTimezone;
-        if (modalBtnAgendarReuniao) {
-          modalBtnAgendarReuniao.innerHTML = `<i class="ti ti-calendar-check" style="font-size:16px" aria-hidden="true"></i>${formatted}`;
-          modalBtnAgendarReuniao.title = `Reunião agendada para: ${formatted}`;
-          modalBtnAgendarReuniao.classList.add('btn-reuniao-agendada');
-        }
-
-        fecharModalAgendamento();
-        showToast(googleEventCreated ? 'Reunião agendada com sucesso e sincronizada com a Google Agenda!' : 'Reunião agendada com sucesso!');
-      });
+      fecharModalAgendamento();
+      showToast('Reunião agendada com sucesso!');
     });
   }
 
