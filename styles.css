@@ -1726,9 +1726,14 @@ display: flex;
 .dot-exigencia { background-color: #3B82F6 !important; }    /* 4. Azul */
 .dot-concedido { background-color: #22C55E !important; }    /* 5. Verde */
 
-/* Dots - Judicial */
-.dot-negado { background-color: #F87171 !important; }       /* Red */
+/* Dots - Insucessos */
+.dot-negado { background-color: #F87171 !important; }       /* Vermelho */
 .dot-planejamento { background-color: #A855F7 !important; } /* Roxo */
+.dot-recuperacao { background-color: #38BDF8 !important; }  /* Azul Claro */
+.dot-no_show { background-color: #FB923C !important; }      /* Laranja */
+.dot-recusado { background-color: #EF4444 !important; }     /* Vermelho Forte */
+.dot-perdido { background-color: #64748B !important; }      /* Cinza Ardósia */
+.dot-desqualificado { background-color: #9CA3AF !important; }/* Cinza */
 
 .column-title {
   font-family: var(--font-display);

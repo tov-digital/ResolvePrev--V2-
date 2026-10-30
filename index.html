@@ -283,16 +283,14 @@
           </svg>
           <span class="nav-label">Operação</span>
         </a>
-        <a href="#" class="nav-item" data-tab="judicial" title="Judicial">
+        <a href="#" class="nav-item" data-tab="judicial" title="Insucessos">
           <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
-            <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
-            <path d="M7 21h10" />
-            <path d="M12 3v18" />
-            <path d="M3 7h18" />
+            <circle cx="12" cy="12" r="10" />
+            <line x1="15" y1="9" x2="9" y2="15" />
+            <line x1="9" y1="9" x2="15" y2="15" />
           </svg>
-          <span class="nav-label">Judicial</span>
+          <span class="nav-label">Insucessos</span>
         </a>
 
         <!-- Botão exclusivo do Administrador para voltar ao Painel Gerencial -->
@@ -565,7 +563,7 @@
                       <span class="filter-chip-text">Concedido</span>
                     </label>
 
-                    <!-- Status Judicial -->
+                    <!-- Status Insucessos (Judicial) -->
                     <label class="filter-chip filter-chip-status" data-tab="judicial">
                       <input type="checkbox" class="filter-status-cb" value="negado">
                       <span class="filter-chip-custom-check"></span>
@@ -577,6 +575,36 @@
                       <span class="filter-chip-custom-check"></span>
                       <span class="filter-chip-dot dot-planejamento"></span>
                       <span class="filter-chip-text">Planejamento</span>
+                    </label>
+                    <label class="filter-chip filter-chip-status" data-tab="judicial">
+                      <input type="checkbox" class="filter-status-cb" value="recuperacao">
+                      <span class="filter-chip-custom-check"></span>
+                      <span class="filter-chip-dot dot-recuperacao"></span>
+                      <span class="filter-chip-text">Recuperação</span>
+                    </label>
+                    <label class="filter-chip filter-chip-status" data-tab="judicial">
+                      <input type="checkbox" class="filter-status-cb" value="no_show">
+                      <span class="filter-chip-custom-check"></span>
+                      <span class="filter-chip-dot dot-no_show"></span>
+                      <span class="filter-chip-text">No-Show</span>
+                    </label>
+                    <label class="filter-chip filter-chip-status" data-tab="judicial">
+                      <input type="checkbox" class="filter-status-cb" value="recusado">
+                      <span class="filter-chip-custom-check"></span>
+                      <span class="filter-chip-dot dot-recusado"></span>
+                      <span class="filter-chip-text">Recusado</span>
+                    </label>
+                    <label class="filter-chip filter-chip-status" data-tab="judicial">
+                      <input type="checkbox" class="filter-status-cb" value="perdido">
+                      <span class="filter-chip-custom-check"></span>
+                      <span class="filter-chip-dot dot-perdido"></span>
+                      <span class="filter-chip-text">Perdido</span>
+                    </label>
+                    <label class="filter-chip filter-chip-status" data-tab="judicial">
+                      <input type="checkbox" class="filter-status-cb" value="desqualificado">
+                      <span class="filter-chip-custom-check"></span>
+                      <span class="filter-chip-dot dot-desqualificado"></span>
+                      <span class="filter-chip-text">Desqualificado</span>
                     </label>
                   </div>
                 </div>
@@ -821,7 +849,7 @@
           <div class="kanban-cards-container"></div>
         </div>
 
-        <!-- COLUNAS JUDICIAL -->
+        <!-- COLUNAS INSUCESSOS (JUDICIAL) -->
         <div class="kanban-column hidden" data-stage="negado" data-tab="judicial">
           <div class="kanban-column-header">
             <div class="column-title-group">
@@ -842,6 +870,45 @@
                 data-tooltip="Elaboração de cálculos, estratégia jurídica e redação da petição inicial."
                 title="Elaboração de cálculos, estratégia jurídica e redação da petição inicial."></span>
               <h4 class="column-title">Planejamento</h4>
+              <span class="column-count">0</span>
+            </div>
+          </div>
+          <div class="kanban-cards-container"></div>
+        </div>
+
+        <div class="kanban-column hidden" data-stage="recuperacao" data-tab="judicial">
+          <div class="kanban-column-header">
+            <div class="column-title-group">
+              <span class="column-status-dot dot-recuperacao"
+                data-tooltip="Tentativa de reengajamento do lead ou cliente para recuperação do contato."
+                title="Tentativa de reengajamento do lead ou cliente para recuperação do contato."></span>
+              <h4 class="column-title">Recuperação</h4>
+              <span class="column-count">0</span>
+            </div>
+          </div>
+          <div class="kanban-cards-container"></div>
+        </div>
+
+        <div class="kanban-column hidden" data-stage="no_show" data-tab="judicial">
+          <div class="kanban-column-header">
+            <div class="column-title-group">
+              <span class="column-status-dot dot-no_show"
+                data-tooltip="Cliente não compareceu à reunião previamente agendada."
+                title="Cliente não compareceu à reunião previamente agendada."></span>
+              <h4 class="column-title">No-Show</h4>
+              <span class="column-count">0</span>
+            </div>
+          </div>
+          <div class="kanban-cards-container"></div>
+        </div>
+
+        <div class="kanban-column hidden" data-stage="desqualificado" data-tab="judicial">
+          <div class="kanban-column-header">
+            <div class="column-title-group">
+              <span class="column-status-dot dot-desqualificado"
+                data-tooltip="Lead desqualificado no filtro inicial sem requisitos para prosseguir."
+                title="Lead desqualificado no filtro inicial sem requisitos para prosseguir."></span>
+              <h4 class="column-title">Desqualificado</h4>
               <span class="column-count">0</span>
             </div>
           </div>
@@ -1058,6 +1125,21 @@ var(--border); flex-shrink: 0;">
               </div>
               <div class="status-option hidden" data-status="planejamento" data-tab="judicial">
                 <span class="column-status-dot dot-planejamento"></span> Planejamento
+              </div>
+              <div class="status-option hidden" data-status="recuperacao" data-tab="judicial">
+                <span class="column-status-dot dot-recuperacao"></span> Recuperação
+              </div>
+              <div class="status-option hidden" data-status="no_show" data-tab="judicial">
+                <span class="column-status-dot dot-no_show"></span> No-Show
+              </div>
+              <div class="status-option hidden" data-status="recusado" data-tab="judicial">
+                <span class="column-status-dot dot-recusado"></span> Recusado
+              </div>
+              <div class="status-option hidden" data-status="perdido" data-tab="judicial">
+                <span class="column-status-dot dot-perdido"></span> Perdido
+              </div>
+              <div class="status-option hidden" data-status="desqualificado" data-tab="judicial">
+                <span class="column-status-dot dot-desqualificado"></span> Desqualificado
               </div>
             </div>
           </div>
@@ -2244,6 +2326,30 @@ números">
       <div class="modal-actions-row">
         <button id="cancelDeleteBtn" class="btn-modal-cancel">Não</button>
         <button id="confirmDeleteBtn" class="btn-modal-danger">Sim</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: CONFIRMAR RETORNO PARA A FILA DE ATENDIMENTO ==================== -->
+  <div id="modalDevolverFilaConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card modal-confirm-card" style="max-width: 440px;">
+      <button class="modal-close" id="closeDevolverFilaModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge" style="background-color: #EFF6FF; color: #2563EB;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+        </div>
+        <h3>Devolver à fila de atendimento?</h3>
+        <p style="margin-top: 8px; line-height: 1.5; color: #1E293B;">
+          Deseja devolver o lead <strong id="devolverFilaClientName">este cliente</strong> para a fila de atendimento? O status será alterado para <strong>Novo</strong>.
+        </p>
+      </div>
+      <div class="modal-actions-row" style="margin-top: 1.5rem;">
+        <button id="cancelDevolverFilaBtn" class="btn-modal-cancel">Cancelar</button>
+        <button id="confirmDevolverFilaBtn" class="btn-modal-primary" style="background-color: var(--brand-primary, #0F172A);">Confirmar</button>
       </div>
     </div>
   </div>

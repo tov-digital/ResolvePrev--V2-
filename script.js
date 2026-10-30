@@ -129,8 +129,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         crmTitle.textContent = 'Operação';
         crmSubtitle.textContent = 'Gestão de Requerimentos';
       } else if (window.currentTab === 'judicial') {
-        crmTitle.textContent = 'Judicial';
-        crmSubtitle.textContent = 'Processos de Requerimentos Negados';
+        crmTitle.textContent = 'Insucessos';
+        crmSubtitle.textContent = 'Processos e Oportunidades Não Concluídas';
       }
 
       // Exibe/Oculta colunas do Kanban com base na aba
@@ -227,7 +227,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     'requerido': 'Requerido',
     'concedido': 'Concedido',
     'exigencia': 'Exigência',
-    'negado': 'Negado'
+    'negado': 'Negado',
+    'recuperacao': 'Recuperação',
+    'no_show': 'No-Show',
+    'recusado': 'Recusado',
+    'perdido': 'Perdido',
+    'desqualificado': 'Desqualificado'
   };
 
   const stageDotClasses = {
@@ -242,7 +247,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     'requerido': 'dot-requerido',
     'concedido': 'dot-concedido',
     'exigencia': 'dot-exigencia',
-    'negado': 'dot-negado'
+    'negado': 'dot-negado',
+    'recuperacao': 'dot-recuperacao',
+    'no_show': 'dot-no_show',
+    'recusado': 'dot-recusado',
+    'perdido': 'dot-perdido',
+    'desqualificado': 'dot-desqualificado'
   };
 
   const backToAdminBtn = document.getElementById('backToAdminBtn');
@@ -293,8 +303,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           crmTitle.textContent = 'Operação';
           crmSubtitle.textContent = 'Gestão de Requerimentos';
         } else if (window.currentTab === 'judicial') {
-          crmTitle.textContent = 'Judicial';
-          crmSubtitle.textContent = 'Processos de Requerimentos Negados';
+          crmTitle.textContent = 'Insucessos';
+          crmSubtitle.textContent = 'Processos e Oportunidades Não Concluídas';
         }
       }
 
@@ -4263,7 +4273,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.currentTab === 'operacao') {
       tabStages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
     } else if (window.currentTab === 'judicial') {
-      tabStages = ['negado', 'planejamento'];
+      tabStages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado'];
     }
 
     let query = supabase.from(getCurrentTable()).select('*').in('status', tabStages);
@@ -4594,7 +4604,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const operacaoStages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
         return operacaoStages.includes(cardStatus);
       } else if (window.currentTab === 'judicial') {
-        const judicialStages = ['negado', 'planejamento'];
+        const judicialStages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado'];
         return judicialStages.includes(cardStatus);
       }
     });
@@ -4918,7 +4928,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     targetCard.atualizado_em = nowIso;
 
     const staysInCurrentTab =
-      (window.currentTab === 'judicial' && ['negado', 'planejamento'].includes(actionValue)) ||
+      (window.currentTab === 'judicial' && ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado'].includes(actionValue)) ||
       (window.currentTab === 'comercial' && ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'].includes(actionValue)) ||
       (window.currentTab === 'operacao' && ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'].includes(actionValue));
 
@@ -5204,7 +5214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (window.currentTab === 'operacao') {
       stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
     } else if (window.currentTab === 'judicial') {
-      stages = ['negado', 'planejamento'];
+      stages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'desqualificado'];
     }
 
     stages.forEach(stage => {
@@ -6277,6 +6287,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Atualizar estado do botão de Comissão de SDR (apenas clicável em Operação)
       updateSdrCommissionUI(card);
 
+      // Atualizar aparência do botão de encerramento/devolução à fila (se estiver na aba Insucessos)
+      updateSheetCloseLeadBtnUI();
+
       // Atualizar estado do botão Switch Fechar Pasta / Reabrir Pasta
       updateFecharPastaUI(card);
 
@@ -6681,7 +6694,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (window.currentTab === 'operacao') {
         stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
       } else if (window.currentTab === 'judicial') {
-        stages = ['negado', 'planejamento'];
+        stages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado'];
       }
 
       const currentIndex = stages.indexOf(stage);
@@ -6934,16 +6947,79 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Botão e Dropdown Encerrar (Insucesso / Deletar Card)
+  // Botão e Dropdown Encerrar (Insucesso / Deletar Card / Devolver para Fila)
   const sheetCloseLeadBtn = document.getElementById('sheetCloseLeadBtn');
   const closeLeadMenu = document.getElementById('closeLeadMenu');
   const closeLeadDropdownWrapper = document.getElementById('closeLeadDropdownWrapper');
   const closeLeadDeleteBtn = document.getElementById('closeLeadDeleteBtn');
 
+  // Modal: Devolver para a Fila de Atendimento (Aba Insucessos)
+  const modalDevolverFilaConfirm = document.getElementById('modalDevolverFilaConfirm');
+  const closeDevolverFilaModal = document.getElementById('closeDevolverFilaModal');
+  const cancelDevolverFilaBtn = document.getElementById('cancelDevolverFilaBtn');
+  const confirmDevolverFilaBtn = document.getElementById('confirmDevolverFilaBtn');
+  const devolverFilaClientName = document.getElementById('devolverFilaClientName');
+
+  function closeDevolverFilaModalFn() {
+    if (modalDevolverFilaConfirm) modalDevolverFilaConfirm.classList.add('hidden');
+  }
+
+  if (closeDevolverFilaModal) closeDevolverFilaModal.addEventListener('click', closeDevolverFilaModalFn);
+  if (cancelDevolverFilaBtn) cancelDevolverFilaBtn.addEventListener('click', closeDevolverFilaModalFn);
+  window.addEventListener('click', (e) => {
+    if (e.target === modalDevolverFilaConfirm) closeDevolverFilaModalFn();
+  });
+
+  function updateSheetCloseLeadBtnUI() {
+    if (!sheetCloseLeadBtn) return;
+    if (window.currentTab === 'judicial') {
+      // Na aba Insucessos: botão para devolver o lead para a fila
+      sheetCloseLeadBtn.title = 'Devolver lead para a fila de atendimento';
+      sheetCloseLeadBtn.setAttribute('aria-label', 'Devolver lead para a fila de atendimento');
+      sheetCloseLeadBtn.innerHTML = '<i class="ti ti-rotate-clockwise" style="font-size: 18px;"></i>';
+      sheetCloseLeadBtn.classList.add('btn-devolver-fila');
+    } else {
+      // Nas demais abas: botão padrão de encerrar lead (menu de insucessos)
+      sheetCloseLeadBtn.title = 'Encerrar lead';
+      sheetCloseLeadBtn.setAttribute('aria-label', 'Encerrar lead');
+      sheetCloseLeadBtn.innerHTML = '<i class="ti ti-circle-x"></i>';
+      sheetCloseLeadBtn.classList.remove('btn-devolver-fila');
+    }
+  }
+
   if (sheetCloseLeadBtn && closeLeadMenu) {
     sheetCloseLeadBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      closeLeadMenu.classList.toggle('hidden');
+
+      if (window.currentTab === 'judicial') {
+        // Na aba Insucessos: abre pop-up para devolver o lead para a fila de atendimento
+        if (!currentActiveCard) return;
+        if (devolverFilaClientName) {
+          devolverFilaClientName.textContent = currentActiveCard.nome ? `"${currentActiveCard.nome}"` : 'este cliente';
+        }
+        if (modalDevolverFilaConfirm) modalDevolverFilaConfirm.classList.remove('hidden');
+      } else {
+        // Nas demais abas: abre menu suspenso de insucesso
+        closeLeadMenu.classList.toggle('hidden');
+      }
+    });
+  }
+
+  // Ação de confirmar retorno para a fila de atendimento (status: novo)
+  if (confirmDevolverFilaBtn) {
+    confirmDevolverFilaBtn.addEventListener('click', async () => {
+      if (!currentActiveCard) {
+        closeDevolverFilaModalFn();
+        return;
+      }
+
+      const targetCard = currentActiveCard;
+      closeDevolverFilaModalFn();
+      closeClientSheet();
+
+      // Altera o status para 'novo'
+      await changeCardStatus(targetCard, 'novo');
+      showToast(`Lead devolvido para a fila de atendimento com status "Novo"!`);
     });
   }
 
@@ -8520,7 +8596,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           } else if (window.currentTab === 'operacao') {
             stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
           } else if (window.currentTab === 'judicial') {
-            stages = ['negado', 'planejamento'];
+            stages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado'];
           }
 
           const currentIndex = stages.indexOf(currentActiveCard.status);
