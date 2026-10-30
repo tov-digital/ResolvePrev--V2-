@@ -18,6 +18,8 @@
   <link rel="stylesheet" href="styles.css?v=109">
   <!-- Chart.js para Dashboards e Gráficos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Google Identity Services (GIS) para autenticação do Google Calendar -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
       .browser-tab {
         color: var(--ink-muted) !important;
@@ -3479,42 +3481,27 @@ type="text" id="sheetCpf" placeholder="999.999.999-99" maxlength="14">
 
       <form id="agendarReuniaoForm" class="concedido-form-group" style="margin-top: 1.25rem;">
         <div class="form-row">
-          <label for="agendarReuniaoData" style="font-size: 0.84rem; font-weight: 600; color: var(--color-neutral); display: flex; align-items: center; gap: 4px;">
-            <i class="ti ti-calendar" style="font-size: 15px; color: var(--ink-muted);"></i>
-            Data da Reunião <span style="color: #ef4444;">*</span>
+          <label for="agendarReuniaoData" style="font-size: 0.84rem; font-weight: 600; color: var(--color-neutral); display: flex; align-items: center; justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 4px;">
+              <i class="ti ti-calendar" style="font-size: 15px; color: var(--ink-muted);"></i>
+              Data da Reunião <span style="color: #ef4444;">*</span>
+            </span>
+            <span id="agendarReuniaoLoadingSlots" class="hidden" style="font-size: 0.78rem; font-weight: 500; color: #0284c7; display: flex; align-items: center; gap: 4px;">
+              <i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i> Consultando agenda...
+            </span>
           </label>
           <input type="date" id="agendarReuniaoData" required />
         </div>
 
-        <div class="concedido-grid-2">
-          <div class="form-row">
-            <label for="agendarReuniaoHora" style="font-size: 0.84rem; font-weight: 600; color: var(--color-neutral); display: flex; align-items: center; gap: 4px;">
-              <i class="ti ti-clock" style="font-size: 15px; color: var(--ink-muted);"></i>
-              Hora <span style="color: #ef4444;">*</span>
-            </label>
-            <select id="agendarReuniaoHora" required style="width: 100%; height: 46px; background-color: var(--bg-input); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 0 0.85rem; font-family: var(--font-family); font-size: 0.9rem; color: var(--color-neutral); outline: none; cursor: pointer; transition: all var(--transition-fast);">
-              <option value="" disabled selected>Hora</option>
-              <option value="09">09h</option>
-              <option value="10">10h</option>
-              <option value="11">11h</option>
-              <option value="12">12h</option>
-              <option value="13">13h</option>
-              <option value="14">14h</option>
-              <option value="15">15h</option>
-              <option value="16">16h</option>
-            </select>
-          </div>
-
-          <div class="form-row">
-            <label for="agendarReuniaoMinuto" style="font-size: 0.84rem; font-weight: 600; color: var(--color-neutral); display: flex; align-items: center; gap: 4px;">
-              <i class="ti ti-clock-play" style="font-size: 15px; color: var(--ink-muted);"></i>
-              Minutos <span style="color: #ef4444;">*</span>
-            </label>
-            <select id="agendarReuniaoMinuto" required style="width: 100%; height: 46px; background-color: var(--bg-input); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 0 0.85rem; font-family: var(--font-family); font-size: 0.9rem; color: var(--color-neutral); outline: none; cursor: pointer; transition: all var(--transition-fast);">
-              <option value="00" selected>:00 min</option>
-              <option value="30">:30 min</option>
-            </select>
-          </div>
+        <div class="form-row">
+          <label for="agendarReuniaoHorarioSlot" style="font-size: 0.84rem; font-weight: 600; color: var(--color-neutral); display: flex; align-items: center; gap: 4px;">
+            <i class="ti ti-clock" style="font-size: 15px; color: var(--ink-muted);"></i>
+            Horário Disponível (Duração: 30 min) <span style="color: #ef4444;">*</span>
+          </label>
+          <select id="agendarReuniaoHorarioSlot" required disabled style="width: 100%; height: 46px; background-color: var(--surface-muted); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 0 0.85rem; font-family: var(--font-family); font-size: 0.9rem; color: var(--color-neutral); outline: none; cursor: not-allowed; transition: all var(--transition-fast);">
+            <option value="" disabled selected>Selecione primeiro uma data acima...</option>
+          </select>
+          <p id="agendarReuniaoAvisoStatus" style="font-size: 0.78rem; color: var(--ink-muted); margin: 4px 0 0 0;"></p>
         </div>
 
         <div class="modal-actions-row" style="margin-top: 1.75rem; justify-content: flex-end; gap: 10px;">
