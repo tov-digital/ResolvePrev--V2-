@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       return profile;
     }
     const name = profile.full_name || profile.nome_completo || profile.nome || profile.name ||
-                 profile.user_metadata?.full_name || profile.user_metadata?.name ||
-                 profile.raw_user_meta_data?.full_name || profile.raw_user_meta_data?.name;
+      profile.user_metadata?.full_name || profile.user_metadata?.name ||
+      profile.raw_user_meta_data?.full_name || profile.raw_user_meta_data?.name;
 
     if (name && typeof name === 'string' && name.trim() !== '') {
       return name.trim();
@@ -96,18 +96,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const navItems = document.querySelectorAll('.nav-item[data-tab]');
   const crmTitle = document.querySelector('.crm-title');
   const crmSubtitle = document.querySelector('.crm-subtitle');
-  
+
   navItems.forEach(item => {
     item.addEventListener('click', async (e) => {
       e.preventDefault();
-      
+
       // Atualiza aba ativa visualmente
       navItems.forEach(nav => nav.classList.remove('active'));
       item.classList.add('active');
-      
+
       // Atualiza o estado
       window.currentTab = item.dataset.tab;
-      
+
       // Sempre que abrir uma aba do menu, restaura a visão para Kanban por padrão e limpa os filtros
       resetFilters();
       const vKanbanBtn = document.getElementById('viewKanbanBtn');
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         crmTitle.textContent = 'Judicial';
         crmSubtitle.textContent = 'Processos de Requerimentos Negados';
       }
-      
+
       // Exibe/Oculta colunas do Kanban com base na aba
       document.querySelectorAll('.kanban-column').forEach(col => {
         if (col.dataset.tab === window.currentTab) {
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           opt.classList.add('hidden');
         }
       });
-      
+
       // Atualiza visibilidade dos chips de status no painel de filtros
       if (typeof updateFilterStatusOptionsVisibility === 'function') {
         updateFilterStatusOptionsVisibility();
@@ -704,11 +704,11 @@ document.addEventListener('DOMContentLoaded', async () => {
               cornerRadius: 8,
               displayColors: false,
               callbacks: {
-                title: function(items) {
+                title: function (items) {
                   const idx = items[0].dataIndex;
                   return months[idx].fullLabel;
                 },
-                label: function(item) {
+                label: function (item) {
                   const count = item.raw;
                   return `${count} ${count === 1 ? 'requerimento' : 'requerimentos'}`;
                 }
@@ -762,12 +762,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ==========================================================================
      MÓDULO DE MARKETING - DASHBOARD ADMIN
      ========================================================================== */
-  
+
   // Estado do Filtro de Período de Marketing
   const nowMkt = new Date();
   let mktFilterStartDate = new Date(nowMkt.getFullYear(), nowMkt.getMonth(), 1);
   let mktFilterEndDate = new Date(nowMkt.getFullYear(), nowMkt.getMonth() + 1, 0, 23, 59, 59, 999);
-  
+
   let mktCalViewYear = nowMkt.getFullYear();
   let mktCalViewMonth = nowMkt.getMonth(); // 0-11
   let mktSelectingStart = null; // Data temporária ao selecionar primeiro clique no calendário
@@ -1468,11 +1468,11 @@ document.addEventListener('DOMContentLoaded', async () => {
               cornerRadius: 8,
               displayColors: false,
               callbacks: {
-                title: function(items) {
+                title: function (items) {
                   const idx = items[0].dataIndex;
                   return `${monthNamesPt[idx]} de ${year}`;
                 },
-                label: function(item) {
+                label: function (item) {
                   const val = item.raw;
                   if (mktSelectedMetric === 'investimento' || mktSelectedMetric === 'cpl') {
                     return `${metricName}: R$ XX`;
@@ -1508,7 +1508,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   weight: '500'
                 },
                 color: '#94A3B8',
-                callback: function(val) {
+                callback: function (val) {
                   if (mktSelectedMetric === 'investimento' || mktSelectedMetric === 'cpl') {
                     return `${yUnitPrefix}${val}`;
                   }
@@ -2101,7 +2101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Globais para ações da tabela
-  window.switchAdminTab = function(tabName) {
+  window.switchAdminTab = function (tabName) {
     if (tabName === 'users') {
       const usersNavBtn = document.querySelector('[data-admin-tab="users"]');
       if (usersNavBtn) usersNavBtn.click();
@@ -2110,7 +2110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  window.openEditUserModal = function(userId) {
+  window.openEditUserModal = function (userId) {
     const user = cachedUsersList.find(u => u.id === userId);
     if (!user) return;
     document.getElementById('adminEditUserId').value = user.id;
@@ -2125,7 +2125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('modalAdminEditUser').classList.remove('hidden');
   };
 
-  window.openDeleteUserModal = function(userId) {
+  window.openDeleteUserModal = function (userId) {
     const user = cachedUsersList.find(u => u.id === userId);
     if (!user) return;
     document.getElementById('adminDeleteUserId').value = user.id;
@@ -2243,7 +2243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             newUserId = edgeRes.data.user.id;
           }
         } else if (edgeRes && edgeRes.error) {
-          const isNetworkOrNotDeployed = 
+          const isNetworkOrNotDeployed =
             edgeRes.error.toLowerCase().includes('failed to send') ||
             edgeRes.error.toLowerCase().includes('functions_fetch_error') ||
             edgeRes.error.toLowerCase().includes('not found') ||
@@ -2341,7 +2341,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (edgeRes && edgeRes.success) {
           edgeHandled = true;
         } else if (edgeRes && edgeRes.error) {
-          const isNetworkOrNotDeployed = 
+          const isNetworkOrNotDeployed =
             edgeRes.error.toLowerCase().includes('failed to send') ||
             edgeRes.error.toLowerCase().includes('functions_fetch_error') ||
             edgeRes.error.toLowerCase().includes('not found') ||
@@ -2905,7 +2905,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Helper para gerar o botão de status somente com ícone
     function renderStatusBadge(item) {
       let status = item.status || 'Pendente';
-      
+
       // Normalização de nomes legados
       if (status === 'Recebido') status = 'Pago';
       if (status === 'A Pagar') status = 'Pendente';
@@ -3262,7 +3262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         catSelect.value = item.categoria || optionsList[0];
       }
-      
+
       const dateVal = item.data ? (item.data.includes('T') ? item.data.split('T')[0] : item.data) : '';
       document.getElementById('editFinData').value = dateVal;
 
@@ -3346,7 +3346,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               salvo = true;
             }
           }
-        } catch (err) {}
+        } catch (err) { }
 
         if (submitEditFinanceiroBtn) submitEditFinanceiroBtn.disabled = false;
         modalEditFinanceiro.classList.add('hidden');
@@ -3398,7 +3398,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem(STORAGE_KEY_DESPESAS, JSON.stringify(listDesp));
               }
             }
-          } catch (err) {}
+          } catch (err) { }
 
           await renderFinancialData(true);
         }
@@ -3458,7 +3458,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const listDesp = JSON.parse(rawDesp).filter(item => item.id !== id);
           localStorage.setItem(STORAGE_KEY_DESPESAS, JSON.stringify(listDesp));
         }
-      } catch (err) {}
+      } catch (err) { }
 
       await renderFinancialData();
       showToast('Lançamento removido com sucesso!');
@@ -3480,7 +3480,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   togglePasswordBtn.addEventListener('click', () => {
     const isPassword = passwordInput.getAttribute('type') === 'password';
     passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
-    
+
     if (isPassword) {
       eyeIcon.classList.add('hidden');
       eyeOffIcon.classList.remove('hidden');
@@ -3942,17 +3942,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ==========================================
      BULK ACTION BAR — SELEÇÃO EM MASSA
      ========================================== */
-  const listBulkBar       = document.getElementById('listBulkBar');
-  const bulkBarCount      = document.getElementById('bulkBarCount');
-  const btnBulkAssign     = document.getElementById('btnBulkAssign');
-  const btnBulkDeselect   = document.getElementById('btnBulkDeselect');
-  const modalBulkAssign   = document.getElementById('modalBulkAssign');
-  const closeBulkAssignModal  = document.getElementById('closeBulkAssignModal');
-  const cancelBulkAssignBtn   = document.getElementById('cancelBulkAssignBtn');
-  const confirmBulkAssignBtn  = document.getElementById('confirmBulkAssignBtn');
-  const bulkAssignUserList    = document.getElementById('bulkAssignUserList');
-  const bulkAssignDesc        = document.getElementById('bulkAssignDesc');
-  const bulkAssignBtnText     = document.getElementById('bulkAssignBtnText');
+  const listBulkBar = document.getElementById('listBulkBar');
+  const bulkBarCount = document.getElementById('bulkBarCount');
+  const btnBulkAssign = document.getElementById('btnBulkAssign');
+  const btnBulkDeselect = document.getElementById('btnBulkDeselect');
+  const modalBulkAssign = document.getElementById('modalBulkAssign');
+  const closeBulkAssignModal = document.getElementById('closeBulkAssignModal');
+  const cancelBulkAssignBtn = document.getElementById('cancelBulkAssignBtn');
+  const confirmBulkAssignBtn = document.getElementById('confirmBulkAssignBtn');
+  const bulkAssignUserList = document.getElementById('bulkAssignUserList');
+  const bulkAssignDesc = document.getElementById('bulkAssignDesc');
+  const bulkAssignBtnText = document.getElementById('bulkAssignBtnText');
   let selectedBulkUserId = null;
 
   // Atualiza visibilidade da barra de ações em massa
@@ -4068,9 +4068,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     selectedBulkUserId = null;
   }
 
-  if (btnBulkAssign)       btnBulkAssign.addEventListener('click', openBulkAssignModal);
+  if (btnBulkAssign) btnBulkAssign.addEventListener('click', openBulkAssignModal);
   if (closeBulkAssignModal) closeBulkAssignModal.addEventListener('click', closeBulkAssignModalFn);
-  if (cancelBulkAssignBtn)  cancelBulkAssignBtn.addEventListener('click', closeBulkAssignModalFn);
+  if (cancelBulkAssignBtn) cancelBulkAssignBtn.addEventListener('click', closeBulkAssignModalFn);
 
   window.addEventListener('click', (e) => {
     if (e.target === modalBulkAssign) closeBulkAssignModalFn();
@@ -4138,7 +4138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const column = btnAdd.closest('.kanban-column');
         const defaultStage = window.currentTab === 'comercial' ? 'novo' : 'documentacao';
         const stage = column ? column.dataset.stage : defaultStage;
-        
+
         // Dados Padrão para novo card (Documentos Obrigatórios iniciam como 'Pendente')
         const defaultData = {
           nome: 'Novo Cliente',
@@ -4310,22 +4310,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       const opDivider = document.getElementById('filterOperatorDivider');
       const opSection = document.getElementById('filterOperatorSection');
       const opSelect = document.getElementById('filterOperatorSelect');
-      
+
       if (opDivider) opDivider.style.display = 'block';
       if (opSection) opSection.style.display = 'flex'; // ou block
-      
+
       if (opSelect) {
         const uniqueUserIds = [...new Set(allUserCards.map(c => c.user_id).filter(Boolean))];
-        
+
         window.crmProfilesCache = window.crmProfilesCache || [];
         if (window.crmProfilesCache.length === 0) {
           const { data: profiles } = await supabase.from('profiles').select('*');
           if (profiles) window.crmProfilesCache = profiles;
         }
-        
+
         const currentSelected = opSelect.value;
         opSelect.innerHTML = '<option value="">Todos</option><option value="unassigned">Não atribuído</option>';
-        
+
         uniqueUserIds.forEach(uId => {
           const prof = window.crmProfilesCache.find(p => p.id === uId);
           const name = prof ? getUserDisplayName(prof) : 'Usuário Desconhecido';
@@ -4334,16 +4334,16 @@ document.addEventListener('DOMContentLoaded', async () => {
           opt.textContent = name;
           opSelect.appendChild(opt);
         });
-        
+
         if (uniqueUserIds.includes(currentSelected) || currentSelected === 'unassigned') {
           opSelect.value = currentSelected;
         }
       }
     } else {
-       const opDivider = document.getElementById('filterOperatorDivider');
-       const opSection = document.getElementById('filterOperatorSection');
-       if (opDivider) opDivider.style.display = 'none';
-       if (opSection) opSection.style.display = 'none';
+      const opDivider = document.getElementById('filterOperatorDivider');
+      const opSection = document.getElementById('filterOperatorSection');
+      if (opDivider) opDivider.style.display = 'none';
+      if (opSection) opSection.style.display = 'none';
     }
 
     const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
@@ -4353,24 +4353,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ==========================================
      PAINEL DE FILTROS
      ========================================== */
-  const filterPanel       = document.getElementById('filterPanel');
+  const filterPanel = document.getElementById('filterPanel');
   const filterDropWrapper = document.getElementById('filterDropdownWrapper');
-  const filterApplyBtn    = document.getElementById('filterApplyBtn');
-  const filterClearBtn    = document.getElementById('filterClearBtn');
+  const filterApplyBtn = document.getElementById('filterApplyBtn');
+  const filterClearBtn = document.getElementById('filterClearBtn');
   const filterActiveBadge = document.getElementById('filterActiveBadge');
 
   // Estado ativo dos filtros (aplicados ao clicar em "Aplicar")
   let activeStatusFilters = []; // array de strings e.g. ['novo','proposta']
-  let activeDateFilter    = ''; // string e.g. 'menos7'
+  let activeDateFilter = ''; // string e.g. 'menos7'
   let activeOperatorFilter = ''; // string, id do operador
-  let activeSortMode      = 'nome'; // 'nome' | 'data_requerimento' | 'created_at' | 'updated_at'
+  let activeSortMode = 'nome'; // 'nome' | 'data_requerimento' | 'created_at' | 'updated_at'
   let activeProductFilter = 'Aposentadoria'; // 'Aposentadoria' (padrão) | 'Salário-Maternidade'
 
   // Dropdown e lógica de Produto
-  const crmProductBtnEl       = document.getElementById('crmProductBtn');
-  const productPanel          = document.getElementById('productPanel');
-  const productDropWrapper    = document.getElementById('productDropdownWrapper');
-  const crmProductBtnLabel    = document.getElementById('crmProductBtnLabel');
+  const crmProductBtnEl = document.getElementById('crmProductBtn');
+  const productPanel = document.getElementById('productPanel');
+  const productDropWrapper = document.getElementById('productDropdownWrapper');
+  const crmProductBtnLabel = document.getElementById('crmProductBtnLabel');
 
   if (crmProductBtnEl && productPanel) {
     crmProductBtnEl.addEventListener('click', (e) => {
@@ -4409,8 +4409,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Dropdown e lógica de Ordenação
-  const crmSortBtnEl    = document.getElementById('crmSortBtn');
-  const sortPanel       = document.getElementById('sortPanel');
+  const crmSortBtnEl = document.getElementById('crmSortBtn');
+  const sortPanel = document.getElementById('sortPanel');
   const sortDropWrapper = document.getElementById('sortDropdownWrapper');
 
   if (crmSortBtnEl && sortPanel) {
@@ -4563,7 +4563,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (anyDateRadio) anyDateRadio.checked = true;
       activeStatusFilters = [];
       activeDateFilter = '';
-      
+
       const opSelect = document.getElementById('filterOperatorSelect');
       if (opSelect) opSelect.value = '';
       activeOperatorFilter = '';
@@ -4604,9 +4604,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const cleanSearchTerm = searchTerm.replace(/\D/g, '');
       filtered = filtered.filter(card => {
         const nameMatch = card.nome && card.nome.toLowerCase().includes(searchTerm);
-        const rawPhone  = card.telefone ? card.telefone.replace(/\D/g, '') : '';
+        const rawPhone = card.telefone ? card.telefone.replace(/\D/g, '') : '';
         const phoneFormattedMatch = card.telefone && card.telefone.toLowerCase().includes(searchTerm);
-        const phoneDigitsMatch    = cleanSearchTerm && rawPhone.includes(cleanSearchTerm);
+        const phoneDigitsMatch = cleanSearchTerm && rawPhone.includes(cleanSearchTerm);
         return nameMatch || phoneFormattedMatch || phoneDigitsMatch;
       });
     }
@@ -4634,8 +4634,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (diff === null) return false;
         switch (activeDateFilter) {
           case 'vencidos': return diff < 0;                  // data já passou (Roxo)
-          case 'menos7':   return diff >= 0 && diff <= 7;   // em até uma semana (Vermelho)
-          case 'menos30':  return diff > 7 && diff <= 30;   // entre 8 e 30 dias (Amarelo)
+          case 'menos7': return diff >= 0 && diff <= 7;   // em até uma semana (Vermelho)
+          case 'menos30': return diff > 7 && diff <= 30;   // entre 8 e 30 dias (Amarelo)
           case 'menos365': return diff > 30 && diff <= 365; // entre 31 e 365 dias (Azul)
           default: return true;
         }
@@ -4692,11 +4692,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const today = new Date(); today.setHours(0, 0, 0, 0);
         const target = new Date(year, month - 1, day); target.setHours(0, 0, 0, 0);
         const diff = Math.ceil((target - today) / 86400000);
-        if (diff < 0)         dateClass = 'date-purple';
-        else if (diff <= 7)   dateClass = 'date-red';
-        else if (diff <= 30)  dateClass = 'date-yellow';
+        if (diff < 0) dateClass = 'date-purple';
+        else if (diff <= 7) dateClass = 'date-red';
+        else if (diff <= 30) dateClass = 'date-yellow';
         else if (diff <= 365) dateClass = 'date-blue';
-        else                  dateClass = 'date-gray';
+        else dateClass = 'date-gray';
       }
 
       // ---- WhatsApp link ----
@@ -4704,7 +4704,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const waUrl = rawPhone ? `https://web.whatsapp.com/send/?phone=55${rawPhone}` : '#';
 
       // ---- Status badge ----
-      const statusLabels = { 
+      const statusLabels = {
         novo: 'Novo', qualificacao: 'Qualificação', acompanhamento: 'Acompanhamento', reuniao: 'Reunião', proposta: 'Proposta', planejamento: 'Planejamento',
         documentacao: 'Documentação', na_fila: 'Na Fila', requerido: 'Requerido', exigencia: 'Exigência', concedido: 'Concedido'
       };
@@ -5073,7 +5073,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const nowIso = new Date().toISOString();
         const { error } = await supabase
           .from(getCurrentTable())
-          .update({ 
+          .update({
             data_requerimento: newDate,
             atualizado_em: nowIso
           })
@@ -5214,7 +5214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const container = column.querySelector('.kanban-cards-container');
         const countSpan = column.querySelector('.column-count');
         container.innerHTML = '';
-        
+
         // Filtrar cards da coluna e ordenar
         const stageCards = cards.filter(c => c.status === stage).sort(sortCardsByActiveMode);
 
@@ -5398,7 +5398,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     cardObj.status = newStage;
     cardObj.atualizado_em = nowIso;
-    
+
     const searchTerm = crmSearchInput ? crmSearchInput.value.toLowerCase().trim() : '';
     filterAndRenderCards(searchTerm);
 
@@ -5409,7 +5409,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (supabase) {
       const { error } = await supabase
         .from(getCurrentTable())
-        .update({ 
+        .update({
           status: newStage,
           atualizado_em: nowIso
         })
@@ -5457,7 +5457,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     proposalCardTarget = card;
     proposalNewStatusTarget = newStatus;
     if (proposalClientName) proposalClientName.textContent = `"${card.nome}"`;
-    
+
     // Reseta para Email por padrão
     const defaultRadio = document.querySelector('input[name="proposalChannel"][value="Email"]');
     if (defaultRadio) {
@@ -5557,7 +5557,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const concedidoAtrasoDiasInput = document.getElementById('concedidoAtrasoDias');
   const concedidoRetroativoInput = document.getElementById('concedidoRetroativo');
   const concedidoPrimeiroPagamentoInput = document.getElementById('concedidoPrimeiroPagamento');
-  
+
   let concedidoCardTarget = null;
   let concedidoNewStatusTarget = null;
 
@@ -5608,7 +5608,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function openConcedidoModal(card, newStatus) {
     concedidoCardTarget = card;
     concedidoNewStatusTarget = newStatus;
-    
+
     if (concedidoClienteInput) concedidoClienteInput.value = card.nome || '';
     if (concedidoCategoriaInput) concedidoCategoriaInput.value = 'Honorários';
     if (concedidoRMIInput) concedidoRMIInput.value = '';
@@ -5972,12 +5972,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         let year = new Date().getFullYear();
         let day = '';
         let month = '';
-        
+
         if (parts.length >= 2) {
           day = parts[0].padStart(2, '0');
           month = parts[1].padStart(2, '0');
         }
-        
+
         if (parts.length === 3) {
           if (parts[2].length === 2) year = (parseInt(parts[2]) > 50 ? '19' : '20') + parts[2];
           else year = parts[2];
@@ -5997,7 +5997,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           sheetDataNascimento.dispatchEvent(new Event('input'));
           saveClientData(true);
         }
-        
+
         e.target.value = `${day}/${month}`;
       }
     });
@@ -6018,7 +6018,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const nowIso = new Date().toISOString();
       const { error } = await supabase
         .from(getCurrentTable())
-        .update({ 
+        .update({
           nome: newName,
           atualizado_em: nowIso
         })
@@ -6048,7 +6048,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function openClientSheetModal(card) {
     try {
       currentActiveCard = card;
-      
+
       // Preencher Nome (Título editável)
       const inputName = document.getElementById('sheetClientNameInput');
       if (inputName) inputName.value = card.nome || '';
@@ -6074,7 +6074,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (sheetReassignBtnEl) sheetReassignBtnEl.title = 'Clique para atribuir a um usuário';
         }
       }
-      
+
       // Preencher etiqueta e botão de código / Google Drive (Guia Documentos)
       const docsCardCodeTag = document.getElementById('docsCardCodeTag');
       if (docsCardCodeTag) {
@@ -6115,7 +6115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           };
         }
       }
-      
+
       // Preencher demais campos da Ficha com segurança
       const elPhone = document.getElementById('sheetPhone');
       if (elPhone) {
@@ -6143,17 +6143,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (card.data_nascimento) {
         let rawDate = card.data_nascimento.split('T')[0];
         if (rawDate.includes('/')) {
-            const p = rawDate.split('/');
-            if (p.length === 3) {
-                if (p[2].length === 4) isoDateNascimento = `${p[2]}-${p[1]}-${p[0]}`;
-                else if (p[0].length === 4) isoDateNascimento = `${p[0]}-${p[1]}-${p[2]}`;
-            }
+          const p = rawDate.split('/');
+          if (p.length === 3) {
+            if (p[2].length === 4) isoDateNascimento = `${p[2]}-${p[1]}-${p[0]}`;
+            else if (p[0].length === 4) isoDateNascimento = `${p[0]}-${p[1]}-${p[2]}`;
+          }
         } else if (rawDate.includes('-')) {
-            const p = rawDate.split('-');
-            if (p.length === 3) {
-                if (p[2].length === 4) isoDateNascimento = `${p[2]}-${p[1]}-${p[0]}`;
-                else if (p[0].length === 4) isoDateNascimento = `${p[0]}-${p[1]}-${p[2]}`;
-            }
+          const p = rawDate.split('-');
+          if (p.length === 3) {
+            if (p[2].length === 4) isoDateNascimento = `${p[2]}-${p[1]}-${p[0]}`;
+            else if (p[0].length === 4) isoDateNascimento = `${p[0]}-${p[1]}-${p[2]}`;
+          }
         }
       }
       if (elDataNascimento) {
@@ -6185,7 +6185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Atualizar stats do topo
       const statIdade = document.getElementById('statIdade');
       if (statIdade) statIdade.textContent = isoDateNascimento ? calculateAge(isoDateNascimento) : '-';
-      
+
       const statAniversario = document.getElementById('statAniversario');
       if (statAniversario) {
         if (isoDateNascimento && isoDateNascimento.length >= 10) {
@@ -6243,7 +6243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               const minStr = String(dt.getMinutes()).padStart(2, '0');
               reuniaoFormatada = `${dStr}/${mStr} - ${hStr}:${minStr}`;
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         if (reuniaoFormatada) {
@@ -6351,7 +6351,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const docKey = badge.dataset.docKey;
       const currentStatus = badge.dataset.status || 'Pendente';
-      
+
       // Encontrar o próximo status no ciclo: Pendente -> Solicitado -> Validar -> Recebido -> Corrigir -> Pendente
       const currentIndex = docStatusOrder.indexOf(currentStatus);
       const nextIndex = (currentIndex + 1) % docStatusOrder.length;
@@ -6368,7 +6368,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Gravar alteração na coluna correspondente da tabela no Supabase
       const { error } = await supabase
         .from(getCurrentTable())
-        .update({ 
+        .update({
           [docKey]: newStatus,
           atualizado_em: nowIso
         })
@@ -6478,7 +6478,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const nowIso = new Date().toISOString();
     const { error } = await supabase
       .from(getCurrentTable())
-      .update({ 
+      .update({
         eventuais: updatedDocsArray,
         atualizado_em: nowIso
       })
@@ -6564,7 +6564,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (rawDataNascimento && rawDataNascimento.length === 10) {
       let oldRaw = currentActiveCard.data_nascimento ? currentActiveCard.data_nascimento.split('T')[0] : '';
-      
+
       if (rawDataNascimento !== oldRaw) {
         const genero = currentActiveCard.genero || currentActiveCard.sexo || '';
         const generoUpper = typeof genero === 'string' ? genero.toUpperCase() : '';
@@ -6595,7 +6595,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const updatedAnswers = {
       servico_militar: document.getElementById('respServicoMilitar') ? document.getElementById('respServicoMilitar').value : 'Não',
-        ja_contribuiu: respJaContribuiu ? respJaContribuiu.value : '',
+      ja_contribuiu: respJaContribuiu ? respJaContribuiu.value : '',
       tempo_contribuicao: respTempoContribuicao && respTempoContribuicao.value !== '' ? parseInt(respTempoContribuicao.value, 10) : null,
       tipo_trabalho: respTipoTrabalho ? respTipoTrabalho.value : '',
       solicitou_beneficio: respSolicitouBeneficio ? respSolicitouBeneficio.value : '',
@@ -6603,8 +6603,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       detalhes: respDetalhes ? respDetalhes.value.trim() : ''
     };
 
-    const finalData = { 
-      ...updatedData, 
+    const finalData = {
+      ...updatedData,
       ...updatedAnswers,
       atualizado_em: new Date().toISOString()
     };
@@ -6651,7 +6651,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (sheetStatusDot) {
       sheetStatusDot.className = 'status-tag-dot ' + (stageDotClasses[stage] || 'dot-novo');
     }
-    
+
     // Atualizar próxima etapa
     const nextStepLabel = document.getElementById('nextStepLabel');
     if (nextStepLabel) {
@@ -6663,7 +6663,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (window.currentTab === 'judicial') {
         stages = ['negado', 'planejamento'];
       }
-      
+
       const currentIndex = stages.indexOf(stage);
       if (currentIndex !== -1 && currentIndex < stages.length - 1) {
         const nextStage = stages[currentIndex + 1];
@@ -6840,7 +6840,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       currentActiveCard.atualizado_em = nowIso;
       const { error } = await supabase
         .from(getCurrentTable())
-        .update({ 
+        .update({
           notas_internas: notes,
           atualizado_em: nowIso
         })
@@ -6871,7 +6871,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Toggle do Dropdown de Etiqueta (Status)
-    // Toggle do Dropdown de Etiqueta (Status)
+  // Toggle do Dropdown de Etiqueta (Status)
   const statusBtnEl = document.getElementById('sheetStatusDropdownBtn');
   const statusMenuEl = document.getElementById('statusDropdownMenu');
   if (statusBtnEl && statusMenuEl) {
@@ -7104,7 +7104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const nowIso = new Date().toISOString();
         const { error } = await supabase
           .from(getCurrentTable())
-          .update({ 
+          .update({
             user_id: profile.id,
             atualizado_em: nowIso
           })
@@ -7236,7 +7236,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function openAddInfoModal(fieldId, originalLabel) {
     if (!modalAddInfo) return;
-    
+
     // Configuração das perguntas dinâmicas por campo
     const questionsConfig = {
       'respTempoContribuicao': [
@@ -7333,7 +7333,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (val === 'Trabalhador rural') {
           noteText = 'Sem a documentação correta, é quase impossível, no administrativo, o INSS aprovar a aposentadoria rural, e no judicial, levará, em média, de 3 a 4 anos.';
         }
-        
+
         if (noteText) {
           html += generateExpandableNoteHTML(noteText);
         }
@@ -7349,7 +7349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         `;
       }).join('');
-      
+
       addInfoDynamicFields.innerHTML = html;
     }
 
@@ -7371,7 +7371,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const label = flexContainer ? flexContainer.querySelector('label') : null;
       const fieldId = label ? label.getAttribute('for') : null;
       const questionText = label ? label.textContent.trim() : 'Pergunta selecionada';
-      
+
       if (fieldId === 'respTipoTrabalho') {
         const selectEl = document.getElementById(fieldId);
         if (selectEl && selectEl.value === 'Servidor público') {
@@ -7426,7 +7426,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (confirmAddInfoBtn) {
     confirmAddInfoBtn.addEventListener('click', () => {
       if (!addInfoDynamicFields) return;
-      
+
       const respDetalhes = document.getElementById('respDetalhes');
       if (!respDetalhes) return;
 
@@ -7435,14 +7435,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Coleta todos os inputs do modal
       const inputs = addInfoDynamicFields.querySelectorAll('textarea, input');
-      
+
       inputs.forEach(input => {
         const val = input.value.trim();
         if (!val) {
           hasEmptyFields = true;
           return;
         }
-        
+
         const label = addInfoDynamicFields.querySelector(`label[for="${input.id}"]`);
         const questionText = label ? label.textContent.trim() : 'Informação Adicional';
 
@@ -7462,7 +7462,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
           respDetalhes.value = newInfoText;
         }
-        
+
         showToast('Informação transferida para os detalhes!');
         closeAddInfoModalHandler();
       }
@@ -7529,7 +7529,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const label = document.getElementById('labelServicoMilitar');
     const text = document.getElementById('textServicoMilitar');
     const input = document.getElementById('respServicoMilitar');
-    
+
     if (!btn || !label || !text || !input) return;
 
     if (val === 'Sim') {
@@ -7675,7 +7675,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (agendarReuniaoLoadingSlots) agendarReuniaoLoadingSlots.classList.add('hidden');
     }
 
-    // Filtrar horários ocupados
+    // Exibir apenas os horários realmente DISPONÍVEIS
     agendarReuniaoHorarioSlot.innerHTML = '<option value="" disabled selected>Selecione o horário desejado...</option>';
     let countDisponiveis = 0;
 
@@ -7689,18 +7689,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return (slotStart < bEnd && slotEnd > bStart);
       });
 
-      const opt = document.createElement('option');
-      opt.value = `${slot.hora}:${slot.minuto}`;
-      if (isBusy) {
-        opt.disabled = true;
-        opt.textContent = `${slot.label} (Ocupado)`;
-        opt.style.color = 'var(--ink-muted)';
-      } else {
-        opt.textContent = `${slot.label} (Disponível)`;
-        countDisponiveis++;
-      }
-      agendarReuniaoHorarioSlot.appendChild(opt);
-    });
+        // Se estiver ocupado na agenda, não exibe como opção
+        if (!isBusy) {
+          const opt = document.createElement('option');
+          opt.value = `${slot.hora}:${slot.minuto}`;
+          opt.textContent = `${slot.label}`;
+          agendarReuniaoHorarioSlot.appendChild(opt);
+          countDisponiveis++;
+        }
+      });
 
     agendarReuniaoHorarioSlot.disabled = false;
     agendarReuniaoHorarioSlot.style.cursor = 'pointer';
@@ -7735,8 +7732,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       if (agendarReuniaoSubtitulo) {
-        agendarReuniaoSubtitulo.textContent = currentActiveCard.nome 
-          ? `Cliente: ${currentActiveCard.nome}` 
+        agendarReuniaoSubtitulo.textContent = currentActiveCard.nome
+          ? `Cliente: ${currentActiveCard.nome}`
           : 'Selecione data e horário para a reunião';
       }
       resetarCamposAgendamento();
@@ -7880,7 +7877,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (modalBtnMoverEtapa) {
     modalBtnMoverEtapa.addEventListener('click', async () => {
       if (!currentActiveCard) return;
-      
+
       let stages = [];
       if (window.currentTab === 'comercial') {
         stages = ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'];
@@ -7889,15 +7886,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (window.currentTab === 'judicial') {
         stages = ['negado', 'planejamento'];
       }
-      
+
       const currentIndex = stages.indexOf(currentActiveCard.status);
       if (currentIndex === -1 || currentIndex === stages.length - 1) {
         showToast('O card j est na ltima etapa.');
         return;
       }
-      
+
       const targetStage = stages[currentIndex + 1];
-      
+
       if (targetStage === 'proposta') {
         openProposalModal(currentActiveCard, targetStage);
         closeModal(modalClientSheet);
@@ -7908,7 +7905,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         closeModal(modalClientSheet);
         return;
       }
-      
+
       await changeCardStatus(currentActiveCard, targetStage);
       closeModal(modalClientSheet);
     });
@@ -7962,11 +7959,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const trigger = document.createElement('div');
       trigger.className = 'custom-select-trigger';
-      
+
       const textSpan = document.createElement('span');
       textSpan.textContent = select.options[select.selectedIndex]?.text || 'Selecione...';
-      
-            trigger.appendChild(textSpan);
+
+      trigger.appendChild(textSpan);
 
       const menu = document.createElement('div');
       menu.className = 'custom-select-menu';
@@ -7981,10 +7978,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           e.stopPropagation();
           select.value = opt.value;
           textSpan.textContent = opt.text;
-          
+
           Array.from(menu.children).forEach(c => c.classList.remove('selected'));
           optionEl.classList.add('selected');
-          
+
           menu.classList.remove('show');
           select.dispatchEvent(new Event('change', { bubbles: true }));
         });
@@ -8064,28 +8061,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   const questionsConfigOverride = {
-      'respTempoContribuicao': [
-        { id: 'addInfoMilitar', label: 'Prestou serviço militar?', type: 'textarea' }
-      ],
-      'respSolicitouBeneficio': [
-        { id: 'addInfoMotivoNegativa', label: 'Se tentou e foi negado, qual foi o motivo da negativa?', type: 'textarea' },
-        { id: 'addInfoNovoPedido', label: 'Foi feito um novo pedido ou protocolado algum processo?', type: 'textarea' }
-      ],
-      'respJaContribuiu': [
-        { id: 'addInfoTempoParou', label: 'Há quanto tempo parou de contribuir?', type: 'textarea' },
-        { id: 'addInfoQualidadeSegurado', label: 'Você sabe se ainda tem qualidade de segurado?', type: 'textarea' },
-        { id: 'addInfo120Contribuicoes', label: 'Sabe se fez mais de 120 contribuições sem interrupção?', type: 'textarea' },
-        { id: 'addInfo12MesesSem', label: 'Sabe se ficou um período maior que 12 meses sem contribuir?', type: 'textarea' }
-      ],
-      'respExerceuAtividadeEspecial': [
-        { id: 'addInfoAtivEspecial1', label: 'Por quanto tempo, e qual era a atividade?', type: 'textarea' },
-        { id: 'addInfoAtivEspecial2', label: 'As empresas ainda existem, caso precise fazer alguma correção ou pedir documentos?', type: 'textarea' },
-        { id: 'addInfoAtivEspecial3', label: 'Sabe a classificação de exposição aos agentes nocivos?', type: 'textarea' },
-        { id: 'addInfoAtivEspecial4', label: 'Sabe se o uso de EPIs neutraliza a exposição a ponto de anular o direito?', type: 'textarea' }
-      ]
+    'respTempoContribuicao': [
+      { id: 'addInfoMilitar', label: 'Prestou serviço militar?', type: 'textarea' }
+    ],
+    'respSolicitouBeneficio': [
+      { id: 'addInfoMotivoNegativa', label: 'Se tentou e foi negado, qual foi o motivo da negativa?', type: 'textarea' },
+      { id: 'addInfoNovoPedido', label: 'Foi feito um novo pedido ou protocolado algum processo?', type: 'textarea' }
+    ],
+    'respJaContribuiu': [
+      { id: 'addInfoTempoParou', label: 'Há quanto tempo parou de contribuir?', type: 'textarea' },
+      { id: 'addInfoQualidadeSegurado', label: 'Você sabe se ainda tem qualidade de segurado?', type: 'textarea' },
+      { id: 'addInfo120Contribuicoes', label: 'Sabe se fez mais de 120 contribuições sem interrupção?', type: 'textarea' },
+      { id: 'addInfo12MesesSem', label: 'Sabe se ficou um período maior que 12 meses sem contribuir?', type: 'textarea' }
+    ],
+    'respExerceuAtividadeEspecial': [
+      { id: 'addInfoAtivEspecial1', label: 'Por quanto tempo, e qual era a atividade?', type: 'textarea' },
+      { id: 'addInfoAtivEspecial2', label: 'As empresas ainda existem, caso precise fazer alguma correção ou pedir documentos?', type: 'textarea' },
+      { id: 'addInfoAtivEspecial3', label: 'Sabe a classificação de exposição aos agentes nocivos?', type: 'textarea' },
+      { id: 'addInfoAtivEspecial4', label: 'Sabe se o uso de EPIs neutraliza a exposição a ponto de anular o direito?', type: 'textarea' }
+    ]
   };
 
-  window.openAddInfoModal = function(fieldId, originalLabel) {
+  window.openAddInfoModal = function (fieldId, originalLabel) {
     const qView = document.getElementById('qualificacaoView');
     const pView = document.getElementById('perguntasView');
     const pTitle = document.getElementById('perguntasViewTitle');
@@ -8094,7 +8091,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (qView && pView && pTitle && pList) {
       qView.style.display = 'none';
       pView.style.display = 'flex';
-      
+
       const btnVoltar = document.getElementById('btnVoltarPerguntas');
       if (btnVoltar) {
         btnVoltar.onclick = () => {
@@ -8102,7 +8099,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           pView.style.display = 'none';
         };
       }
-      
+
       // Set Title
       if (customTitles[fieldId]) {
         pTitle.querySelector('span').textContent = customTitles[fieldId];
@@ -8113,7 +8110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Populate list
       pList.innerHTML = '';
       const questions = questionsConfigOverride[fieldId] || [];
-      
+
       if (questions.length === 0) {
         const div = document.createElement('div');
         div.style.padding = '10px 14px';
@@ -8132,7 +8129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           container.style.borderRadius = '8px';
           container.style.overflow = 'hidden';
           container.style.transition = 'all 0.2s';
-          
+
           const header = document.createElement('div');
           header.style.padding = '10px 14px';
           header.style.cursor = 'pointer';
@@ -8143,25 +8140,25 @@ document.addEventListener('DOMContentLoaded', async () => {
           header.style.overflow = 'hidden';
           header.style.textOverflow = 'ellipsis';
           header.textContent = q.label;
-          
+
           header.onmouseover = () => {
-             if (activeItem !== container) {
-                container.style.background = 'var(--surface-hover)';
-                container.style.borderColor = 'var(--primary)';
-             }
+            if (activeItem !== container) {
+              container.style.background = 'var(--surface-hover)';
+              container.style.borderColor = 'var(--primary)';
+            }
           };
           header.onmouseout = () => {
-             if (activeItem !== container) {
-                container.style.background = 'transparent';
-                container.style.borderColor = 'var(--border)';
-             }
+            if (activeItem !== container) {
+              container.style.background = 'transparent';
+              container.style.borderColor = 'var(--border)';
+            }
           };
-          
+
           const body = document.createElement('div');
           body.style.display = 'none';
           body.style.padding = '0 14px 14px 14px';
           body.style.flexDirection = 'column';
-          
+
           const inputCont = document.createElement('div');
           inputCont.style.display = 'flex';
           inputCont.style.alignItems = 'center';
@@ -8169,7 +8166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           inputCont.style.borderRadius = '6px';
           inputCont.style.padding = '4px 4px 4px 12px';
           inputCont.style.background = 'white';
-          
+
           const input = document.createElement('input');
           input.type = 'text';
           input.placeholder = 'Nova observação...';
@@ -8180,7 +8177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           input.style.fontFamily = 'inherit';
           input.style.background = 'transparent';
           input.style.color = 'var(--text-primary)';
-          
+
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.title = 'Enviar para Detalhes do caso';
@@ -8196,58 +8193,58 @@ document.addEventListener('DOMContentLoaded', async () => {
           btn.style.cursor = 'pointer';
           btn.style.transition = '0.2s';
           btn.innerHTML = '<i class="ti ti-send" style="font-size: 16px;"></i>';
-          
+
           btn.onclick = (e) => {
-             e.stopPropagation();
-             const respDetalhes = document.getElementById('respDetalhes');
-             const textVal = input.value.trim();
-             
-             if (textVal) {
-                let currentVal = respDetalhes.value;
-                if (currentVal && !currentVal.endsWith('\n\n')) {
-                    currentVal += '\n\n';
-                }
-                respDetalhes.value = currentVal + "P: " + q.label + "\nR: " + textVal + "\n";
-                
-                const icon = btn.querySelector('i');
-                icon.className = 'ti ti-check';
-                setTimeout(() => {
-                   icon.className = 'ti ti-send';
-                   input.value = '';
-                }, 1000);
-             }
+            e.stopPropagation();
+            const respDetalhes = document.getElementById('respDetalhes');
+            const textVal = input.value.trim();
+
+            if (textVal) {
+              let currentVal = respDetalhes.value;
+              if (currentVal && !currentVal.endsWith('\n\n')) {
+                currentVal += '\n\n';
+              }
+              respDetalhes.value = currentVal + "P: " + q.label + "\nR: " + textVal + "\n";
+
+              const icon = btn.querySelector('i');
+              icon.className = 'ti ti-check';
+              setTimeout(() => {
+                icon.className = 'ti ti-send';
+                input.value = '';
+              }, 1000);
+            }
           };
-          
+
           inputCont.appendChild(input);
           inputCont.appendChild(btn);
           body.appendChild(inputCont);
-          
+
           container.appendChild(header);
           container.appendChild(body);
-          
+
           header.onclick = () => {
-             if (activeItem && activeItem !== container) {
-                activeItem.querySelector('div:nth-child(2)').style.display = 'none';
-                activeItem.querySelector('div:first-child').style.whiteSpace = 'nowrap';
-                activeItem.style.borderColor = 'var(--border)';
-                activeItem.style.background = 'transparent';
-             }
-             
-             if (body.style.display === 'none') {
-                body.style.display = 'flex';
-                header.style.whiteSpace = 'normal'; // Expand text
-                container.style.borderColor = 'var(--primary)';
-                container.style.background = 'var(--surface-hover)';
-                activeItem = container;
-             } else {
-                body.style.display = 'none';
-                header.style.whiteSpace = 'nowrap';
-                container.style.borderColor = 'var(--border)';
-                container.style.background = 'transparent';
-                activeItem = null;
-             }
+            if (activeItem && activeItem !== container) {
+              activeItem.querySelector('div:nth-child(2)').style.display = 'none';
+              activeItem.querySelector('div:first-child').style.whiteSpace = 'nowrap';
+              activeItem.style.borderColor = 'var(--border)';
+              activeItem.style.background = 'transparent';
+            }
+
+            if (body.style.display === 'none') {
+              body.style.display = 'flex';
+              header.style.whiteSpace = 'normal'; // Expand text
+              container.style.borderColor = 'var(--primary)';
+              container.style.background = 'var(--surface-hover)';
+              activeItem = container;
+            } else {
+              body.style.display = 'none';
+              header.style.whiteSpace = 'nowrap';
+              container.style.borderColor = 'var(--border)';
+              container.style.background = 'transparent';
+              activeItem = null;
+            }
           };
-          
+
           pList.appendChild(container);
         });
       }
