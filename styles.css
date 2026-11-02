@@ -7420,7 +7420,71 @@ button:hover[style*="background: white"],
   cursor: not-allowed !important;
 }
 
-/* Indicador visual de pasta fechada (sem pendências) no card */
+/* Campo Senha Gov */
+.senha-gov-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.senha-gov-label {
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.senha-gov-input-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.senha-gov-input {
+  height: 36px !important;
+  width: 170px !important;
+  padding: 0 34px 0 12px !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border) !important;
+  background-color: var(--surface-1, #FFFFFF) !important;
+  font-family: var(--font-family) !important;
+  font-size: 13px !important;
+  color: var(--color-primary) !important;
+  box-sizing: border-box !important;
+  transition: all var(--transition-fast) !important;
+  outline: none !important;
+}
+
+.senha-gov-input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px var(--brand-soft) !important;
+}
+
+.senha-gov-toggle-btn {
+  position: absolute;
+  right: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary, #94a3b8);
+  border-radius: 4px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.senha-gov-toggle-btn:hover {
+  color: var(--text-primary, #0f172a);
+  background-color: var(--bg-hover, #f1f5f9);
+}
+
+.senha-gov-toggle-btn svg {
+  width: 16px;
+  height: 16px;
+}
 .card-bottom-row {
   display: flex;
   align-items: center;

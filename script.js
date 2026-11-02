@@ -5795,6 +5795,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const sheetUf = document.getElementById('sheetUf');
   const sheetCidade = document.getElementById('sheetCidade');
   const sheetBairro = document.getElementById('sheetBairro');
+  const sheetSenhaGov = document.getElementById('sheetSenhaGov');
+  const toggleSenhaGovBtn = document.getElementById('toggleSenhaGovBtn');
   const saveClientSheetBtn = document.getElementById('saveClientSheetBtn');
 
   function updateSheetPhoneWaLink(phoneVal) {
@@ -6199,6 +6201,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const elBairro = document.getElementById('sheetBairro');
       if (elBairro) elBairro.value = card.bairro || '';
 
+      const elSenhaGov = document.getElementById('sheetSenhaGov');
+      if (elSenhaGov) {
+        elSenhaGov.value = card.senha_gov || '';
+        elSenhaGov.type = 'password';
+        updateSenhaGovToggleIcon(false);
+      }
+
       // Preencher campos da guia Respostas
       const elIdade = document.getElementById('respIdade');
       if (elIdade) elIdade.value = calculateAge(isoDateNascimento);
@@ -6592,6 +6601,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       uf: sheetUf ? sheetUf.value : '',
       cidade: sheetCidade ? sheetCidade.value.trim() : '',
       bairro: sheetBairro ? sheetBairro.value.trim() : '',
+      senha_gov: sheetSenhaGov ? sheetSenhaGov.value : '',
       comissao_sdr: document.getElementById('sdrCommissionSwitch') ? document.getElementById('sdrCommissionSwitch').checked : (currentActiveCard.comissao_sdr || false)
     };
 
@@ -7108,6 +7118,48 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.warn('Erro ao atualizar comissao_sdr:', err);
           }
         }
+      }
+    });
+  }
+
+  // Controle do campo Senha Gov (Mostrar / Ocultar Senha)
+  function updateSenhaGovToggleIcon(isVisible) {
+    if (!toggleSenhaGovBtn) return;
+    toggleSenhaGovBtn.title = isVisible ? 'Ocultar senha' : 'Ver senha';
+    toggleSenhaGovBtn.setAttribute('aria-label', isVisible ? 'Ocultar senha' : 'Ver senha');
+    if (isVisible) {
+      toggleSenhaGovBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+          <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+          <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+          <line x1="2" y1="2" x2="22" y2="22"/>
+        </svg>
+      `;
+    } else {
+      toggleSenhaGovBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      `;
+    }
+  }
+
+  if (toggleSenhaGovBtn && sheetSenhaGov) {
+    toggleSenhaGovBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isPassword = sheetSenhaGov.type === 'password';
+      sheetSenhaGov.type = isPassword ? 'text' : 'password';
+      updateSenhaGovToggleIcon(isPassword);
+    });
+
+    // Salvar ao perder foco ou pressionar Enter
+    sheetSenhaGov.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sheetSenhaGov.blur();
       }
     });
   }

@@ -1982,14 +1982,29 @@ números">
                 </div>
               </div>
 
-              <!-- Comissão de SDR -->
-              <div style="margin-top: 10px; display: flex; justify-content: flex-start;">
+              <!-- Linha de Ações: Comissão de SDR + Senha Gov -->
+              <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <!-- Comissão de SDR -->
                 <div class="sdr-commission-container" id="sdrCommissionContainer">
                   <label class="sdr-commission-btn" id="sdrCommissionBtn" title="Comissão de SDR">
                     <span class="sdr-commission-label">Comissão de SDR:</span>
                     <input type="checkbox" id="sdrCommissionSwitch" class="sdr-commission-checkbox">
                     <span class="sdr-commission-slider"></span>
                   </label>
+                </div>
+
+                <!-- Campo Senha Gov -->
+                <div class="senha-gov-wrapper">
+                  <span class="senha-gov-label">Senha Gov:</span>
+                  <div class="senha-gov-input-container">
+                    <input type="password" id="sheetSenhaGov" class="senha-gov-input" placeholder="Digite a senha..." autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
+                    <button type="button" id="toggleSenhaGovBtn" class="senha-gov-toggle-btn" title="Mostrar senha" aria-label="Mostrar senha">
+                      <svg id="senhaGovEyeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </form>
