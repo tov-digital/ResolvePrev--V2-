@@ -6099,33 +6099,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  const sheetPhoneCopyBtn = document.getElementById('sheetPhoneCopyBtn');
-  if (sheetPhoneCopyBtn && sheetPhone) {
-    sheetPhoneCopyBtn.addEventListener('click', () => {
-      const phoneVal = sheetPhone.value ? sheetPhone.value.trim() : '';
+  const modalBtnCopyPhone = document.getElementById('modalBtnCopyPhone');
+  if (modalBtnCopyPhone) {
+    modalBtnCopyPhone.addEventListener('click', () => {
+      const phoneVal = currentActiveCard && currentActiveCard.telefone ? currentActiveCard.telefone.trim() : '';
       if (!phoneVal) {
         showToast('Nenhum telefone para copiar.');
         return;
       }
 
       navigator.clipboard.writeText(phoneVal).then(() => {
-        sheetPhoneCopyBtn.classList.add('copied');
-        sheetPhoneCopyBtn.title = 'Telefone copiado!';
-        const originalSvg = sheetPhoneCopyBtn.innerHTML;
-        sheetPhoneCopyBtn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        modalBtnCopyPhone.classList.add('copied');
+        modalBtnCopyPhone.title = 'Telefone copiado!';
+        const originalSvg = modalBtnCopyPhone.innerHTML;
+        modalBtnCopyPhone.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         `;
         showToast('Telefone copiado para a área de transferência!');
 
         setTimeout(() => {
-          sheetPhoneCopyBtn.classList.remove('copied');
-          sheetPhoneCopyBtn.title = 'Copiar número de telefone';
-          sheetPhoneCopyBtn.innerHTML = originalSvg;
+          modalBtnCopyPhone.classList.remove('copied');
+          modalBtnCopyPhone.title = 'Copiar telefone';
+          modalBtnCopyPhone.innerHTML = originalSvg;
         }, 2000);
       }).catch(() => {
-        // Fallback caso clipboard API falhe
         try {
           const tempInput = document.createElement('input');
           tempInput.value = phoneVal;
@@ -6418,6 +6417,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             showToast('Link do Google Drive não cadastrado.');
           };
         }
+      }
+
+      // Atualizar botão de WhatsApp com o número do telefone do lead
+      const modalBtnEnviarMensagemText = document.getElementById('modalBtnEnviarMensagemText');
+      if (modalBtnEnviarMensagemText) {
+        modalBtnEnviarMensagemText.textContent = card.telefone ? card.telefone : 'Enviar mensagem';
       }
 
       // Preencher demais campos da Ficha com segurança
@@ -6858,7 +6863,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const nameEl = document.getElementById('sheetClientNameInput');
     const updatedNome = nameEl ? nameEl.value.trim() : (sheetClientNameInput ? sheetClientNameInput.value.trim() : '');
-    const updatedPhone = sheetPhone ? sheetPhone.value.trim() : '';
+    const updatedPhone = currentActiveCard.telefone || (sheetPhone ? sheetPhone.value.trim() : '');
 
     if (!updatedNome) {
       if (showToastMsg) showToast('O nome do cliente é obrigatório.');
