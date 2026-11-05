@@ -5399,6 +5399,24 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
+        // Se estiver saindo de 'documentacao' para 'na_fila' (ou movendo para 'na_fila' na Operação)
+        if (targetStage === 'na_fila' && (cardObj.status === 'documentacao' || window.currentTab === 'operacao')) {
+          openNaFilaModal(cardObj, targetStage);
+          return;
+        }
+
+        // Se a coluna destino for 'requerido' na aba Operação
+        if (targetStage === 'requerido' && window.currentTab === 'operacao') {
+          openRequeridoModal(cardObj, targetStage);
+          return;
+        }
+
+        // Se a coluna destino for 'exigencia' na aba Operação
+        if (targetStage === 'exigencia' && window.currentTab === 'operacao') {
+          openExigenciaModal(cardObj, targetStage);
+          return;
+        }
+
         // Se a coluna destino for 'concedido' na aba Operação, abre o pop-up de cobrança
         if (targetStage === 'concedido' && window.currentTab === 'operacao') {
           openConcedidoModal(cardObj, targetStage);
@@ -5757,6 +5775,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       // 2. Mover o card para o novo status (Concedido)
       const cardToUpdate = concedidoCardTarget;
       const newStatus = concedidoNewStatusTarget;
+
+      // Disparar Webhook do n8n: https://n8n.srv1077266.hstgr.cloud/webhook/concedido
+      const payloadConcedido = {
+        id: cardToUpdate.id,
+        codigo: cardToUpdate.codigo || '',
+        nome: cardToUpdate.nome || '',
+        telefone: cardToUpdate.telefone || '',
+        drive_link: cardToUpdate.drive_link || '',
+        status_origem: cardToUpdate.status || '',
+        novo_status: newStatus,
+        rmi: rmiValor,
+        parcelas: parcelas,
+        atraso_dias: atrasoDias,
+        retroativo: retroativoCalculado,
+        valor_total: valorTotal,
+        data_hora: new Date().toISOString()
+      };
+
+      try {
+        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/concedido', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payloadConcedido)
+        });
+      } catch (webhookErr) {
+        console.warn('Aviso no envio do webhook concedido:', webhookErr);
+      }
+
       closeConcedidoModalWindow();
 
       await changeCardStatus(cardToUpdate, newStatus);
@@ -5764,6 +5810,213 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       confirmConcedidoBtn.disabled = false;
       if (btnSpan) btnSpan.textContent = 'Salvar';
+    });
+  }
+
+  // ================= MODAL NA FILA =================
+  const modalNaFilaConfirm = document.getElementById('modalNaFilaConfirm');
+  const closeNaFilaModal = document.getElementById('closeNaFilaModal');
+  const confirmNaFilaBtn = document.getElementById('confirmNaFilaBtn');
+  const naFilaCardName = document.getElementById('naFilaCardName');
+  let naFilaCardTarget = null;
+  let naFilaNewStatusTarget = null;
+
+  function closeNaFilaModalWindow() {
+    naFilaCardTarget = null;
+    naFilaNewStatusTarget = null;
+    if (modalNaFilaConfirm) modalNaFilaConfirm.classList.add('hidden');
+  }
+
+  if (closeNaFilaModal) closeNaFilaModal.addEventListener('click', closeNaFilaModalWindow);
+  window.addEventListener('click', (e) => {
+    if (e.target === modalNaFilaConfirm) closeNaFilaModalWindow();
+  });
+
+  function openNaFilaModal(card, newStatus) {
+    naFilaCardTarget = card;
+    naFilaNewStatusTarget = newStatus;
+    if (naFilaCardName) naFilaCardName.textContent = card.nome ? `"${card.nome}"` : 'este cliente';
+    if (modalNaFilaConfirm) modalNaFilaConfirm.classList.remove('hidden');
+  }
+
+  if (confirmNaFilaBtn) {
+    confirmNaFilaBtn.addEventListener('click', async () => {
+      if (!naFilaCardTarget) return;
+
+      confirmNaFilaBtn.disabled = true;
+      const originalText = confirmNaFilaBtn.textContent;
+      confirmNaFilaBtn.textContent = 'Confirmando...';
+
+      const cardToUpdate = naFilaCardTarget;
+      const newStatus = naFilaNewStatusTarget || 'na_fila';
+
+      // Disparar Webhook do n8n: https://n8n.srv1077266.hstgr.cloud/webhook/fila
+      const payload = {
+        id: cardToUpdate.id,
+        codigo: cardToUpdate.codigo || '',
+        nome: cardToUpdate.nome || '',
+        telefone: cardToUpdate.telefone || '',
+        drive_link: cardToUpdate.drive_link || '',
+        status_origem: cardToUpdate.status || '',
+        novo_status: newStatus,
+        data_hora: new Date().toISOString()
+      };
+
+      try {
+        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/fila', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (webhookErr) {
+        console.warn('Aviso no envio do webhook fila:', webhookErr);
+      }
+
+      closeNaFilaModalWindow();
+
+      await changeCardStatus(cardToUpdate, newStatus);
+      showToast(`Card movido para "Na Fila" e equipe técnica notificada!`);
+
+      confirmNaFilaBtn.disabled = false;
+      confirmNaFilaBtn.textContent = originalText;
+    });
+  }
+
+  // ================= MODAL REQUERIDO =================
+  const modalRequeridoConfirm = document.getElementById('modalRequeridoConfirm');
+  const closeRequeridoModal = document.getElementById('closeRequeridoModal');
+  const confirmRequeridoBtn = document.getElementById('confirmRequeridoBtn');
+  const requeridoCardName = document.getElementById('requeridoCardName');
+  let requeridoCardTarget = null;
+  let requeridoNewStatusTarget = null;
+
+  function closeRequeridoModalWindow() {
+    requeridoCardTarget = null;
+    requeridoNewStatusTarget = null;
+    if (modalRequeridoConfirm) modalRequeridoConfirm.classList.add('hidden');
+  }
+
+  if (closeRequeridoModal) closeRequeridoModal.addEventListener('click', closeRequeridoModalWindow);
+  window.addEventListener('click', (e) => {
+    if (e.target === modalRequeridoConfirm) closeRequeridoModalWindow();
+  });
+
+  function openRequeridoModal(card, newStatus) {
+    requeridoCardTarget = card;
+    requeridoNewStatusTarget = newStatus;
+    if (requeridoCardName) requeridoCardName.textContent = card.nome ? `"${card.nome}"` : 'este cliente';
+    if (modalRequeridoConfirm) modalRequeridoConfirm.classList.remove('hidden');
+  }
+
+  if (confirmRequeridoBtn) {
+    confirmRequeridoBtn.addEventListener('click', async () => {
+      if (!requeridoCardTarget) return;
+
+      confirmRequeridoBtn.disabled = true;
+      const originalText = confirmRequeridoBtn.textContent;
+      confirmRequeridoBtn.textContent = 'Confirmando...';
+
+      const cardToUpdate = requeridoCardTarget;
+      const newStatus = requeridoNewStatusTarget || 'requerido';
+
+      // Disparar Webhook do n8n: https://n8n.srv1077266.hstgr.cloud/webhook/requerido
+      const payload = {
+        id: cardToUpdate.id,
+        codigo: cardToUpdate.codigo || '',
+        nome: cardToUpdate.nome || '',
+        telefone: cardToUpdate.telefone || '',
+        drive_link: cardToUpdate.drive_link || '',
+        status_origem: cardToUpdate.status || '',
+        novo_status: newStatus,
+        data_hora: new Date().toISOString()
+      };
+
+      try {
+        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/requerido', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (webhookErr) {
+        console.warn('Aviso no envio do webhook requerido:', webhookErr);
+      }
+
+      closeRequeridoModalWindow();
+
+      await changeCardStatus(cardToUpdate, newStatus);
+      showToast(`Card movido para "Requerido"!`);
+
+      confirmRequeridoBtn.disabled = false;
+      confirmRequeridoBtn.textContent = originalText;
+    });
+  }
+
+  // ================= MODAL EXIGÊNCIA =================
+  const modalExigenciaConfirm = document.getElementById('modalExigenciaConfirm');
+  const closeExigenciaModal = document.getElementById('closeExigenciaModal');
+  const confirmExigenciaBtn = document.getElementById('confirmExigenciaBtn');
+  const exigenciaCardName = document.getElementById('exigenciaCardName');
+  let exigenciaCardTarget = null;
+  let exigenciaNewStatusTarget = null;
+
+  function closeExigenciaModalWindow() {
+    exigenciaCardTarget = null;
+    exigenciaNewStatusTarget = null;
+    if (modalExigenciaConfirm) modalExigenciaConfirm.classList.add('hidden');
+  }
+
+  if (closeExigenciaModal) closeExigenciaModal.addEventListener('click', closeExigenciaModalWindow);
+  window.addEventListener('click', (e) => {
+    if (e.target === modalExigenciaConfirm) closeExigenciaModalWindow();
+  });
+
+  function openExigenciaModal(card, newStatus) {
+    exigenciaCardTarget = card;
+    exigenciaNewStatusTarget = newStatus;
+    if (exigenciaCardName) exigenciaCardName.textContent = card.nome ? `"${card.nome}"` : 'este cliente';
+    if (modalExigenciaConfirm) modalExigenciaConfirm.classList.remove('hidden');
+  }
+
+  if (confirmExigenciaBtn) {
+    confirmExigenciaBtn.addEventListener('click', async () => {
+      if (!exigenciaCardTarget) return;
+
+      confirmExigenciaBtn.disabled = true;
+      const originalText = confirmExigenciaBtn.textContent;
+      confirmExigenciaBtn.textContent = 'Confirmando...';
+
+      const cardToUpdate = exigenciaCardTarget;
+      const newStatus = exigenciaNewStatusTarget || 'exigencia';
+
+      // Disparar Webhook do n8n: https://n8n.srv1077266.hstgr.cloud/webhook/exigencia
+      const payload = {
+        id: cardToUpdate.id,
+        codigo: cardToUpdate.codigo || '',
+        nome: cardToUpdate.nome || '',
+        telefone: cardToUpdate.telefone || '',
+        drive_link: cardToUpdate.drive_link || '',
+        status_origem: cardToUpdate.status || '',
+        novo_status: newStatus,
+        data_hora: new Date().toISOString()
+      };
+
+      try {
+        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/exigencia', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (webhookErr) {
+        console.warn('Aviso no envio do webhook exigencia:', webhookErr);
+      }
+
+      closeExigenciaModalWindow();
+
+      await changeCardStatus(cardToUpdate, newStatus);
+      showToast(`Card movido para "Exigência"!`);
+
+      confirmExigenciaBtn.disabled = false;
+      confirmExigenciaBtn.textContent = originalText;
     });
   }
 
@@ -6936,6 +7189,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (newStatus !== currentActiveCard.status) {
         if (newStatus === 'proposta') {
           openProposalModal(currentActiveCard, newStatus);
+          return;
+        }
+
+        if (newStatus === 'na_fila' && (currentActiveCard.status === 'documentacao' || window.currentTab === 'operacao')) {
+          openNaFilaModal(currentActiveCard, newStatus);
+          return;
+        }
+
+        if (newStatus === 'requerido' && window.currentTab === 'operacao') {
+          openRequeridoModal(currentActiveCard, newStatus);
+          return;
+        }
+
+        if (newStatus === 'exigencia' && window.currentTab === 'operacao') {
+          openExigenciaModal(currentActiveCard, newStatus);
           return;
         }
 
@@ -8661,6 +8929,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           if (targetStage === 'proposta') {
             openProposalModal(currentActiveCard, targetStage);
+            closeModal(modalClientSheet);
+            return;
+          }
+          if (targetStage === 'na_fila' && (currentActiveCard.status === 'documentacao' || window.currentTab === 'operacao')) {
+            openNaFilaModal(currentActiveCard, targetStage);
+            closeModal(modalClientSheet);
+            return;
+          }
+          if (targetStage === 'requerido' && window.currentTab === 'operacao') {
+            openRequeridoModal(currentActiveCard, targetStage);
+            closeModal(modalClientSheet);
+            return;
+          }
+          if (targetStage === 'exigencia' && window.currentTab === 'operacao') {
+            openExigenciaModal(currentActiveCard, targetStage);
             closeModal(modalClientSheet);
             return;
           }
