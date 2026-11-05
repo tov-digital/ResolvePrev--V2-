@@ -415,37 +415,39 @@
               </div>
               <div class="sort-options-list">
                 <button type="button" class="sort-option-item active" data-sort="nome">
-                  <span class="sort-option-text">Nome</span>
-                  <svg class="sort-check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </button>
-                <button type="button" class="sort-option-item" data-sort="data_requerimento">
-                  <span class="sort-option-text">Data de requerimento</span>
-                  <svg class="sort-check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </button>
-                <button type="button" class="sort-option-item" data-sort="created_at">
-                  <span class="sort-option-text">Data de criação</span>
-                  <svg class="sort-check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </button>
-                <button type="button" class="sort-option-item" data-sort="updated_at">
-                  <span class="sort-option-text">Última atualização</span>
-                  <svg class="sort-check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </button>
+                  <button type="button" class="sort-option-item" data-sort="nome">
+                    <span class="sort-option-text">Nome</span>
+                    <svg class="sort-check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+                  <button type="button" class="sort-option-item" data-sort="data_requerimento">
+                    <button type="button" class="sort-option-item active" data-sort="data_requerimento">
+                      <span class="sort-option-text">Data de requerimento</span>
+                      <svg class="sort-check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </button>
+                    <button type="button" class="sort-option-item" data-sort="created_at">
+                      <span class="sort-option-text">Data de criação</span>
+                      <svg class="sort-check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </button>
+                    <button type="button" class="sort-option-item" data-sort="updated_at">
+                      <span class="sort-option-text">Última atualização</span>
+                      <svg class="sort-check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </button>
               </div>
             </div>
           </div>
@@ -1763,7 +1765,8 @@ width:100%; color:var(--text-primary);">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
                   <p id="perguntasViewTitle"
                     style="margin:0; font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px; color:var(--text-accent);">
-                    <i class="ti ti-list-details" style="font-size:18px;"></i><span>Perguntas</span></p>
+                    <i class="ti ti-list-details" style="font-size:18px;"></i><span>Perguntas</span>
+                  </p>
                   <button type="button" id="btnVoltarPerguntas" title="Voltar"
                     style="background:none; border:none; padding:4px; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); cursor:pointer;"><i
                       class="ti ti-arrow-left" style="font-size:18px;"></i></button>
@@ -1983,7 +1986,8 @@ números">
               </div>
 
               <!-- Linha de Ações: Comissão de SDR + Senha Gov -->
-              <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+              <div
+                style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <!-- Comissão de SDR -->
                 <div class="sdr-commission-container" id="sdrCommissionContainer">
                   <label class="sdr-commission-btn" id="sdrCommissionBtn" title="Comissão de SDR">
@@ -1997,11 +2001,16 @@ números">
                 <div class="senha-gov-wrapper">
                   <span class="senha-gov-label">Senha Gov:</span>
                   <div class="senha-gov-input-container">
-                    <input type="password" id="sheetSenhaGov" class="senha-gov-input" placeholder="Digite a senha..." autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other">
-                    <button type="button" id="toggleSenhaGovBtn" class="senha-gov-toggle-btn" title="Mostrar senha" aria-label="Mostrar senha">
-                      <svg id="senhaGovEyeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                        <circle cx="12" cy="12" r="3"/>
+                    <input type="password" id="sheetSenhaGov" class="senha-gov-input" placeholder="Digite a senha..."
+                      autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"
+                      data-lpignore="true" data-form-type="other">
+                    <button type="button" id="toggleSenhaGovBtn" class="senha-gov-toggle-btn" title="Mostrar senha"
+                      aria-label="Mostrar senha">
+                      <svg id="senhaGovEyeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
                       </svg>
                     </button>
                   </div>
@@ -2012,11 +2021,13 @@ números">
           </div>
 
           <!-- Conteúdo da Guia: DOCUMENTOS -->
-          <div id="tabContentDocumentos" class="tab-pane hidden" style="flex-grow: 1; display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; padding: 0;">
+          <div id="tabContentDocumentos" class="tab-pane hidden"
+            style="flex-grow: 1; display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; padding: 0;">
             <!-- Área com rolagem apenas para os documentos -->
             <div style="flex: 1; overflow-y: auto; padding: 1.5rem 1.5rem 0.5rem 1.5rem;">
               <div class="docs-tab-header">
-                <div class="docs-tag-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+                <div class="docs-tag-row"
+                  style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
                   <a id="docsCardCodeBtn" class="gray-code-tag" target="_blank" rel="noopener noreferrer"
                     title="Abrir Google Drive">
                     <img src="assets/images/drive_icon.png" alt="Google Drive" class="drive-icon-img">
@@ -2076,7 +2087,8 @@ números">
                     <!-- Documento 5 -->
                     <div class="doc-item">
                       <span class="doc-name">Certidão de Nascimento ou Casamento</span>
-                      <button class="doc-status-badge badge-pendente" data-doc-key="doc_certidao" data-status="Pendente">
+                      <button class="doc-status-badge badge-pendente" data-doc-key="doc_certidao"
+                        data-status="Pendente">
                         <span class="doc-badge-dot"></span> Pendente
                       </button>
                     </div>
@@ -2094,7 +2106,8 @@ números">
             </div>
 
             <!-- Formulário Fixo no Rodapé para Adicionar Novo Documento Eventual -->
-            <div style="flex-shrink: 0; padding: 12px 1.5rem; background: var(--surface); border-top: 1px solid var(--line); z-index: 10;">
+            <div
+              style="flex-shrink: 0; padding: 12px 1.5rem; background: var(--surface); border-top: 1px solid var(--line); z-index: 10;">
               <div class="add-eventual-doc-row" style="margin: 0;">
                 <input type="text" id="newEventualDocName" placeholder="Nome do documento eventual..."
                   class="add-doc-input">
@@ -2360,11 +2373,13 @@ números">
         </div>
         <h3>Mover para a Fila?</h3>
         <p style="margin-top: 8px; line-height: 1.5; color: #1E293B;">
-          Ao mover o card de <strong id="naFilaCardName">este cliente</strong> para a coluna <strong>Na Fila</strong>, a equipe técnica será notificada para iniciar a validação.
+          Ao mover o card de <strong id="naFilaCardName">este cliente</strong> para a coluna <strong>Na Fila</strong>, a
+          equipe técnica será notificada para iniciar a validação.
         </p>
       </div>
       <div class="modal-actions-row" style="margin-top: 1.5rem; justify-content: flex-end;">
-        <button id="confirmNaFilaBtn" class="btn-modal-primary" style="background-color: var(--brand-primary, #0F172A); width: 100%;">Confirmar</button>
+        <button id="confirmNaFilaBtn" class="btn-modal-primary"
+          style="background-color: var(--brand-primary, #0F172A); width: 100%;">Confirmar</button>
       </div>
     </div>
   </div>
@@ -2384,11 +2399,13 @@ números">
         </div>
         <h3>Mover para Requerido?</h3>
         <p style="margin-top: 8px; line-height: 1.5; color: #1E293B;">
-          Deseja mover o card de <strong id="requeridoCardName">este cliente</strong> para a coluna <strong>Requerido</strong>?
+          Deseja mover o card de <strong id="requeridoCardName">este cliente</strong> para a coluna
+          <strong>Requerido</strong>?
         </p>
       </div>
       <div class="modal-actions-row" style="margin-top: 1.5rem; justify-content: flex-end;">
-        <button id="confirmRequeridoBtn" class="btn-modal-primary" style="background-color: var(--brand-primary, #0F172A); width: 100%;">Confirmar</button>
+        <button id="confirmRequeridoBtn" class="btn-modal-primary"
+          style="background-color: var(--brand-primary, #0F172A); width: 100%;">Confirmar</button>
       </div>
     </div>
   </div>
@@ -2408,11 +2425,13 @@ números">
         </div>
         <h3>Mover para Exigência?</h3>
         <p style="margin-top: 8px; line-height: 1.5; color: #1E293B;">
-          Deseja mover o card de <strong id="exigenciaCardName">este cliente</strong> para a coluna <strong>Exigência</strong>?
+          Deseja mover o card de <strong id="exigenciaCardName">este cliente</strong> para a coluna
+          <strong>Exigência</strong>?
         </p>
       </div>
       <div class="modal-actions-row" style="margin-top: 1.5rem; justify-content: flex-end;">
-        <button id="confirmExigenciaBtn" class="btn-modal-primary" style="background-color: var(--brand-primary, #0F172A); width: 100%;">Confirmar</button>
+        <button id="confirmExigenciaBtn" class="btn-modal-primary"
+          style="background-color: var(--brand-primary, #0F172A); width: 100%;">Confirmar</button>
       </div>
     </div>
   </div>
@@ -2431,12 +2450,14 @@ números">
         </div>
         <h3>Devolver à fila de atendimento?</h3>
         <p style="margin-top: 8px; line-height: 1.5; color: #1E293B;">
-          Deseja devolver o lead <strong id="devolverFilaClientName">este cliente</strong> para a fila de atendimento? O status será alterado para <strong>Novo</strong>.
+          Deseja devolver o lead <strong id="devolverFilaClientName">este cliente</strong> para a fila de atendimento? O
+          status será alterado para <strong>Novo</strong>.
         </p>
       </div>
       <div class="modal-actions-row" style="margin-top: 1.5rem;">
         <button id="cancelDevolverFilaBtn" class="btn-modal-cancel">Cancelar</button>
-        <button id="confirmDevolverFilaBtn" class="btn-modal-primary" style="background-color: var(--brand-primary, #0F172A);">Confirmar</button>
+        <button id="confirmDevolverFilaBtn" class="btn-modal-primary"
+          style="background-color: var(--brand-primary, #0F172A);">Confirmar</button>
       </div>
     </div>
   </div>
@@ -2499,8 +2520,8 @@ números">
       <button class="modal-close" id="closeFecharPastaModal" aria-label="Fechar">&times;</button>
       <div class="modal-header">
         <div id="fecharPastaModalBadge" class="modal-icon-badge" style="background-color: #DCFCE7; color: #16A34A;">
-          <svg id="fecharPastaModalIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg id="fecharPastaModalIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
