@@ -5050,6 +5050,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   const datePickerInput = document.getElementById('datePickerInput');
   const datePickerClientName = document.getElementById('datePickerClientName');
 
+  async function triggerDataRequerimentoWebhook(card, novaData) {
+    if (!card) return;
+    try {
+      const payload = {
+        id: card.id,
+        codigo: card.codigo || '',
+        nome: card.nome || '',
+        telefone: card.telefone || '',
+        status: card.status || '',
+        data_requerimento: novaData || card.data_requerimento || '',
+        drive_link: card.drive_link || '',
+        data_hora: new Date().toISOString()
+      };
+
+      await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/data_requerimento', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.warn('Aviso no envio do webhook data_requerimento:', err);
+    }
+  }
+
   function openDatePickerModal(card) {
     cardToUpdateDate = card;
     if (datePickerClientName) datePickerClientName.textContent = card.nome ? `"${card.nome}"` : 'este cliente';
@@ -5103,7 +5127,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       saveDatePickerBtn.disabled = false;
       saveDatePickerBtn.textContent = 'Salvar Data';
+      const updatedCardRef = cardToUpdateDate;
       closeDatePickerModalFn();
+
+      // Disparar Webhook do n8n: https://n8n.srv1077266.hstgr.cloud/webhook/data_requerimento
+      triggerDataRequerimentoWebhook(updatedCardRef, newDate);
 
       loadUserCards(); // Atualiza os cards
       showToast('Data de requerimento atualizada com sucesso!');
@@ -6915,7 +6943,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    const previousDataRequerimento = currentActiveCard.data_requerimento;
     Object.assign(currentActiveCard, finalData);
+
+    // Se houve alteração na data de requerimento decorrente da ficha
+    if (finalData.data_requerimento && finalData.data_requerimento !== previousDataRequerimento) {
+      triggerDataRequerimentoWebhook(currentActiveCard, finalData.data_requerimento);
+    }
+
     loadUserCards(); // Atualiza kanban (como o nome pode ter mudado)
     if (showToastMsg) showToast('Dados salvos automaticamente!');
   }
