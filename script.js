@@ -5427,6 +5427,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
+        // Se a coluna destino for 'documentacao' na aba Operação
+        if (targetStage === 'documentacao' && window.currentTab === 'operacao') {
+          openDocumentacaoModal(cardObj, targetStage);
+          return;
+        }
+
         // Se estiver saindo de 'documentacao' para 'na_fila' (ou movendo para 'na_fila' na Operação)
         if (targetStage === 'na_fila' && (cardObj.status === 'documentacao' || window.currentTab === 'operacao')) {
           openNaFilaModal(cardObj, targetStage);
@@ -5838,6 +5844,75 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       confirmConcedidoBtn.disabled = false;
       if (btnSpan) btnSpan.textContent = 'Salvar';
+    });
+  }
+
+  // ================= MODAL DOCUMENTAÇÃO =================
+  const modalDocumentacaoConfirm = document.getElementById('modalDocumentacaoConfirm');
+  const closeDocumentacaoModal = document.getElementById('closeDocumentacaoModal');
+  const confirmDocumentacaoBtn = document.getElementById('confirmDocumentacaoBtn');
+  const documentacaoCardName = document.getElementById('documentacaoCardName');
+  let documentacaoCardTarget = null;
+  let documentacaoNewStatusTarget = null;
+
+  function closeDocumentacaoModalWindow() {
+    documentacaoCardTarget = null;
+    documentacaoNewStatusTarget = null;
+    if (modalDocumentacaoConfirm) modalDocumentacaoConfirm.classList.add('hidden');
+  }
+
+  if (closeDocumentacaoModal) closeDocumentacaoModal.addEventListener('click', closeDocumentacaoModalWindow);
+  window.addEventListener('click', (e) => {
+    if (e.target === modalDocumentacaoConfirm) closeDocumentacaoModalWindow();
+  });
+
+  function openDocumentacaoModal(card, newStatus) {
+    documentacaoCardTarget = card;
+    documentacaoNewStatusTarget = newStatus;
+    if (documentacaoCardName) documentacaoCardName.textContent = card.nome ? `"${card.nome}"` : 'este cliente';
+    if (modalDocumentacaoConfirm) modalDocumentacaoConfirm.classList.remove('hidden');
+  }
+
+  if (confirmDocumentacaoBtn) {
+    confirmDocumentacaoBtn.addEventListener('click', async () => {
+      if (!documentacaoCardTarget) return;
+
+      confirmDocumentacaoBtn.disabled = true;
+      const originalText = confirmDocumentacaoBtn.textContent;
+      confirmDocumentacaoBtn.textContent = 'Confirmando...';
+
+      const cardToUpdate = documentacaoCardTarget;
+      const newStatus = documentacaoNewStatusTarget || 'documentacao';
+
+      // Disparar Webhook do n8n: https://n8n.srv1077266.hstgr.cloud/webhook/documentacao
+      const payload = {
+        id: cardToUpdate.id,
+        codigo: cardToUpdate.codigo || '',
+        nome: cardToUpdate.nome || '',
+        telefone: cardToUpdate.telefone || '',
+        drive_link: cardToUpdate.drive_link || '',
+        status_origem: cardToUpdate.status || '',
+        novo_status: newStatus,
+        data_hora: new Date().toISOString()
+      };
+
+      try {
+        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/documentacao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (webhookErr) {
+        console.warn('Aviso no envio do webhook documentacao:', webhookErr);
+      }
+
+      closeDocumentacaoModalWindow();
+
+      await changeCardStatus(cardToUpdate, newStatus);
+      showToast(`Card movido para "Documentação"!`);
+
+      confirmDocumentacaoBtn.disabled = false;
+      confirmDocumentacaoBtn.textContent = originalText;
     });
   }
 
@@ -7229,6 +7304,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (newStatus !== currentActiveCard.status) {
         if (newStatus === 'proposta') {
           openProposalModal(currentActiveCard, newStatus);
+          return;
+        }
+
+        if (newStatus === 'documentacao' && window.currentTab === 'operacao') {
+          openDocumentacaoModal(currentActiveCard, newStatus);
           return;
         }
 

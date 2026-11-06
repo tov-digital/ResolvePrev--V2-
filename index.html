@@ -2338,6 +2338,31 @@ números">
     </div>
   </div>
 
+  <!-- ==================== MODAL: CONFIRMAR MOVIMENTAÇÃO PARA 'DOCUMENTAÇÃO' ==================== -->
+  <div id="modalDocumentacaoConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card modal-confirm-card" style="max-width: 440px;">
+      <button class="modal-close" id="closeDocumentacaoModal" aria-label="Fechar">&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge" style="background-color: #FEF3C7; color: #D97706;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <h3>Mover para Documentação?</h3>
+        <p style="margin-top: 8px; line-height: 1.5; color: #1E293B;">
+          Confirma que alguma documentação de <strong id="documentacaoCardName">este cliente</strong> precisa ser corrigida?
+        </p>
+      </div>
+      <div class="modal-actions-row" style="margin-top: 1.5rem; justify-content: flex-end;">
+        <button id="confirmDocumentacaoBtn" class="btn-modal-primary"
+          style="background-color: var(--brand-primary, #0F172A); width: 100%;">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== MODAL: CONFIRMAR MOVIMENTAÇÃO PARA 'NA FILA' ==================== -->
   <div id="modalNaFilaConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal-card modal-confirm-card" style="max-width: 440px;">
