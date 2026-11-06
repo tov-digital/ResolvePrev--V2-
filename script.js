@@ -6431,6 +6431,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       const inputName = document.getElementById('sheetClientNameInput');
       if (inputName) inputName.value = card.nome || '';
 
+      // Atualizar Data de Criação do card ("criado em: dd/mm/aa")
+      const sheetCreatedAtText = document.getElementById('sheetCreatedAtText');
+      if (sheetCreatedAtText) {
+        const rawCreated = card.criado_em || card.created_at;
+        if (rawCreated) {
+          const d = new Date(rawCreated);
+          if (!isNaN(d.getTime())) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = String(d.getFullYear()).slice(-2);
+            sheetCreatedAtText.textContent = `criado em: ${day}/${month}/${year}`;
+          } else {
+            sheetCreatedAtText.textContent = 'criado em: --/--/--';
+          }
+        } else {
+          sheetCreatedAtText.textContent = 'criado em: --/--/--';
+        }
+      }
+
       // Atualizar Responsável no botão de Atribuição
       const sheetAssigneeName = document.getElementById('sheetAssigneeName');
       const sheetAssigneeAvatar = document.getElementById('sheetAssigneeAvatar');
