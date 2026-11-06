@@ -7420,6 +7420,15 @@ button:hover[style*="background: white"],
   cursor: not-allowed !important;
 }
 
+.btn-copy-phone:hover {
+  color: var(--text-primary, #0f172a) !important;
+  background-color: var(--bg-hover, #f1f5f9) !important;
+}
+
+.btn-copy-phone.copied {
+  color: #16a34a !important;
+}
+
 /* Campo Senha Gov */
 .senha-gov-wrapper {
   display: inline-flex;
