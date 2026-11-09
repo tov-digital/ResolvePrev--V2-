@@ -6648,17 +6648,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Atualizar botão de agendamento de reunião
       const btnAgendar = document.getElementById('modalBtnAgendarReuniao');
       if (btnAgendar) {
-        let reuniaoFormatada = '';
-        let isReuniaoFutura = false;
+        let reuniaoFormatada = card._reuniaoAgendada || '';
 
         const dataReuniaoRaw = card.data_reuniao || card._reuniaoIso;
         if (dataReuniaoRaw) {
           try {
             const dt = new Date(dataReuniaoRaw);
-            const agora = new Date();
-            // Só consideramos ativa/vermelha se a data e horário inicial da reunião ainda não passaram
-            if (!isNaN(dt.getTime()) && dt > agora) {
-              isReuniaoFutura = true;
+            if (!isNaN(dt.getTime())) {
               const dStr = String(dt.getDate()).padStart(2, '0');
               const mStr = String(dt.getMonth() + 1).padStart(2, '0');
               const hStr = String(dt.getHours()).padStart(2, '0');
@@ -6668,7 +6664,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           } catch (e) { }
         }
 
-        if (isReuniaoFutura && reuniaoFormatada) {
+        if (reuniaoFormatada) {
           btnAgendar.innerHTML = `<i class="ti ti-calendar-check" style="font-size:16px" aria-hidden="true"></i>${reuniaoFormatada}`;
           btnAgendar.title = `Reunião agendada para: ${reuniaoFormatada}`;
           btnAgendar.classList.add('btn-reuniao-agendada');
