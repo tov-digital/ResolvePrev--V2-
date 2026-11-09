@@ -232,7 +232,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     'no_show': 'No-Show',
     'recusado': 'Recusado',
     'perdido': 'Perdido',
-    'desqualificado': 'Desqualificado'
+    'desqualificado': 'Desqualificado',
+    'churn': 'Churn'
   };
 
   const stageDotClasses = {
@@ -252,7 +253,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     'no_show': 'dot-no_show',
     'recusado': 'dot-recusado',
     'perdido': 'dot-perdido',
-    'desqualificado': 'dot-desqualificado'
+    'desqualificado': 'dot-desqualificado',
+    'churn': 'dot-churn'
   };
 
   const backToAdminBtn = document.getElementById('backToAdminBtn');
@@ -4273,7 +4275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.currentTab === 'operacao') {
       tabStages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
     } else if (window.currentTab === 'judicial') {
-      tabStages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado'];
+      tabStages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado', 'churn'];
     }
 
     let query = supabase.from(getCurrentTable()).select('*').in('status', tabStages);
@@ -4604,7 +4606,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const operacaoStages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
         return operacaoStages.includes(cardStatus);
       } else if (window.currentTab === 'judicial') {
-        const judicialStages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado'];
+        const judicialStages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado', 'churn'];
         return judicialStages.includes(cardStatus);
       }
     });
@@ -4845,6 +4847,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnOptRecuperacao = document.getElementById('btnOptRecuperacao');
   const btnOptNoShow = document.getElementById('btnOptNoShow');
   const btnOptNegado = document.getElementById('btnOptNegado');
+  const btnOptChurn = document.getElementById('btnOptChurn');
   const btnOptDeletar = document.getElementById('btnOptDeletar');
 
   function openDeleteModal(card, cardElement) {
@@ -4928,7 +4931,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     targetCard.atualizado_em = nowIso;
 
     const staysInCurrentTab =
-      (window.currentTab === 'judicial' && ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado'].includes(actionValue)) ||
+      (window.currentTab === 'judicial' && ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado', 'churn'].includes(actionValue)) ||
       (window.currentTab === 'comercial' && ['novo', 'qualificacao', 'acompanhamento', 'reuniao', 'proposta'].includes(actionValue)) ||
       (window.currentTab === 'operacao' && ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'].includes(actionValue));
 
@@ -4982,6 +4985,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   if (btnOptNegado) {
     btnOptNegado.addEventListener('click', () => requestStatusChangeConfirmation('Negado', 'negado'));
+  }
+  if (btnOptChurn) {
+    btnOptChurn.addEventListener('click', () => requestStatusChangeConfirmation('Churn', 'churn'));
   }
 
   // Clicou em 'Deletar' na lista de opções: remove o registro do banco de dados (Supabase)
@@ -7091,7 +7097,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (window.currentTab === 'operacao') {
         stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
       } else if (window.currentTab === 'judicial') {
-        stages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado'];
+        stages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado', 'churn'];
       }
 
       const currentIndex = stages.indexOf(stage);
@@ -9055,7 +9061,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (window.currentTab === 'operacao') {
         stages = ['documentacao', 'na_fila', 'requerido', 'exigencia', 'concedido'];
       } else if (window.currentTab === 'judicial') {
-        stages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado'];
+        stages = ['negado', 'planejamento', 'recuperacao', 'no_show', 'recusado', 'perdido', 'desqualificado', 'churn'];
       }
 
       const currentIndex = stages.indexOf(currentActiveCard.status);

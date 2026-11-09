@@ -1734,6 +1734,7 @@ display: flex;
 .dot-recusado { background-color: #EF4444 !important; }     /* Vermelho Forte */
 .dot-perdido { background-color: #64748B !important; }      /* Cinza Ardósia */
 .dot-desqualificado { background-color: #9CA3AF !important; }/* Cinza */
+.dot-churn { background-color: #E11D48 !important; }          /* Rosa/Vermelho Carmesim */
 
 .column-title {
   font-family: var(--font-display);
@@ -3218,7 +3219,8 @@ display: flex;
 .btn-opt-recusado:hover,
 .btn-opt-perdido:hover,
 .btn-opt-recuperacao:hover,
-.btn-opt-noshow:hover {
+.btn-opt-noshow:hover,
+.btn-opt-churn:hover {
   background-color: #FEF3C7;
   color: #92400E;
   border-color: #FCD34D;
