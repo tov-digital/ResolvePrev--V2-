@@ -3713,15 +3713,17 @@ display: flex;
   background-color: #22C55E;
 }
 
-/* Status 5: Corrigir (Roxo) */
-.doc-status-badge.badge-corrigir {
-  background-color: #FAF5FF;
-  color: #7E22CE;
-  border: 1px solid #E9D5FF;
+/* Status 5: Corrigir (Teal / Verde-azulado) */
+.doc-status-badge.badge-corrigir,
+.badge-corrigir {
+  background-color: #F0FDFA !important;
+  color: #0F766E !important;
+  border: 1px solid #99F6E4 !important;
 }
 
-.doc-status-badge.badge-corrigir .doc-badge-dot {
-  background-color: #A855F7;
+.doc-status-badge.badge-corrigir .doc-badge-dot,
+.badge-corrigir .doc-badge-dot {
+  background-color: #14B8A6 !important;
 }
 
 /* Formulário e Seções da Ficha */
