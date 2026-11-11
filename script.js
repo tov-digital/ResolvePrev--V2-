@@ -6183,11 +6183,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modalBtnCopyPhone = document.getElementById('modalBtnCopyPhone');
   if (modalBtnCopyPhone) {
     modalBtnCopyPhone.addEventListener('click', () => {
-      const phoneVal = currentActiveCard && currentActiveCard.telefone ? currentActiveCard.telefone.trim() : '';
-      if (!phoneVal) {
+      const rawPhone = currentActiveCard && currentActiveCard.telefone ? currentActiveCard.telefone.trim() : '';
+      if (!rawPhone) {
         showToast('Nenhum telefone para copiar.');
         return;
       }
+
+      const digitsOnly = rawPhone.replace(/\D/g, '');
+      const phoneVal = digitsOnly.startsWith('0') ? digitsOnly : '0' + digitsOnly;
 
       navigator.clipboard.writeText(phoneVal).then(() => {
         modalBtnCopyPhone.classList.add('copied');
