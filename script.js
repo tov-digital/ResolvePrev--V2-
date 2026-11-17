@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.currentProduct = localStorage.getItem('tov_active_product') || 'aposentadoria';
   window.productTables = {
     aposentadoria: 'crm',
-    maternidade: 'crm_maternidade' // Tabela que o usuário configurará/informará
+    maternidade: 'crm_sm'
   };
 
   function getCurrentTable() {
@@ -4284,9 +4284,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           doc_rg_cnh: 'Pendente',
           doc_certidao: 'Pendente',
           doc_cnis: 'Pendente',
-          doc_carteira_trabalho: 'Pendente',
           doc_carteira_digital: 'Pendente'
         };
+
+        if (window.currentProduct === 'aposentadoria') {
+          defaultData.doc_carteira_trabalho = 'Pendente';
+        }
 
         if (supabase) {
           if (!currentUserId) {
@@ -4348,12 +4351,27 @@ document.addEventListener('DOMContentLoaded', async () => {
           table: 'crm'
         },
         () => {
-          loadUserCards();
+          if (window.currentProduct === 'aposentadoria') {
+            loadUserCards();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'crm_sm'
+        },
+        () => {
+          if (window.currentProduct === 'maternidade') {
+            loadUserCards();
+          }
         }
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Sincronização em tempo real ativa no Supabase (tabela crm).');
+          console.log('Sincronização em tempo real ativa no Supabase (crm e crm_sm).');
         }
       });
   }
@@ -6687,7 +6705,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       const elDetalhes = document.getElementById('respDetalhes');
       if (elDetalhes) elDetalhes.value = card.detalhes || '';
 
-      if (typeof initQualificationForm === 'function') {
+      // Alterna exibição do formulário de qualificação conforme o produto ativo
+      const formAposentadoria = document.getElementById('clientAnswersForm');
+      const formSM = document.getElementById('clientAnswersFormSM');
+      const isMaternidade = window.currentProduct === 'maternidade';
+
+      if (formAposentadoria && formSM) {
+        if (isMaternidade) {
+          formAposentadoria.style.display = 'none';
+          formSM.style.display = 'flex';
+
+          const smTempo = document.getElementById('sm_respTempo');
+          if (smTempo) smTempo.value = card.tempo || '';
+
+          const smTitular = document.getElementById('sm_respTitularBeneficio');
+          if (smTitular) smTitular.value = card.titular_do_beneficio || '';
+
+          const smTrabalho = document.getElementById('sm_respTrabalhoRegistrado');
+          if (smTrabalho) smTrabalho.value = card.trabalho_registrado || '';
+
+          const smHistorico = document.getElementById('sm_respHistoricoCarteira');
+          if (smHistorico) smHistorico.value = card.historico_carteira_ou_inss || '';
+
+          const smJaPediu = document.getElementById('sm_respJaPediuBeneficio');
+          if (smJaPediu) smJaPediu.value = card.ja_pediu_beneficio || '';
+        } else {
+          formAposentadoria.style.display = 'block';
+          formSM.style.display = 'none';
+        }
+      }
+
+      if (!isMaternidade && typeof initQualificationForm === 'function') {
         initQualificationForm();
       };
 
@@ -7072,15 +7120,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     const respExerceuAtividadeEspecial = document.getElementById('respExerceuAtividadeEspecial');
     const respDetalhes = document.getElementById('respDetalhes');
 
-    const updatedAnswers = {
-      servico_militar: document.getElementById('respServicoMilitar') ? document.getElementById('respServicoMilitar').value : 'Não',
-      ja_contribuiu: respJaContribuiu ? respJaContribuiu.value : '',
-      tempo_contribuicao: respTempoContribuicao && respTempoContribuicao.value !== '' ? parseInt(respTempoContribuicao.value, 10) : null,
-      tipo_trabalho: respTipoTrabalho ? respTipoTrabalho.value : '',
-      solicitou_beneficio: respSolicitouBeneficio ? respSolicitouBeneficio.value : '',
-      exerceu_atividade_especial: respExerceuAtividadeEspecial ? respExerceuAtividadeEspecial.value : '',
-      detalhes: respDetalhes ? respDetalhes.value.trim() : ''
-    };
+    let updatedAnswers = {};
+
+    if (window.currentProduct === 'maternidade') {
+      const smTempo = document.getElementById('sm_respTempo');
+      const smTitular = document.getElementById('sm_respTitularBeneficio');
+      const smTrabalho = document.getElementById('sm_respTrabalhoRegistrado');
+      const smHistorico = document.getElementById('sm_respHistoricoCarteira');
+      const smJaPediu = document.getElementById('sm_respJaPediuBeneficio');
+
+      updatedAnswers = {
+        tempo: smTempo ? smTempo.value.trim() : '',
+        titular_do_beneficio: smTitular ? smTitular.value : '',
+        trabalho_registrado: smTrabalho ? smTrabalho.value : '',
+        historico_carteira_ou_inss: smHistorico ? smHistorico.value.trim() : '',
+        ja_pediu_beneficio: smJaPediu ? smJaPediu.value : '',
+        detalhes: respDetalhes ? respDetalhes.value.trim() : ''
+      };
+    } else {
+      updatedAnswers = {
+        servico_militar: document.getElementById('respServicoMilitar') ? document.getElementById('respServicoMilitar').value : 'Não',
+        ja_contribuiu: respJaContribuiu ? respJaContribuiu.value : '',
+        tempo_contribuicao: respTempoContribuicao && respTempoContribuicao.value !== '' ? parseInt(respTempoContribuicao.value, 10) : null,
+        tipo_trabalho: respTipoTrabalho ? respTipoTrabalho.value : '',
+        solicitou_beneficio: respSolicitouBeneficio ? respSolicitouBeneficio.value : '',
+        exerceu_atividade_especial: respExerceuAtividadeEspecial ? respExerceuAtividadeEspecial.value : '',
+        detalhes: respDetalhes ? respDetalhes.value.trim() : ''
+      };
+    }
 
     const finalData = {
       ...updatedData,
@@ -7126,6 +7193,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     clientAnswersForm.addEventListener('submit', (e) => e.preventDefault());
     clientAnswersForm.addEventListener('focusout', () => saveClientData(true));
     clientAnswersForm.addEventListener('change', (e) => {
+      if (e.target.tagName === 'SELECT' || e.target.type === 'checkbox' || e.target.type === 'radio') {
+        saveClientData(true);
+      }
+    });
+  }
+
+  const clientAnswersFormSM = document.getElementById('clientAnswersFormSM');
+  if (clientAnswersFormSM) {
+    clientAnswersFormSM.addEventListener('submit', (e) => e.preventDefault());
+    clientAnswersFormSM.addEventListener('focusout', () => saveClientData(true));
+    clientAnswersFormSM.addEventListener('change', (e) => {
       if (e.target.tagName === 'SELECT' || e.target.type === 'checkbox' || e.target.type === 'radio') {
         saveClientData(true);
       }

@@ -1762,6 +1762,77 @@ width:100%; color:var(--text-primary);">
                     </div>
 
                   </form>
+
+                  <!-- Formulário de Qualificação para Salário Maternidade -->
+                  <form id="clientAnswersFormSM"
+                    style="display: none; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-right: 0; min-height: 0; flex-direction: column; gap: 14px;">
+                    
+                    <!-- 1. tempo -->
+                    <div class="qual-field-group">
+                      <div class="qual-header-row">
+                        <label for="sm_respTempo" class="qual-field-label">1. Tempo de gestação ou idade da criança?</label>
+                      </div>
+                      <input type="text" id="sm_respTempo" class="qual-input" placeholder="Ex: 7 meses de gestação / 4 meses de nascido"
+                        style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary); font-size: 13px; outline: none;">
+                    </div>
+
+                    <!-- 2. titular_do_beneficio -->
+                    <div class="qual-field-group">
+                      <div class="qual-header-row">
+                        <label for="sm_respTitularBeneficio" class="qual-field-label">2. Quem é o titular do benefício?</label>
+                      </div>
+                      <select id="sm_respTitularBeneficio" class="qual-select"
+                        style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
+                        <option value="">Selecione...</option>
+                        <option value="Mãe biológica">Mãe biológica</option>
+                        <option value="Mãe adotiva">Mãe adotiva</option>
+                        <option value="Pai (falecimento da mãe / guarda)">Pai (falecimento da mãe / guarda)</option>
+                        <option value="Outro">Outro</option>
+                      </select>
+                    </div>
+
+                    <!-- 3. trabalho_registrado -->
+                    <div class="qual-field-group">
+                      <div class="qual-header-row">
+                        <label for="sm_respTrabalhoRegistrado" class="qual-field-label">3. Possui trabalho registrado em carteira (CLT)?</label>
+                      </div>
+                      <select id="sm_respTrabalhoRegistrado" class="qual-select"
+                        style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
+                        <option value="">Selecione...</option>
+                        <option value="Sim - com carteira assinada (CLT)">Sim - com carteira assinada (CLT)</option>
+                        <option value="Não - desempregada">Não - desempregada</option>
+                        <option value="MEI / Autônoma">MEI / Autônoma</option>
+                        <option value="Trabalhadora Rural / Segurada Especial">Trabalhadora Rural / Segurada Especial</option>
+                        <option value="Contribuinte Facultativa">Contribuinte Facultativa</option>
+                      </select>
+                    </div>
+
+                    <!-- 4. historico_carteira_ou_inss -->
+                    <div class="qual-field-group">
+                      <div class="qual-header-row">
+                        <label for="sm_respHistoricoCarteira" class="qual-field-label">4. Histórico de contribuição em carteira ou INSS?</label>
+                      </div>
+                      <textarea id="sm_respHistoricoCarteira" class="qual-textarea" rows="2"
+                        placeholder="Ex: Teve registro CLT até 2023 / Pagou carnê por 1 ano..."
+                        style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary); font-size: 13px; outline: none; resize: vertical;"></textarea>
+                    </div>
+
+                    <!-- 5. ja_pediu_beneficio -->
+                    <div class="qual-field-group">
+                      <div class="qual-header-row">
+                        <label for="sm_respJaPediuBeneficio" class="qual-field-label">5. Já deu entrada no pedido de salário maternidade antes?</label>
+                      </div>
+                      <select id="sm_respJaPediuBeneficio" class="qual-select"
+                        style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
+                        <option value="">Selecione...</option>
+                        <option value="Não - nunca pedi">Não - nunca pedi</option>
+                        <option value="Sim - pedido em análise no INSS">Sim - pedido em análise no INSS</option>
+                        <option value="Sim - pedido indeferido / negado">Sim - pedido indeferido / negado</option>
+                        <option value="Sim - benefício já concedido">Sim - benefício já concedido</option>
+                      </select>
+                    </div>
+
+                  </form>
                   <div id="summaryCardsContainer"
                     style="display: none; flex-direction: column; gap: 12px; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 8px 16px 6px; min-height: 0; box-sizing: border-box;">
                   </div>
