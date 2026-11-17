@@ -6685,7 +6685,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      updateServicoMilitarUI(card.servico_militar || 'Não');
+      const isMaternidade = window.currentProduct === 'maternidade';
+      const valorBadge = isMaternidade ? (card.situacao || 'Não') : (card.servico_militar || 'Não');
+      updateServicoMilitarUI(valorBadge);
 
       const elJaContribuiu = document.getElementById('respJaContribuiu');
       if (elJaContribuiu) elJaContribuiu.value = card.ja_contribuiu || 'Sim - e continuo contribuindo.';
@@ -6708,7 +6710,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Alterna exibição do formulário de qualificação conforme o produto ativo
       const formAposentadoria = document.getElementById('clientAnswersForm');
       const formSM = document.getElementById('clientAnswersFormSM');
-      const isMaternidade = window.currentProduct === 'maternidade';
 
       if (formAposentadoria && formSM) {
         if (isMaternidade) {
@@ -7130,6 +7131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const smJaPediu = document.getElementById('sm_respJaPediuBeneficio');
 
       updatedAnswers = {
+        situacao: document.getElementById('respServicoMilitar') ? document.getElementById('respServicoMilitar').value : 'Não',
         tempo: smTempo ? smTempo.value.trim() : '',
         titular_do_beneficio: smTitular ? smTitular.value : '',
         trabalho_registrado: smTrabalho ? smTrabalho.value : '',
@@ -8435,6 +8437,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const input = document.getElementById('respServicoMilitar');
 
     if (!btn || !label || !text || !input) return;
+
+    if (label) {
+      label.textContent = window.currentProduct === 'maternidade' ? 'Nascimento no próximo mês?' : 'Serviço Militar';
+    }
 
     if (val === 'Sim') {
       btn.style.background = 'var(--bg-success)';
