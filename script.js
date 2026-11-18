@@ -6811,6 +6811,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       const valorBadge = isMaternidade ? (card.situacao || 'Não') : (card.servico_militar || 'Não');
       updateServicoMilitarUI(valorBadge);
 
+      // Atualizar box de Contribuição total (Aposentadoria) ou É o titular? (Salário Maternidade)
+      const boxStatContribuicao = document.getElementById('boxStatContribuicao');
+      const btnTitularBeneficio = document.getElementById('btnTitularBeneficio');
+      const boxStatIdade = document.getElementById('boxStatIdade');
+      const boxStatAniversario = document.getElementById('boxStatAniversario');
+      const btnServicoMilitar = document.getElementById('btnServicoMilitar');
+
+      if (isMaternidade) {
+        if (boxStatContribuicao) boxStatContribuicao.style.display = 'none';
+        if (btnTitularBeneficio) {
+          btnTitularBeneficio.style.display = 'block';
+          btnTitularBeneficio.style.order = '4';
+        }
+        if (btnServicoMilitar) btnServicoMilitar.style.order = '1';
+        if (boxStatAniversario) boxStatAniversario.style.order = '2';
+        if (boxStatIdade) boxStatIdade.style.order = '3';
+        updateTitularBeneficioUI(card.titular_do_beneficio || 'Não');
+      } else {
+        if (btnTitularBeneficio) btnTitularBeneficio.style.display = 'none';
+        if (boxStatContribuicao) {
+          boxStatContribuicao.style.display = 'block';
+          boxStatContribuicao.style.order = '2';
+        }
+        if (boxStatIdade) boxStatIdade.style.order = '1';
+        if (boxStatAniversario) boxStatAniversario.style.order = '3';
+        if (btnServicoMilitar) btnServicoMilitar.style.order = '4';
+      }
+
       const elJaContribuiu = document.getElementById('respJaContribuiu');
       if (elJaContribuiu) elJaContribuiu.value = card.ja_contribuiu || 'Sim - e continuo contribuindo.';
 
@@ -6840,9 +6868,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           const smTempo = document.getElementById('sm_respTempo');
           if (smTempo) smTempo.value = card.tempo || '';
-
-          const smTitular = document.getElementById('sm_respTitularBeneficio');
-          if (smTitular) smTitular.value = card.titular_do_beneficio || '';
 
           const smTrabalho = document.getElementById('sm_respTrabalhoRegistrado');
           if (smTrabalho) smTrabalho.value = card.trabalho_registrado || '';
@@ -7279,11 +7304,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (window.currentProduct === 'maternidade') {
       const smTempo = document.getElementById('sm_respTempo');
-      const smTitular = document.getElementById('sm_respTitularBeneficio');
       const smTrabalho = document.getElementById('sm_respTrabalhoRegistrado');
       const smHistorico = document.getElementById('sm_respHistoricoCarteira');
       const smJaPediu = document.getElementById('sm_respJaPediuBeneficio');
       const smIdadeInput = document.getElementById('statIdadeInput');
+      const titularVal = document.getElementById('respTitularBeneficioSM') ? document.getElementById('respTitularBeneficioSM').value : (currentActiveCard?.titular_do_beneficio || 'Não');
 
       const situacaoVal = document.getElementById('respServicoMilitar') ? document.getElementById('respServicoMilitar').value : 'Não';
       const parsedIdade = smIdadeInput && smIdadeInput.value.trim() !== '' ? parseInt(smIdadeInput.value.trim(), 10) : null;
@@ -7292,7 +7317,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         situacao: situacaoVal,
         Idade: parsedIdade,
         tempo: smTempo ? smTempo.value.trim() : '',
-        titular_do_beneficio: smTitular ? smTitular.value : '',
+        titular_do_beneficio: titularVal,
         trabalho_registrado: smTrabalho ? smTrabalho.value : '',
         historico_carteira_ou_inss: smHistorico ? smHistorico.value.trim() : '',
         ja_pediu_beneficio: smJaPediu ? smJaPediu.value : '',
@@ -8630,6 +8655,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  function updateTitularBeneficioUI(val) {
+    const btn = document.getElementById('btnTitularBeneficio');
+    const label = document.getElementById('labelTitularBeneficio');
+    const text = document.getElementById('textTitularBeneficio');
+    const input = document.getElementById('respTitularBeneficioSM');
+
+    if (!btn || !label || !text || !input) return;
+
+    const isPositive = val === 'Sim' || val === 'Sim, é para mim';
+
+    if (isPositive) {
+      btn.style.background = 'var(--bg-success)';
+      label.style.color = 'var(--text-success)';
+      text.style.color = 'var(--text-success)';
+      text.textContent = 'Sim';
+      input.value = 'Sim';
+    } else {
+      btn.style.background = '#FEE2E2';
+      label.style.color = '#B91C1C';
+      text.style.color = '#B91C1C';
+      text.textContent = 'Não';
+      input.value = 'Não';
+    }
+  }
+
+  const btnTitularBeneficio = document.getElementById('btnTitularBeneficio');
+  if (btnTitularBeneficio) {
+    btnTitularBeneficio.addEventListener('click', () => {
+      const input = document.getElementById('respTitularBeneficioSM');
+      const newVal = input && input.value === 'Sim' ? 'Não' : 'Sim';
+      updateTitularBeneficioUI(newVal);
+      saveClientData(true);
+    });
+  }
+
 
 
   // --- Aes dos botes no rodap do modal ---
@@ -9784,7 +9844,6 @@ function updateQualificationProgress() {
 
     const smQuestions = [
       document.getElementById('sm_respTempo'),
-      document.getElementById('sm_respTitularBeneficio'),
       document.getElementById('sm_respTrabalhoRegistrado'),
       document.getElementById('sm_respHistoricoCarteira'),
       document.getElementById('sm_respJaPediuBeneficio')
@@ -10122,20 +10181,22 @@ function compileQualificationSummary() {
       smBlocks.push(`O bebê já nasceu?\nR: ${situacaoVal}`);
     }
 
+    const titularVal = document.getElementById('respTitularBeneficioSM')?.value || currentActiveCard?.titular_do_beneficio;
+    if (titularVal) {
+      smBlocks.push(`É o titular?\nR: ${titularVal}`);
+    }
+
     const q1 = document.getElementById('sm_respTempo');
     if (q1 && q1.value) smBlocks.push(`1. Qual o tempo de gestação ou a idade do bebê?\nR: ${q1.value}`);
 
-    const q2 = document.getElementById('sm_respTitularBeneficio');
-    if (q2 && q2.value) smBlocks.push(`2. Quem é o titular do benefício?\nR: ${q2.value}`);
+    const q2 = document.getElementById('sm_respTrabalhoRegistrado');
+    if (q2 && q2.value) smBlocks.push(`2. Trabalha Registrada?\nR: ${q2.value}`);
 
-    const q3 = document.getElementById('sm_respTrabalhoRegistrado');
-    if (q3 && q3.value) smBlocks.push(`3. Trabalha Registrada?\nR: ${q3.value}`);
+    const q3 = document.getElementById('sm_respHistoricoCarteira');
+    if (q3 && q3.value) smBlocks.push(`3. Já trabalhou ou contribuiu para o INSS?\nR: ${q3.value}`);
 
-    const q4 = document.getElementById('sm_respHistoricoCarteira');
-    if (q4 && q4.value) smBlocks.push(`4. Já trabalhou ou contribuiu para o INSS?\nR: ${q4.value}`);
-
-    const q5 = document.getElementById('sm_respJaPediuBeneficio');
-    if (q5 && q5.value) smBlocks.push(`5. Você já pediu esse benefício?\nR: ${q5.value}`);
+    const q4 = document.getElementById('sm_respJaPediuBeneficio');
+    if (q4 && q4.value) smBlocks.push(`4. Você já pediu esse benefício?\nR: ${q4.value}`);
 
     if (smBlocks.length === 0) return '';
     return `=== QUALIFICAÇÃO DO CLIENTE (SALÁRIO MATERNIDADE) ===\n\n` + smBlocks.join('\n\n');

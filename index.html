@@ -1164,9 +1164,9 @@ var(--border); flex-shrink: 0;">
         </div>
 
         <!-- Metrics -->
-        <div
+        <div id="clientSheetMetricsContainer"
           style="padding:0 20px 16px; display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; flex-shrink: 0;">
-          <div style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
+          <div id="boxStatIdade" style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
             <label id="labelStatIdade" for="statIdadeInput" style="margin:0; font-size:11px; color:var(--text-secondary); display:block;">Idade</label>
             <!-- Elemento de texto estático para Aposentadoria (cálculo automático original) -->
             <p id="statIdade" style="margin:2px 0 0; font-size:18px; font-weight:700; color:var(--text-primary); display:block;">-</p>
@@ -1174,18 +1174,22 @@ var(--border); flex-shrink: 0;">
             <input type="number" id="statIdadeInput" class="sheet-input" placeholder="-" min="0" max="120" step="1"
               style="margin:2px 0 0; font-size:18px; font-weight:700; background:transparent; border:none; outline:none; padding:0; width:100%; color:var(--text-primary); display:none;">
           </div>
-          <div style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
-            <div style="margin:0; font-size:11px; color:var(--text-secondary); display:flex; align-items:center; 
-justify-content:space-between; gap:4px;">
-              <label for="respTempoContribuicao" style="margin:0; font-weight:normal; cursor:text;">Contribuição
-                total</label>
+          <!-- Contribuição total (Aposentadoria) / É o titular? (Salário Maternidade) -->
+          <div id="boxStatContribuicao" style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
+            <div style="margin:0; font-size:11px; color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between; gap:4px;">
+              <label for="respTempoContribuicao" style="margin:0; font-weight:normal; cursor:text;">Contribuição total</label>
             </div>
-            <!-- Keep input but style it 
-like text -->
-            <input type="number" id="respTempoContribuicao" placeholder="0" min="0" step="1" style="margin:2px 0 0; font-size:18px; font-weight:500; background:transparent; border:none; outline:none; padding:0; 
-width:100%; color:var(--text-primary);">
+            <!-- Keep input but style it like text -->
+            <input type="number" id="respTempoContribuicao" placeholder="0" min="0" step="1" style="margin:2px 0 0; font-size:18px; font-weight:500; background:transparent; border:none; outline:none; padding:0; width:100%; color:var(--text-primary);">
           </div>
-          <div style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
+          <!-- Toggle É o titular? exclusivo para Salário Maternidade -->
+          <div id="btnTitularBeneficio"
+            style="background:#FEE2E2; border-radius:var(--radius); padding:10px 12px; cursor:pointer; user-select:none; transition: all 0.2s; display:none;">
+            <p id="labelTitularBeneficio" style="margin:0; font-size:11px; color:#B91C1C;">É o titular?</p>
+            <p id="textTitularBeneficio" style="margin:2px 0 0; font-size:18px; font-weight:500; color:#B91C1C;">Não</p>
+            <input type="hidden" id="respTitularBeneficioSM" value="Não">
+          </div>
+          <div id="boxStatAniversario" style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
             <label id="labelStatAniversario" for="statAniversario"
               style="margin:0; font-size:11px; color:var(--text-secondary); display:block; cursor:text;">Aniversário</label>
             <input type="text" id="statAniversario" class="sheet-input" placeholder="DD/MM"
@@ -1771,7 +1775,7 @@ width:100%; color:var(--text-primary);">
                   <form id="clientAnswersFormSM"
                     style="display: none; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-right: 0; min-height: 0;">
                     
-                    <!-- Pergunta 2: Qual o tempo de gestação ou a idade do bebê? -->
+                    <!-- Pergunta 1: Qual o tempo de gestação ou a idade do bebê? -->
                     <div class="qual-field-group">
                       <div class="qual-header-row">
                         <label for="sm_respTempo" class="qual-field-label">1. Qual o tempo de gestação ou a idade do bebê?</label>
@@ -1790,22 +1794,10 @@ width:100%; color:var(--text-primary);">
                       </select>
                     </div>
 
-                    <!-- Pergunta 3: Quem é o titular do benefício? -->
+                    <!-- Pergunta 2: Trabalha Registrada? -->
                     <div class="qual-field-group">
                       <div class="qual-header-row">
-                        <label for="sm_respTitularBeneficio" class="qual-field-label">2. Quem é o titular do benefício?</label>
-                      </div>
-                      <select id="sm_respTitularBeneficio" class="qual-select">
-                        <option value="">Selecione...</option>
-                        <option value="Sim, é para mim">Sim, é para mim</option>
-                        <option value="Não, estou pesquisando para outra pessoa">Não, estou pesquisando para outra pessoa</option>
-                      </select>
-                    </div>
-
-                    <!-- Pergunta 4: Trabalha Registrada? -->
-                    <div class="qual-field-group">
-                      <div class="qual-header-row">
-                        <label for="sm_respTrabalhoRegistrado" class="qual-field-label">3. Trabalha Registrada?</label>
+                        <label for="sm_respTrabalhoRegistrado" class="qual-field-label">2. Trabalha Registrada?</label>
                       </div>
                       <select id="sm_respTrabalhoRegistrado" class="qual-select">
                         <option value="">Selecione...</option>
@@ -1828,10 +1820,10 @@ width:100%; color:var(--text-primary);">
                       </select>
                     </div>
 
-                    <!-- Pergunta 5: Já trabalhou ou contribuiu para o INSS? -->
+                    <!-- Pergunta 3: Já trabalhou ou contribuiu para o INSS? -->
                     <div class="qual-field-group">
                       <div class="qual-header-row">
-                        <label for="sm_respHistoricoCarteira" class="qual-field-label">4. Já trabalhou ou contribuiu para o INSS?</label>
+                        <label for="sm_respHistoricoCarteira" class="qual-field-label">3. Já trabalhou ou contribuiu para o INSS?</label>
                       </div>
                       <select id="sm_respHistoricoCarteira" class="qual-select">
                         <option value="">Selecione...</option>
@@ -1844,10 +1836,10 @@ width:100%; color:var(--text-primary);">
                       </select>
                     </div>
 
-                    <!-- Pergunta 6: Você já pediu esse benefício? -->
+                    <!-- Pergunta 4: Você já pediu esse benefício? -->
                     <div class="qual-field-group">
                       <div class="qual-header-row">
-                        <label for="sm_respJaPediuBeneficio" class="qual-field-label">5. Você já pediu esse benefício?</label>
+                        <label for="sm_respJaPediuBeneficio" class="qual-field-label">4. Você já pediu esse benefício?</label>
                       </div>
                       <select id="sm_respJaPediuBeneficio" class="qual-select">
                         <option value="">Selecione...</option>
