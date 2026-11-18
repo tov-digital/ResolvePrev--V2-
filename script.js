@@ -6822,20 +6822,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     'Corrigir': 'badge-corrigir'
   };
 
-  const obrigatorioKeys = ['doc_cnis', 'doc_rg_cnh', 'doc_carteira_trabalho', 'doc_carteira_digital', 'doc_certidao'];
+  const obrigatorioKeysAposentadoria = ['doc_cnis', 'doc_rg_cnh', 'doc_carteira_trabalho', 'doc_carteira_digital', 'doc_certidao'];
+  const obrigatorioKeysMaternidade = ['doc_cnis', 'doc_rg_cnh', 'doc_carteira_digital', 'doc_certidao'];
+
+  function getActiveObrigatorioKeys() {
+    return window.currentProduct === 'maternidade' ? obrigatorioKeysMaternidade : obrigatorioKeysAposentadoria;
+  }
 
   function updateDocsCounters() {
     if (!currentActiveCard) return;
 
-    // 1. Contagem dos Obrigatórios (Total: 5)
+    const activeKeys = getActiveObrigatorioKeys();
+    const totalObg = activeKeys.length;
+
+    // 1. Contagem dos Obrigatórios
     let obgRecebidos = 0;
-    obrigatorioKeys.forEach(key => {
+    activeKeys.forEach(key => {
       if (currentActiveCard[key] === 'Recebido') {
         obgRecebidos++;
       }
     });
     const countObgEl = document.getElementById('countObrigatorios');
-    if (countObgEl) countObgEl.textContent = `${obgRecebidos}/5`;
+    if (countObgEl) countObgEl.textContent = `${obgRecebidos}/${totalObg}`;
 
     // 2. Contagem dos Eventuais (Total dinâmico)
     let eventuaisList = currentActiveCard.eventuais;
@@ -6855,6 +6863,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderDocumentBadges(card) {
+    const isMaternidade = window.currentProduct === 'maternidade';
+
+    // Ajusta visibilidade de "Carteira de Trabalho Física"
+    const docItemCarteiraFisica = document.getElementById('docItemCarteiraFisica');
+    if (docItemCarteiraFisica) {
+      docItemCarteiraFisica.style.display = isMaternidade ? 'none' : 'flex';
+    }
+
+    // Ajusta o nome de "Certidão de Nascimento ou Casamento" / "Certidão de Nascimento do Filho(a)"
+    const docNameCertidao = document.getElementById('docNameCertidao');
+    if (docNameCertidao) {
+      docNameCertidao.textContent = isMaternidade ? 'Certidão de Nascimento do Filho(a)' : 'Certidão de Nascimento ou Casamento';
+    }
+
     document.querySelectorAll('.doc-status-badge').forEach(badge => {
       const docKey = badge.dataset.docKey;
       if (!docKey) return;
