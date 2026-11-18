@@ -1167,8 +1167,12 @@ var(--border); flex-shrink: 0;">
         <div
           style="padding:0 20px 16px; display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; flex-shrink: 0;">
           <div style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
-            <p style="margin:0; font-size:11px; color:var(--text-secondary);">Idade</p>
-            <p id="statIdade" style="margin:2px 0 0; font-size:18px; font-weight:500;">-</p>
+            <label id="labelStatIdade" for="statIdadeInput" style="margin:0; font-size:11px; color:var(--text-secondary); display:block;">Idade</label>
+            <!-- Elemento de texto estático para Aposentadoria (cálculo automático original) -->
+            <p id="statIdade" style="margin:2px 0 0; font-size:18px; font-weight:700; color:var(--text-primary); display:block;">-</p>
+            <!-- Input editável exclusivo para Salário Maternidade (digitação manual) -->
+            <input type="number" id="statIdadeInput" class="sheet-input" placeholder="-" min="0" max="120" step="1"
+              style="margin:2px 0 0; font-size:18px; font-weight:700; background:transparent; border:none; outline:none; padding:0; width:100%; color:var(--text-primary); display:none;">
           </div>
           <div style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
             <div style="margin:0; font-size:11px; color:var(--text-secondary); display:flex; align-items:center; 
@@ -1182,7 +1186,7 @@ like text -->
 width:100%; color:var(--text-primary);">
           </div>
           <div style="background:var(--surface-1); border-radius:var(--radius); padding:10px 12px;">
-            <label for="statAniversario"
+            <label id="labelStatAniversario" for="statAniversario"
               style="margin:0; font-size:11px; color:var(--text-secondary); display:block; cursor:text;">Aniversário</label>
             <input type="text" id="statAniversario" class="sheet-input" placeholder="DD/MM"
               style="margin:2px 0 0; font-size:18px; font-weight:500; background:transparent; border:none; outline:none; padding:0; width:100%; color:var(--text-primary);">
@@ -1765,70 +1769,98 @@ width:100%; color:var(--text-primary);">
 
                   <!-- Formulário de Qualificação para Salário Maternidade -->
                   <form id="clientAnswersFormSM"
-                    style="display: none; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-right: 0; min-height: 0; flex-direction: column; gap: 14px;">
+                    style="display: none; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-right: 0; min-height: 0;">
                     
-                    <!-- 1. tempo -->
+                    <!-- Pergunta 2: Qual o tempo de gestação ou a idade do bebê? -->
                     <div class="qual-field-group">
                       <div class="qual-header-row">
-                        <label for="sm_respTempo" class="qual-field-label">1. Tempo de gestação ou idade da criança?</label>
+                        <label for="sm_respTempo" class="qual-field-label">1. Qual o tempo de gestação ou a idade do bebê?</label>
                       </div>
-                      <input type="text" id="sm_respTempo" class="qual-input" placeholder="Ex: 7 meses de gestação / 4 meses de nascido"
-                        style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary); font-size: 13px; outline: none;">
+                      <select id="sm_respTempo" class="qual-select">
+                        <option value="">Selecione...</option>
+                        <option value="9 meses">9 meses</option>
+                        <option value="8 meses">8 meses</option>
+                        <option value="6 ou 7 meses">6 ou 7 meses</option>
+                        <option value="Até 5 meses">Até 5 meses</option>
+                        <option value="Menos de 3 meses">Menos de 3 meses</option>
+                        <option value="Entre 3 meses e 1 ano">Entre 3 meses e 1 ano</option>
+                        <option value="Entre 1 e 3 anos">Entre 1 e 3 anos</option>
+                        <option value="Entre 3 e 5 anos">Entre 3 e 5 anos</option>
+                        <option value="Mais de 5 anos">Mais de 5 anos</option>
+                      </select>
                     </div>
 
-                    <!-- 2. titular_do_beneficio -->
+                    <!-- Pergunta 3: Quem é o titular do benefício? -->
                     <div class="qual-field-group">
                       <div class="qual-header-row">
                         <label for="sm_respTitularBeneficio" class="qual-field-label">2. Quem é o titular do benefício?</label>
                       </div>
-                      <select id="sm_respTitularBeneficio" class="qual-select"
-                        style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
+                      <select id="sm_respTitularBeneficio" class="qual-select">
                         <option value="">Selecione...</option>
-                        <option value="Mãe biológica">Mãe biológica</option>
-                        <option value="Mãe adotiva">Mãe adotiva</option>
-                        <option value="Pai (falecimento da mãe / guarda)">Pai (falecimento da mãe / guarda)</option>
-                        <option value="Outro">Outro</option>
+                        <option value="Sim, é para mim">Sim, é para mim</option>
+                        <option value="Não, estou pesquisando para outra pessoa">Não, estou pesquisando para outra pessoa</option>
                       </select>
                     </div>
 
-                    <!-- 3. trabalho_registrado -->
+                    <!-- Pergunta 4: Trabalha Registrada? -->
                     <div class="qual-field-group">
                       <div class="qual-header-row">
-                        <label for="sm_respTrabalhoRegistrado" class="qual-field-label">3. Possui trabalho registrado em carteira (CLT)?</label>
+                        <label for="sm_respTrabalhoRegistrado" class="qual-field-label">3. Trabalha Registrada?</label>
                       </div>
-                      <select id="sm_respTrabalhoRegistrado" class="qual-select"
-                        style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
+                      <select id="sm_respTrabalhoRegistrado" class="qual-select">
                         <option value="">Selecione...</option>
-                        <option value="Sim - com carteira assinada (CLT)">Sim - com carteira assinada (CLT)</option>
-                        <option value="Não - desempregada">Não - desempregada</option>
-                        <option value="MEI / Autônoma">MEI / Autônoma</option>
-                        <option value="Trabalhadora Rural / Segurada Especial">Trabalhadora Rural / Segurada Especial</option>
-                        <option value="Contribuinte Facultativa">Contribuinte Facultativa</option>
+                        <option value="Sim, trabalho de carteira assinada">Sim, trabalho de carteira assinada</option>
+                        <option value="Não, estou desempregada">Não, estou desempregada</option>
+                        <option value="Trabalho por conta própria ou sou MEI">Trabalho por conta própria ou sou MEI</option>
+                        <option value="Trabalho sem registro (bico, diária)">Trabalho sem registro (bico, diária)</option>
+                        <option value="Sim, ela trabalha de carteira assinada">Sim, ela trabalha de carteira assinada</option>
+                        <option value="Não, ela está desempregada">Não, ela está desempregada</option>
+                        <option value="Ela trabalha por conta própria ou é MEI">Ela trabalha por conta própria ou é MEI</option>
+                        <option value="Ela trabalha sem registro (bico, diária)">Ela trabalha sem registro (bico, diária)</option>
+                        <option value="Sim, trabalhava de carteira assinada">Sim, trabalhava de carteira assinada</option>
+                        <option value="Não, estava desempregada">Não, estava desempregada</option>
+                        <option value="Trabalhava por conta própria ou era MEI">Trabalhava por conta própria ou era MEI</option>
+                        <option value="Trabalhava sem registro (bico, diária)">Trabalhava sem registro (bico, diária)</option>
+                        <option value="Sim, ela trabalhava de carteira assinada">Sim, ela trabalhava de carteira assinada</option>
+                        <option value="Não, ela estava desempregada">Não, ela estava desempregada</option>
+                        <option value="Ela trabalhava por conta própria ou era MEI">Ela trabalhava por conta própria ou era MEI</option>
+                        <option value="Ela trabalhava sem registro (bico, diária)">Ela trabalhava sem registro (bico, diária)</option>
                       </select>
                     </div>
 
-                    <!-- 4. historico_carteira_ou_inss -->
+                    <!-- Pergunta 5: Já trabalhou ou contribuiu para o INSS? -->
                     <div class="qual-field-group">
                       <div class="qual-header-row">
-                        <label for="sm_respHistoricoCarteira" class="qual-field-label">4. Histórico de contribuição em carteira ou INSS?</label>
+                        <label for="sm_respHistoricoCarteira" class="qual-field-label">4. Já trabalhou ou contribuiu para o INSS?</label>
                       </div>
-                      <textarea id="sm_respHistoricoCarteira" class="qual-textarea" rows="2"
-                        placeholder="Ex: Teve registro CLT até 2023 / Pagou carnê por 1 ano..."
-                        style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary); font-size: 13px; outline: none; resize: vertical;"></textarea>
+                      <select id="sm_respHistoricoCarteira" class="qual-select">
+                        <option value="">Selecione...</option>
+                        <option value="Sim, já trabalhei registrada ou paguei">Sim, já trabalhei registrada ou paguei</option>
+                        <option value="Não, nunca trabalhei registrada nem paguei">Não, nunca trabalhei registrada nem paguei</option>
+                        <option value="Não tenho certeza">Não tenho certeza</option>
+                        <option value="Sim, ela já trabalhou registrada ou pagou">Sim, ela já trabalhou registrada ou pagou</option>
+                        <option value="Não, ela nunca trabalhou registrada nem pagou">Não, ela nunca trabalhou registrada nem pagou</option>
+                        <option value="Não tenho certeza (outra pessoa)">Não tenho certeza (outra pessoa)</option>
+                      </select>
                     </div>
 
-                    <!-- 5. ja_pediu_beneficio -->
+                    <!-- Pergunta 6: Você já pediu esse benefício? -->
                     <div class="qual-field-group">
                       <div class="qual-header-row">
-                        <label for="sm_respJaPediuBeneficio" class="qual-field-label">5. Já deu entrada no pedido de salário maternidade antes?</label>
+                        <label for="sm_respJaPediuBeneficio" class="qual-field-label">5. Você já pediu esse benefício?</label>
                       </div>
-                      <select id="sm_respJaPediuBeneficio" class="qual-select"
-                        style="background-image: none !important; -webkit-appearance: none !important; appearance: none !important; padding-right: 10px !important;">
+                      <select id="sm_respJaPediuBeneficio" class="qual-select">
                         <option value="">Selecione...</option>
-                        <option value="Não - nunca pedi">Não - nunca pedi</option>
-                        <option value="Sim - pedido em análise no INSS">Sim - pedido em análise no INSS</option>
-                        <option value="Sim - pedido indeferido / negado">Sim - pedido indeferido / negado</option>
-                        <option value="Sim - benefício já concedido">Sim - benefício já concedido</option>
+                        <option value="Não, ainda não pedi">Não, ainda não pedi</option>
+                        <option value="Pedi e foi negado">Pedi e foi negado</option>
+                        <option value="Pedi e ainda está em análise">Pedi e ainda está em análise</option>
+                        <option value="Pedi e já foi aprovado">Pedi e já foi aprovado</option>
+                        <option value="Não tenho certeza">Não tenho certeza</option>
+                        <option value="Não, ela ainda não pedi">Não, ela ainda não pedi</option>
+                        <option value="Ela pediu e foi negado">Ela pediu e foi negado</option>
+                        <option value="Ela pediu e ainda está em análise">Ela pediu e ainda está em análise</option>
+                        <option value="Ela pediu e já foi aprovado">Ela pediu e já foi aprovado</option>
+                        <option value="Não tenho certeza (outra pessoa)">Não tenho certeza (outra pessoa)</option>
                       </select>
                     </div>
 

@@ -6387,17 +6387,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (sheetDataNascimento) {
     sheetDataNascimento.addEventListener('input', (e) => {
       const v = e.target.value; // YYYY-MM-DD from type="date"
+      const isMaternidade = window.currentProduct === 'maternidade';
 
       const elIdade = document.getElementById('respIdade');
       if (elIdade) {
         elIdade.value = calculateAge(v);
       }
 
+      const calculatedAge = v ? calculateAge(v) : '';
+
       const statIdade = document.getElementById('statIdade');
-      if (statIdade) statIdade.textContent = v ? calculateAge(v) : '-';
+      if (statIdade && !isMaternidade) {
+        statIdade.textContent = calculatedAge || '-';
+      }
+
+      const statIdadeInput = document.getElementById('statIdadeInput');
+      if (statIdadeInput && !isMaternidade) {
+        statIdadeInput.value = calculatedAge;
+      }
 
       const statAniversario = document.getElementById('statAniversario');
-      if (statAniversario) {
+      if (statAniversario && !isMaternidade) {
         if (v && v.length >= 10) {
           const parts = v.split('-');
           if (parts.length === 3) statAniversario.value = `${parts[2]}/${parts[1]}`;
@@ -6409,9 +6419,58 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  const statIdadeInput = document.getElementById('statIdadeInput');
+  if (statIdadeInput) {
+    statIdadeInput.addEventListener('blur', (e) => {
+      const isMaternidade = window.currentProduct === 'maternidade';
+      if (!isMaternidade || !currentActiveCard || !supabase) return;
+
+      const rawVal = e.target.value.trim();
+      const numVal = rawVal !== '' ? parseInt(rawVal, 10) : null;
+      const oldVal = currentActiveCard.Idade !== undefined ? currentActiveCard.Idade : currentActiveCard.idade;
+
+      if (numVal !== oldVal) {
+        currentActiveCard.Idade = numVal;
+        currentActiveCard.idade = numVal;
+        supabase
+          .from('crm_sm')
+          .update({
+            Idade: numVal,
+            atualizado_em: new Date().toISOString()
+          })
+          .eq('id', currentActiveCard.id)
+          .then(({ error }) => {
+            if (error) {
+              showToast('Erro ao salvar idade: ' + error.message);
+            } else {
+              showToast('Idade atualizada!');
+            }
+          });
+      }
+    });
+
+    statIdadeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.target.blur();
+      }
+    });
+  }
+
   const statAniversario = document.getElementById('statAniversario');
   if (statAniversario) {
     statAniversario.addEventListener('focus', (e) => {
+      const isMaternidade = window.currentProduct === 'maternidade';
+      if (isMaternidade) {
+        const rawReq = currentActiveCard?.data_requerimento || '';
+        if (rawReq && rawReq.length >= 10) {
+          const parts = rawReq.split('-');
+          if (parts.length === 3) {
+            e.target.value = `${parts[2]}/${parts[1]}/${parts[0]}`;
+          }
+        }
+        return;
+      }
+
       if (sheetDataNascimento && sheetDataNascimento.value && sheetDataNascimento.value.length >= 10) {
         const parts = sheetDataNascimento.value.split('-');
         if (parts.length === 3) {
@@ -6422,38 +6481,75 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     statAniversario.addEventListener('blur', (e) => {
       const val = e.target.value.trim();
-      if (!val) return;
-      const parts = val.split('/');
-      if (sheetDataNascimento) {
-        let year = new Date().getFullYear();
-        let day = '';
-        let month = '';
+      const isMaternidade = window.currentProduct === 'maternidade';
 
-        if (parts.length >= 2) {
-          day = parts[0].padStart(2, '0');
-          month = parts[1].padStart(2, '0');
-        }
-
-        if (parts.length === 3) {
-          if (parts[2].length === 2) year = (parseInt(parts[2]) > 50 ? '19' : '20') + parts[2];
-          else year = parts[2];
-        } else if (parts.length === 2 && sheetDataNascimento.value && sheetDataNascimento.value.length >= 10) {
-          year = sheetDataNascimento.value.split('-')[0];
-        } else if (parts.length < 2) {
-          if (sheetDataNascimento.value && sheetDataNascimento.value.length >= 10) {
-            const p = sheetDataNascimento.value.split('-');
-            e.target.value = `${p[2]}/${p[1]}`;
+      if (!val) {
+        if (isMaternidade && currentActiveCard) {
+          if (currentActiveCard.data_requerimento) {
+            currentActiveCard.data_requerimento = null;
+            supabase.from('crm_sm').update({ data_requerimento: null, atualizado_em: new Date().toISOString() }).eq('id', currentActiveCard.id).then(() => {
+              loadUserCards();
+            });
           }
-          return;
         }
+        return;
+      }
 
-        const newVal = `${year}-${month}-${day}`;
-        if (sheetDataNascimento.value !== newVal) {
-          sheetDataNascimento.value = newVal;
-          sheetDataNascimento.dispatchEvent(new Event('input'));
-          saveClientData(true);
+      const parts = val.split('/');
+      let year = new Date().getFullYear();
+      let day = '';
+      let month = '';
+
+      if (parts.length >= 2) {
+        day = parts[0].padStart(2, '0');
+        month = parts[1].padStart(2, '0');
+      }
+
+      if (parts.length === 3) {
+        if (parts[2].length === 2) year = (parseInt(parts[2]) > 50 ? '19' : '20') + parts[2];
+        else year = parts[2];
+      } else if (parts.length === 2) {
+        const baseDate = isMaternidade ? (currentActiveCard?.data_requerimento || '') : (sheetDataNascimento?.value || '');
+        if (baseDate && baseDate.length >= 10) {
+          year = baseDate.split('-')[0];
         }
+      } else if (parts.length < 2) {
+        const baseDate = isMaternidade ? (currentActiveCard?.data_requerimento || '') : (sheetDataNascimento?.value || '');
+        if (baseDate && baseDate.length >= 10) {
+          const p = baseDate.split('-');
+          e.target.value = `${p[2]}/${p[1]}`;
+        }
+        return;
+      }
 
+      const newVal = `${year}-${month}-${day}`;
+
+      if (isMaternidade) {
+        if (currentActiveCard) {
+          const oldReq = currentActiveCard.data_requerimento;
+          if (oldReq !== newVal) {
+            currentActiveCard.data_requerimento = newVal;
+            supabase.from('crm_sm').update({ data_requerimento: newVal, atualizado_em: new Date().toISOString() }).eq('id', currentActiveCard.id).then(() => {
+              triggerDataRequerimentoWebhook(currentActiveCard, newVal);
+              loadUserCards();
+              showToast('Data do parto atualizada!');
+            });
+          }
+        }
+        e.target.value = `${day}/${month}`;
+        return;
+      }
+
+      if (sheetDataNascimento) {
+        sheetDataNascimento.value = newVal;
+        sheetDataNascimento.dispatchEvent(new Event('input'));
+        
+        const statIdade = document.getElementById('statIdade');
+        if (statIdade) {
+          statIdade.textContent = calculateAge(newVal) || '-';
+        }
+        
+        saveClientData(true);
         e.target.value = `${day}/${month}`;
       }
     });
@@ -6671,13 +6767,40 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (elIdade) elIdade.value = calculateAge(isoDateNascimento);
 
       // Atualizar stats do topo
+      const isMaternidade = window.currentProduct === 'maternidade';
+
       const statIdade = document.getElementById('statIdade');
-      if (statIdade) statIdade.textContent = isoDateNascimento ? calculateAge(isoDateNascimento) : '-';
+      const statIdadeInput = document.getElementById('statIdadeInput');
+      const labelStatIdade = document.getElementById('labelStatIdade');
+
+      if (isMaternidade) {
+        if (statIdade) statIdade.style.display = 'none';
+        if (statIdadeInput) {
+          const cardIdade = card.Idade !== undefined && card.Idade !== null ? card.Idade : (card.idade !== undefined ? card.idade : '');
+          statIdadeInput.value = cardIdade !== null ? cardIdade : '';
+          statIdadeInput.style.display = 'block';
+          statIdadeInput.readOnly = false;
+        }
+        if (labelStatIdade) labelStatIdade.style.cursor = 'text';
+      } else {
+        if (statIdadeInput) statIdadeInput.style.display = 'none';
+        if (statIdade) {
+          statIdade.textContent = isoDateNascimento ? calculateAge(isoDateNascimento) : '-';
+          statIdade.style.display = 'block';
+        }
+        if (labelStatIdade) labelStatIdade.style.cursor = 'default';
+      }
+
+      const labelStatAniversario = document.getElementById('labelStatAniversario') || document.querySelector('label[for="statAniversario"]');
+      if (labelStatAniversario) {
+        labelStatAniversario.textContent = isMaternidade ? 'Data do Parto' : 'Aniversário';
+      }
 
       const statAniversario = document.getElementById('statAniversario');
       if (statAniversario) {
-        if (isoDateNascimento && isoDateNascimento.length >= 10) {
-          const parts = isoDateNascimento.split('-'); // YYYY-MM-DD
+        const rawDate = isMaternidade ? (card.data_requerimento || '') : (isoDateNascimento || '');
+        if (rawDate && rawDate.length >= 10) {
+          const parts = rawDate.split('-'); // YYYY-MM-DD
           if (parts.length === 3) statAniversario.value = `${parts[2]}/${parts[1]}`;
           else statAniversario.value = '';
         } else {
@@ -6685,7 +6808,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      const isMaternidade = window.currentProduct === 'maternidade';
       const valorBadge = isMaternidade ? (card.situacao || 'Não') : (card.servico_militar || 'Não');
       updateServicoMilitarUI(valorBadge);
 
@@ -6714,7 +6836,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (formAposentadoria && formSM) {
         if (isMaternidade) {
           formAposentadoria.style.display = 'none';
-          formSM.style.display = 'flex';
+          formSM.style.display = 'block';
 
           const smTempo = document.getElementById('sm_respTempo');
           if (smTempo) smTempo.value = card.tempo || '';
@@ -6730,6 +6852,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           const smJaPediu = document.getElementById('sm_respJaPediuBeneficio');
           if (smJaPediu) smJaPediu.value = card.ja_pediu_beneficio || '';
+
+          // Atualiza seletores customizados e barra de progresso para SM
+          initCustomSelects();
+          document.querySelectorAll('#clientAnswersFormSM select').forEach(s => s.dispatchEvent(new Event('change')));
+          updateQualificationProgress();
         } else {
           formAposentadoria.style.display = 'block';
           formSM.style.display = 'none';
@@ -7093,6 +7220,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let rawDataNascimento = sheetDataNascimento ? sheetDataNascimento.value : '';
 
+    const isMaternidade = window.currentProduct === 'maternidade';
+
     const updatedData = {
       nome: updatedNome,
       telefone: updatedPhone,
@@ -7101,7 +7230,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       estado_civil: sheetEstadoCivil ? sheetEstadoCivil.value : '',
       rg: sheetRg ? sheetRg.value.trim() : '',
       cpf: sheetCpf ? sheetCpf.value.trim() : '',
-      data_nascimento: rawDataNascimento,
       cep: sheetCep ? sheetCep.value.trim() : '',
       endereco: sheetEndereco ? sheetEndereco.value.trim() : '',
       complemento: sheetComplemento ? sheetComplemento.value.trim() : '',
@@ -7111,6 +7239,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       senha_gov: sheetSenhaGov ? sheetSenhaGov.value : '',
       comissao_sdr: document.getElementById('sdrCommissionSwitch') ? document.getElementById('sdrCommissionSwitch').checked : (currentActiveCard.comissao_sdr || false)
     };
+
+    if (!isMaternidade) {
+      updatedData.data_nascimento = rawDataNascimento;
+    }
 
     if (rawDataNascimento && rawDataNascimento.length === 10) {
       let oldRaw = currentActiveCard.data_nascimento ? currentActiveCard.data_nascimento.split('T')[0] : '';
@@ -7151,9 +7283,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       const smTrabalho = document.getElementById('sm_respTrabalhoRegistrado');
       const smHistorico = document.getElementById('sm_respHistoricoCarteira');
       const smJaPediu = document.getElementById('sm_respJaPediuBeneficio');
+      const smIdadeInput = document.getElementById('statIdadeInput');
+
+      const situacaoVal = document.getElementById('respServicoMilitar') ? document.getElementById('respServicoMilitar').value : 'Não';
+      const parsedIdade = smIdadeInput && smIdadeInput.value.trim() !== '' ? parseInt(smIdadeInput.value.trim(), 10) : null;
 
       updatedAnswers = {
-        situacao: document.getElementById('respServicoMilitar') ? document.getElementById('respServicoMilitar').value : 'Não',
+        situacao: situacaoVal,
+        Idade: parsedIdade,
         tempo: smTempo ? smTempo.value.trim() : '',
         titular_do_beneficio: smTitular ? smTitular.value : '',
         trabalho_registrado: smTrabalho ? smTrabalho.value : '',
@@ -8460,11 +8597,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!btn || !label || !text || !input) return;
 
+    const isMaternidade = window.currentProduct === 'maternidade';
+
     if (label) {
-      label.textContent = window.currentProduct === 'maternidade' ? 'Nascimento no próximo mês?' : 'Serviço Militar';
+      label.textContent = isMaternidade ? 'O bebê já nasceu?' : 'Serviço Militar';
     }
 
-    if (val === 'Sim') {
+    const isPositive = val === 'Sim' || val === 'Meu bebê já nasceu';
+
+    if (isPositive) {
       btn.style.background = 'var(--bg-success)';
       label.style.color = 'var(--text-success)';
       text.style.color = 'var(--text-success)';
@@ -9260,9 +9401,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
 
-  // --- Custom Select para Formulrio de Qualificao ---
+  // --- Custom Select para Formulários de Qualificação (Aposentadoria e Salário Maternidade) ---
   function initCustomSelects() {
-    const selects = document.querySelectorAll('#clientAnswersForm select');
+    const selects = document.querySelectorAll('#clientAnswersForm select, #clientAnswersFormSM select');
     if (selects.length === 0) return;
 
     if (!document.getElementById('custom-select-styles')) {
@@ -9347,7 +9488,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!isShowing) {
           menu.classList.add('show');
           setTimeout(() => {
-            const form = document.getElementById('clientAnswersForm');
+            const form = window.currentProduct === 'maternidade' ? document.getElementById('clientAnswersFormSM') : document.getElementById('clientAnswersForm');
             if (form && menu.classList.contains('show')) {
               const menuRect = menu.getBoundingClientRect();
               const formRect = form.getBoundingClientRect();
@@ -9637,6 +9778,42 @@ function updateTrackingBar() {
 }
 
 function updateQualificationProgress() {
+  if (window.currentProduct === 'maternidade') {
+    const formSM = document.getElementById('clientAnswersFormSM');
+    if (!formSM) return;
+
+    const smQuestions = [
+      document.getElementById('sm_respTempo'),
+      document.getElementById('sm_respTitularBeneficio'),
+      document.getElementById('sm_respTrabalhoRegistrado'),
+      document.getElementById('sm_respHistoricoCarteira'),
+      document.getElementById('sm_respJaPediuBeneficio')
+    ];
+
+    let totalCount = 0;
+    let filledCount = 0;
+
+    smQuestions.forEach(el => {
+      if (el) {
+        totalCount += 1;
+        if (el.value && el.value.trim() !== '') {
+          filledCount += 1;
+        }
+      }
+    });
+
+    const pct = totalCount > 0 ? Math.round((filledCount / totalCount) * 100) : 0;
+    const badge = document.getElementById('stepCounterBadge');
+    if (badge) badge.textContent = `${pct}%`;
+
+    const fill = document.getElementById('formProgressBarFill');
+    if (fill) {
+      fill.style.width = `${pct}%`;
+      fill.style.background = pct === 100 ? '#10b981' : 'var(--fill-accent)';
+    }
+    return;
+  }
+
   const form = document.getElementById('clientAnswersForm');
   if (!form) return;
 
@@ -9938,6 +10115,32 @@ function initQualificationForm() {
 
 // Compilar todas as respostas respondidas com a nova hierarquia (1, Sub / 2, Subs / 3 / 4 / Outros: Subs)
 function compileQualificationSummary() {
+  if (window.currentProduct === 'maternidade') {
+    const smBlocks = [];
+    const situacaoVal = document.getElementById('respServicoMilitar')?.value || currentActiveCard?.situacao;
+    if (situacaoVal) {
+      smBlocks.push(`O bebê já nasceu?\nR: ${situacaoVal}`);
+    }
+
+    const q1 = document.getElementById('sm_respTempo');
+    if (q1 && q1.value) smBlocks.push(`1. Qual o tempo de gestação ou a idade do bebê?\nR: ${q1.value}`);
+
+    const q2 = document.getElementById('sm_respTitularBeneficio');
+    if (q2 && q2.value) smBlocks.push(`2. Quem é o titular do benefício?\nR: ${q2.value}`);
+
+    const q3 = document.getElementById('sm_respTrabalhoRegistrado');
+    if (q3 && q3.value) smBlocks.push(`3. Trabalha Registrada?\nR: ${q3.value}`);
+
+    const q4 = document.getElementById('sm_respHistoricoCarteira');
+    if (q4 && q4.value) smBlocks.push(`4. Já trabalhou ou contribuiu para o INSS?\nR: ${q4.value}`);
+
+    const q5 = document.getElementById('sm_respJaPediuBeneficio');
+    if (q5 && q5.value) smBlocks.push(`5. Você já pediu esse benefício?\nR: ${q5.value}`);
+
+    if (smBlocks.length === 0) return '';
+    return `=== QUALIFICAÇÃO DO CLIENTE (SALÁRIO MATERNIDADE) ===\n\n` + smBlocks.join('\n\n');
+  }
+
   const blocks = [];
 
   // 1. Já contribuiu?
@@ -10121,7 +10324,7 @@ function syncQualificationToDetails(isFinal = false) {
   }
 
   let currentVal = detalhesField.value.trim();
-  const qualRegex = /=== QUALIFICAÇÃO DO CLIENTE ===[\s\S]*?(?=\n\n===|\n\n[A-Z]|$)/;
+  const qualRegex = /=== QUALIFICAÇÃO DO CLIENTE.*===[\s\S]*?(?=\n\n===|\n\n[A-Z]|$)/;
 
   if (qualRegex.test(currentVal)) {
     currentVal = currentVal.replace(qualRegex, summary).trim();
