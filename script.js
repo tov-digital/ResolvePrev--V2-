@@ -195,6 +195,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (productSwitcherBtn) {
       productSwitcherBtn.setAttribute('title', `Operação: ${productName}`);
     }
+
+    // Alterna visibilidade das opções de filtro de Requerimento / Período
+    const filterOptionsAposentadoria = document.getElementById('filterDateOptionsAposentadoria');
+    const filterOptionsMaternidade = document.getElementById('filterDateOptionsMaternidade');
+    if (filterOptionsAposentadoria && filterOptionsMaternidade) {
+      if (productKey === 'maternidade') {
+        filterOptionsAposentadoria.style.display = 'none';
+        filterOptionsMaternidade.style.display = 'flex';
+      } else {
+        filterOptionsAposentadoria.style.display = 'flex';
+        filterOptionsMaternidade.style.display = 'none';
+      }
+    }
+    const filterDateLabel = document.getElementById('filterDateSectionLabel');
+    if (filterDateLabel) {
+      filterDateLabel.textContent = productKey === 'maternidade' ? 'Previsão / Parto' : 'Requerimento';
+    }
   }
 
   // Inicializa o estado visual do produto salvo
@@ -4036,6 +4053,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.filter-status-cb').forEach(cb => cb.checked = false);
     const anyDateRadio = document.querySelector('.filter-date-radio[value=""]');
     if (anyDateRadio) anyDateRadio.checked = true;
+    document.querySelectorAll('.filter-date-radio-sm').forEach(radio => radio.checked = false);
     if (crmSearchInput) crmSearchInput.value = '';
     activeStatusFilters = [];
     activeDateFilter = '';
@@ -4600,6 +4618,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Permite desselecionar uma opção de data clicando nela novamente (Salário Maternidade)
+  document.querySelectorAll('.filter-date-radio-sm').forEach(radio => {
+    let wasChecked = false;
+    radio.addEventListener('mousedown', () => {
+      wasChecked = radio.checked;
+    });
+    radio.addEventListener('click', () => {
+      if (wasChecked) {
+        radio.checked = false;
+      }
+    });
+  });
+
   // Função auxiliar: calcula diferença em dias entre hoje e a data do card
   function daysDiff(dateStr) {
     if (!dateStr) return null;
@@ -4607,6 +4638,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const target = new Date(year, month - 1, day); target.setHours(0, 0, 0, 0);
     return Math.ceil((target - today) / 86400000); // positivo = futuro, negativo = passado
+  }
+
+  // Função auxiliar: retorna a cor da etiqueta ('purple', 'red', 'orange', 'yellow', 'blue') para Salário Maternidade
+  function getMaternidadeBadgeColor(card) {
+    if (card.data_requerimento) {
+      const diff = daysDiff(card.data_requerimento);
+      if (diff === null) return null;
+      if (diff < 0) return 'purple';
+      if (diff <= 30) return 'red';
+      if (diff <= 60) return 'orange';
+      if (diff <= 90) return 'yellow';
+      return 'blue';
+    } else if (card.tempo) {
+      const tempoKey = card.tempo.trim().toLowerCase();
+      if (tempoKey === 'altíssima' || tempoKey === 'altissima') return 'red';
+      if (tempoKey === 'alta') return 'orange';
+      if (tempoKey === 'média' || tempoKey === 'media') return 'yellow';
+      if (tempoKey === 'baixa') return 'blue';
+      if (tempoKey === 'nascido') return 'purple';
+      return null;
+    }
+    return null;
   }
 
   // Atualiza badge de filtros ativos no botão
@@ -4636,8 +4689,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         .map(cb => cb.value);
 
       // Lê radio de data (requerimento seleção única)
-      const checkedRadio = document.querySelector('.filter-date-radio:checked');
-      activeDateFilter = checkedRadio ? checkedRadio.value : '';
+      if (window.currentProduct === 'maternidade') {
+        const checkedRadioSM = document.querySelector('.filter-date-radio-sm:checked');
+        activeDateFilter = checkedRadioSM ? checkedRadioSM.value : '';
+      } else {
+        const checkedRadio = document.querySelector('.filter-date-radio:checked');
+        activeDateFilter = checkedRadio ? checkedRadio.value : '';
+      }
 
       // Lê select de operador
       const opSelect = document.getElementById('filterOperatorSelect');
@@ -4658,6 +4716,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.querySelectorAll('.filter-status-cb').forEach(cb => cb.checked = false);
       const anyDateRadio = document.querySelector('.filter-date-radio[value=""]');
       if (anyDateRadio) anyDateRadio.checked = true;
+      document.querySelectorAll('.filter-date-radio-sm').forEach(radio => radio.checked = false);
       activeStatusFilters = [];
       activeDateFilter = '';
 
@@ -4710,15 +4769,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 2. Filtro de data de requerimento (seleção única)
     if (activeDateFilter) {
+      const isMaternidade = window.currentProduct === 'maternidade';
       filtered = filtered.filter(card => {
-        const diff = daysDiff(card.data_requerimento);
-        if (diff === null) return false;
-        switch (activeDateFilter) {
-          case 'vencidos': return diff < 0;                  // data já passou (Roxo)
-          case 'menos7': return diff >= 0 && diff <= 7;   // em até uma semana (Vermelho)
-          case 'menos30': return diff > 7 && diff <= 30;   // entre 8 e 30 dias (Amarelo)
-          case 'menos365': return diff > 30 && diff <= 365; // entre 31 e 365 dias (Azul)
-          default: return true;
+        if (isMaternidade) {
+          const color = getMaternidadeBadgeColor(card);
+          if (!color) return false;
+          switch (activeDateFilter) {
+            case 'sm_nascidos': return color === 'purple';
+            case 'sm_1mes': return color === 'red';
+            case 'sm_2meses': return color === 'orange';
+            case 'sm_3meses': return color === 'yellow';
+            case 'sm_mais3meses': return color === 'blue';
+            default: return true;
+          }
+        } else {
+          const diff = daysDiff(card.data_requerimento);
+          if (diff === null) return false;
+          switch (activeDateFilter) {
+            case 'vencidos': return diff < 0;                  // data já passou (Roxo)
+            case 'menos7': return diff >= 0 && diff <= 7;   // em até uma semana (Vermelho)
+            case 'menos30': return diff > 7 && diff <= 30;   // entre 8 e 30 dias (Amarelo)
+            case 'menos365': return diff > 30 && diff <= 365; // entre 31 e 365 dias (Azul)
+            default: return true;
+          }
         }
       });
     }
@@ -4767,17 +4840,44 @@ document.addEventListener('DOMContentLoaded', async () => {
       // ---- Formatação de Data ----
       let formattedDate = '—';
       let dateClass = 'date-gray';
+      const isMaternidade = window.currentProduct === 'maternidade';
+
       if (card.data_requerimento) {
         const [year, month, day] = card.data_requerimento.split('-').map(Number);
         formattedDate = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${String(year).slice(-2)}`;
         const today = new Date(); today.setHours(0, 0, 0, 0);
         const target = new Date(year, month - 1, day); target.setHours(0, 0, 0, 0);
         const diff = Math.ceil((target - today) / 86400000);
-        if (diff < 0) dateClass = 'date-purple';
-        else if (diff <= 7) dateClass = 'date-red';
-        else if (diff <= 30) dateClass = 'date-yellow';
-        else if (diff <= 365) dateClass = 'date-blue';
-        else dateClass = 'date-gray';
+
+        if (isMaternidade) {
+          if (diff < 0) dateClass = 'date-purple';           // Data já passou -> Roxo
+          else if (diff <= 30) dateClass = 'date-red';       // Daqui 30 dias ou menos -> Vermelho
+          else if (diff <= 60) dateClass = 'date-orange';    // Daqui 60 dias ou menos -> Laranja
+          else if (diff <= 90) dateClass = 'date-yellow';    // Daqui 90 dias ou menos -> Amarelo
+          else dateClass = 'date-blue';                      // Daqui a mais de 90 dias -> Azul
+        } else {
+          if (diff < 0) dateClass = 'date-purple';
+          else if (diff <= 7) dateClass = 'date-red';
+          else if (diff <= 30) dateClass = 'date-yellow';
+          else if (diff <= 365) dateClass = 'date-blue';
+          else dateClass = 'date-gray';
+        }
+      } else if (isMaternidade && card.tempo) {
+        formattedDate = escapeHtml(card.tempo);
+        const tempoKey = card.tempo.trim().toLowerCase();
+        if (tempoKey === 'altíssima' || tempoKey === 'altissima') {
+          dateClass = 'date-red';      // Altíssima = Vermelho
+        } else if (tempoKey === 'alta') {
+          dateClass = 'date-orange';   // Alta = Laranja
+        } else if (tempoKey === 'média' || tempoKey === 'media') {
+          dateClass = 'date-yellow';   // Média = Amarela
+        } else if (tempoKey === 'baixa') {
+          dateClass = 'date-blue';     // Baixa = Azul
+        } else if (tempoKey === 'nascido') {
+          dateClass = 'date-purple';   // Nascido = Roxo
+        } else {
+          dateClass = 'date-gray';
+        }
       }
 
       // ---- WhatsApp link ----
@@ -5236,6 +5336,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Função auxiliar para ordenar cards por data de requerimento e nome
   function getCardSortWeight(card) {
+    if (window.currentProduct === 'maternidade') {
+      const color = getMaternidadeBadgeColor(card);
+      // Ordem solicitada:
+      // 1. Roxas (Nascidos / Passou) -> grupo 0
+      // 2. Vermelhas (Altíssima / <= 30 dias) -> grupo 10000
+      // 3. Laranjas (Alta / <= 60 dias) -> grupo 20000
+      // 4. Amarelas (Média / <= 90 dias) -> grupo 30000
+      // 5. Azuis (Baixa / > 90 dias) -> grupo 40000
+      // 6. Sem informação / Outro -> grupo 900000
+      const colorPriority = {
+        'purple': 0,
+        'red': 10000,
+        'orange': 20000,
+        'yellow': 30000,
+        'blue': 40000
+      };
+
+      const baseWeight = color ? (colorPriority[color] ?? 900000) : 900000;
+
+      // Desempate refinado dentro da mesma cor
+      if (card.data_requerimento) {
+        const diff = daysDiff(card.data_requerimento);
+        if (diff !== null) {
+          if (diff < 0) {
+            // No passado (roxo): os mais recentes primeiro (-1 antes de -10)
+            return baseWeight + (-diff);
+          } else {
+            // No futuro: os mais próximos primeiro (0, 1, 2...)
+            return baseWeight + diff;
+          }
+        }
+      }
+      return baseWeight + 5000;
+    }
+
     if (!card.data_requerimento) return 999999;
     const diff = daysDiff(card.data_requerimento);
     if (diff === null) return 999999;
@@ -5350,6 +5485,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Formatação da Data (DD/MM/AA) e Lógica de Cores por Período
     let formattedDate = '--/--/--';
     let dateStatusClass = 'date-gray'; // Padrão: Cinza
+    const isMaternidade = window.currentProduct === 'maternidade';
 
     if (card.data_requerimento) {
       const [year, month, day] = card.data_requerimento.split('-').map(Number);
@@ -5365,16 +5501,46 @@ document.addEventListener('DOMContentLoaded', async () => {
       const diffTime = targetDate.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      if (diffDays < 0) {
-        dateStatusClass = 'date-purple'; // A data já passou -> Roxo
-      } else if (diffDays <= 7) {
-        dateStatusClass = 'date-red';    // A data está a 7 ou menos dias -> Vermelho
-      } else if (diffDays <= 30) {
-        dateStatusClass = 'date-yellow'; // A data está entre 30 e 7 dias -> Amarelo
-      } else if (diffDays <= 365) {
-        dateStatusClass = 'date-blue';   // A data está entre 365 e 30 dias -> Azul
+      if (isMaternidade) {
+        if (diffDays < 0) {
+          dateStatusClass = 'date-purple'; // Data já passou -> Roxo
+        } else if (diffDays <= 30) {
+          dateStatusClass = 'date-red';    // Daqui 30 dias ou menos -> Vermelho
+        } else if (diffDays <= 60) {
+          dateStatusClass = 'date-orange'; // Daqui 60 dias ou menos -> Laranja
+        } else if (diffDays <= 90) {
+          dateStatusClass = 'date-yellow'; // Daqui 90 dias ou menos -> Amarelo
+        } else {
+          dateStatusClass = 'date-blue';   // Daqui a mais de 90 dias -> Azul
+        }
       } else {
-        dateStatusClass = 'date-gray';   // Acima de 365 dias -> Cinza
+        if (diffDays < 0) {
+          dateStatusClass = 'date-purple'; // A data já passou -> Roxo
+        } else if (diffDays <= 7) {
+          dateStatusClass = 'date-red';    // A data está a 7 ou menos dias -> Vermelho
+        } else if (diffDays <= 30) {
+          dateStatusClass = 'date-yellow'; // A data está entre 30 e 7 dias -> Amarelo
+        } else if (diffDays <= 365) {
+          dateStatusClass = 'date-blue';   // A data está entre 365 e 30 dias -> Azul
+        } else {
+          dateStatusClass = 'date-gray';   // Acima de 365 dias -> Cinza
+        }
+      }
+    } else if (isMaternidade && card.tempo) {
+      formattedDate = escapeHtml(card.tempo);
+      const tempoKey = card.tempo.trim().toLowerCase();
+      if (tempoKey === 'altíssima' || tempoKey === 'altissima') {
+        dateStatusClass = 'date-red';      // Altíssima = Vermelho
+      } else if (tempoKey === 'alta') {
+        dateStatusClass = 'date-orange';   // Alta = Laranja
+      } else if (tempoKey === 'média' || tempoKey === 'media') {
+        dateStatusClass = 'date-yellow';   // Média = Amarela
+      } else if (tempoKey === 'baixa') {
+        dateStatusClass = 'date-blue';     // Baixa = Azul
+      } else if (tempoKey === 'nascido') {
+        dateStatusClass = 'date-purple';   // Nascido = Roxo
+      } else {
+        dateStatusClass = 'date-gray';
       }
     }
 
@@ -6866,9 +7032,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           formAposentadoria.style.display = 'none';
           formSM.style.display = 'block';
 
-          const smTempo = document.getElementById('sm_respTempo');
-          if (smTempo) smTempo.value = card.tempo || '';
-
           const smTrabalho = document.getElementById('sm_respTrabalhoRegistrado');
           if (smTrabalho) smTrabalho.value = card.trabalho_registrado || '';
 
@@ -7303,7 +7466,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let updatedAnswers = {};
 
     if (window.currentProduct === 'maternidade') {
-      const smTempo = document.getElementById('sm_respTempo');
       const smTrabalho = document.getElementById('sm_respTrabalhoRegistrado');
       const smHistorico = document.getElementById('sm_respHistoricoCarteira');
       const smJaPediu = document.getElementById('sm_respJaPediuBeneficio');
@@ -7316,7 +7478,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       updatedAnswers = {
         situacao: situacaoVal,
         Idade: parsedIdade,
-        tempo: smTempo ? smTempo.value.trim() : '',
+        tempo: currentActiveCard?.tempo || '',
         titular_do_beneficio: titularVal,
         trabalho_registrado: smTrabalho ? smTrabalho.value : '',
         historico_carteira_ou_inss: smHistorico ? smHistorico.value.trim() : '',
@@ -9843,7 +10005,6 @@ function updateQualificationProgress() {
     if (!formSM) return;
 
     const smQuestions = [
-      document.getElementById('sm_respTempo'),
       document.getElementById('sm_respTrabalhoRegistrado'),
       document.getElementById('sm_respHistoricoCarteira'),
       document.getElementById('sm_respJaPediuBeneficio')
@@ -10186,17 +10347,14 @@ function compileQualificationSummary() {
       smBlocks.push(`É o titular?\nR: ${titularVal}`);
     }
 
-    const q1 = document.getElementById('sm_respTempo');
-    if (q1 && q1.value) smBlocks.push(`1. Qual o tempo de gestação ou a idade do bebê?\nR: ${q1.value}`);
+    const q1 = document.getElementById('sm_respTrabalhoRegistrado');
+    if (q1 && q1.value) smBlocks.push(`1. Qual sua situação de trabalho?\nR: ${q1.value}`);
 
-    const q2 = document.getElementById('sm_respTrabalhoRegistrado');
-    if (q2 && q2.value) smBlocks.push(`2. Trabalha Registrada?\nR: ${q2.value}`);
+    const q2 = document.getElementById('sm_respHistoricoCarteira');
+    if (q2 && q2.value) smBlocks.push(`2. Já contribuiu para o INSS?\nR: ${q2.value}`);
 
-    const q3 = document.getElementById('sm_respHistoricoCarteira');
-    if (q3 && q3.value) smBlocks.push(`3. Já trabalhou ou contribuiu para o INSS?\nR: ${q3.value}`);
-
-    const q4 = document.getElementById('sm_respJaPediuBeneficio');
-    if (q4 && q4.value) smBlocks.push(`4. Você já pediu esse benefício?\nR: ${q4.value}`);
+    const q3 = document.getElementById('sm_respJaPediuBeneficio');
+    if (q3 && q3.value) smBlocks.push(`3. Já solicitou esse benefício?\nR: ${q3.value}`);
 
     if (smBlocks.length === 0) return '';
     return `=== QUALIFICAÇÃO DO CLIENTE (SALÁRIO MATERNIDADE) ===\n\n` + smBlocks.join('\n\n');

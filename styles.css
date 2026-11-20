@@ -2078,6 +2078,19 @@ display: flex;
   box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
 }
 
+/* Laranja: SM - Daqui 60 dias ou menos / Alta */
+.card-detail-item.date-orange {
+  background-color: #FFF7ED;
+  color: #C2410C;
+  border: 1px solid rgba(234, 88, 12, 0.25);
+  font-weight: 600;
+}
+.card-detail-item.date-orange .date-dot {
+  background-color: #F97316;
+  border: 1px solid #EA580C;
+  box-shadow: 0 0 4px rgba(249, 115, 22, 0.4);
+}
+
 /* Amarelo: Entre 30 e 7 dias */
 .card-detail-item.date-yellow {
   background-color: var(--warning-soft);
@@ -2615,6 +2628,12 @@ display: flex;
   border: 1px solid rgba(220, 38, 38, 0.25);
 }
 
+.list-date-badge.date-orange {
+  background-color: #FFF7ED;
+  color: #C2410C;
+  border: 1px solid rgba(234, 88, 12, 0.25);
+}
+
 .list-date-badge.date-yellow {
   background-color: #FEF3C7;
   color: #92400E;
@@ -2642,6 +2661,7 @@ display: flex;
 
 .list-date-badge.date-purple .list-date-dot { background-color: #9333EA; }
 .list-date-badge.date-red    .list-date-dot { background-color: #EF4444; }
+.list-date-badge.date-orange .list-date-dot { background-color: #F97316; }
 .list-date-badge.date-yellow .list-date-dot { background-color: #F59E0B; }
 .list-date-badge.date-blue   .list-date-dot { background-color: #3B82F6; }
 .list-date-badge.date-gray   .list-date-dot { background-color: #94A3B8; }
