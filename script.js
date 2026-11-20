@@ -5834,8 +5834,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         criado_em: proposalCardTarget.criado_em
       };
 
+      const webhookUrl = window.currentProduct === 'maternidade'
+        ? 'https://n8n.srv1077266.hstgr.cloud/webhook/plena_gerar_contrato'
+        : 'https://n8n.srv1077266.hstgr.cloud/webhook/proposta_rp';
+
       try {
-        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/proposta_rp', {
+        await fetch(webhookUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -6709,12 +6713,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (sheetDataNascimento) {
         sheetDataNascimento.value = newVal;
         sheetDataNascimento.dispatchEvent(new Event('input'));
-        
+
         const statIdade = document.getElementById('statIdade');
         if (statIdade) {
           statIdade.textContent = calculateAge(newVal) || '-';
         }
-        
+
         saveClientData(true);
         e.target.value = `${day}/${month}`;
       }
