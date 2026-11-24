@@ -2527,83 +2527,83 @@ document.addEventListener('DOMContentLoaded', async () => {
             edgeRes.error.toLowerCase().includes('indisponível');
 
           if (!isNetworkOrNotDeployed) {
-            showToast(`Erro Supabase Auth: ${edgeRes.error}`);
-            return;
+            console.warn(`Aviso Edge Function: ${edgeRes.error}. Aplicando atualização direta no banco.`);
           }
         }
 
-        // 2. Fallback caso a Edge Function não esteja ativa
-        if (!edgeHandled && supabase) {
-          const { data: existingProfile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .maybeSingle();
-
-          const updatePayload = { id: userId, operacao: operacao };
-
-          if (existingProfile) {
-            if ('full_name' in existingProfile) updatePayload.full_name = name;
-            if ('nome' in existingProfile) updatePayload.nome = name;
-            if ('name' in existingProfile) updatePayload.name = name;
-            if ('email' in existingProfile) updatePayload.email = email;
-            if ('role' in existingProfile) updatePayload.role = role;
-            if ('updated_at' in existingProfile) updatePayload.updated_at = new Date().toISOString();
-          } else {
-            updatePayload.full_name = name;
-            updatePayload.nome = name;
-            updatePayload.email = email;
-            updatePayload.role = role;
-          }
-
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .upsert(updatePayload, { onConflict: 'id' });
-
-          if (updateError) {
-            await supabase
+          // 2. Atualizar SEMPRE diretamente na tabela profiles no Supabase (garante persistência imediata)
+          if (supabase) {
+            const { data: existingProfile } = await supabase
               .from('profiles')
-              .update({ full_name: name, email: email, role: role, operacao: operacao })
-              .eq('id', userId);
-          }
+              .select('*')
+              .eq('id', userId)
+              .maybeSingle();
 
-          // Se for a própria sessão do admin logado, atualizar via SDK cliente
-          if (newPassword) {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session && session.user && session.user.id === userId) {
-              await supabase.auth.updateUser({ password: newPassword });
+            const updatePayload = { id: userId, operacao: operacao };
+
+            if (existingProfile) {
+              if ('full_name' in existingProfile) updatePayload.full_name = name;
+              if ('nome' in existingProfile) updatePayload.nome = name;
+              if ('name' in existingProfile) updatePayload.name = name;
+              if ('email' in existingProfile) updatePayload.email = email;
+              if ('role' in existingProfile) updatePayload.role = role;
+              if ('updated_at' in existingProfile) updatePayload.updated_at = new Date().toISOString();
+            } else {
+              updatePayload.full_name = name;
+              updatePayload.nome = name;
+              updatePayload.email = email;
+              updatePayload.role = role;
+            }
+
+            const { error: updateError } = await supabase
+              .from('profiles')
+            .update(updatePayload)
+              .eq('id', userId);
+
+            if (updateError) {
+              console.warn('Erro update profiles, tentando upsert:', updateError);
+              await supabase
+                .from('profiles')
+              .upsert(updatePayload, { onConflict: 'id' });
+            }
+
+            // Se for a própria sessão do admin logado, atualizar via SDK cliente
+            if (newPassword) {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session && session.user && session.user.id === userId) {
+                await supabase.auth.updateUser({ password: newPassword });
+              }
             }
           }
-        }
 
-        // Atualizar lista em memória e re-renderizar para resposta imediata na UI
-        const cachedUser = cachedUsersList.find(u => u.id === userId);
-        if (cachedUser) {
-          cachedUser.full_name = name;
-          cachedUser.nome = name;
-          cachedUser.email = email;
-          cachedUser.role = role;
-          cachedUser.operacao = operacao;
-        }
+          // Atualizar lista em memória e re-renderizar para resposta imediata na UI
+          const cachedUser = cachedUsersList.find(u => u.id === userId);
+          if (cachedUser) {
+            cachedUser.full_name = name;
+            cachedUser.nome = name;
+            cachedUser.email = email;
+            cachedUser.role = role;
+            cachedUser.operacao = operacao;
+          }
 
-        if (edgeHandled) {
-          showToast(newPassword ? 'Perfil e nova senha salvos com sucesso no Supabase Auth!' : 'Perfil do usuário atualizado com sucesso!');
-        } else {
-          showToast(newPassword ? 'Perfil salvo no banco. Publicar Edge Function para sincronizar a nova senha de outros usuários no Auth.' : 'Perfil do usuário atualizado com sucesso!');
-        }
+          if (edgeHandled) {
+            showToast(newPassword ? 'Perfil e nova senha salvos com sucesso no Supabase Auth!' : 'Perfil do usuário atualizado com sucesso!');
+          } else {
+            showToast(newPassword ? 'Perfil salvo no banco. Publicar Edge Function para sincronizar a nova senha de outros usuários no Auth.' : 'Perfil do usuário atualizado com sucesso!');
+          }
 
-        document.getElementById('modalAdminEditUser').classList.add('hidden');
-        adminEditUserForm.reset();
-        await loadAdminUsersTable(adminUserSearchInput ? adminUserSearchInput.value.trim() : '');
-      } catch (err) {
-        console.error('Erro ao atualizar usuário:', err);
-        showToast(`Erro ao atualizar usuário: ${err.message || 'Falha na requisição'}`);
-      } finally {
-        btnText.textContent = 'Salvar Alterações';
-        spinner.classList.add('hidden');
-        submitBtn.disabled = false;
-      }
-    });
+          document.getElementById('modalAdminEditUser').classList.add('hidden');
+          adminEditUserForm.reset();
+          await loadAdminUsersTable(adminUserSearchInput ? adminUserSearchInput.value.trim() : '');
+        } catch (err) {
+          console.error('Erro ao atualizar usuário:', err);
+          showToast(`Erro ao atualizar usuário: ${err.message || 'Falha na requisição'}`);
+        } finally {
+          btnText.textContent = 'Salvar Alterações';
+          spinner.classList.add('hidden');
+          submitBtn.disabled = false;
+        }
+      });
   }
 
   // Submit Excluir Usuário
