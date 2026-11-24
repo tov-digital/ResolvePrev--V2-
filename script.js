@@ -2539,32 +2539,35 @@ document.addEventListener('DOMContentLoaded', async () => {
               .eq('id', userId)
               .maybeSingle();
 
-            const updatePayload = { id: userId, operacao: operacao };
+            const updatePayload = {
+              full_name: name,
+              email: email,
+              role: role,
+              operacao: operacao,
+              updated_at: new Date().toISOString()
+            };
 
             if (existingProfile) {
-              if ('full_name' in existingProfile) updatePayload.full_name = name;
               if ('nome' in existingProfile) updatePayload.nome = name;
               if ('name' in existingProfile) updatePayload.name = name;
-              if ('email' in existingProfile) updatePayload.email = email;
-              if ('role' in existingProfile) updatePayload.role = role;
-              if ('updated_at' in existingProfile) updatePayload.updated_at = new Date().toISOString();
-            } else {
-              updatePayload.full_name = name;
-              updatePayload.nome = name;
-              updatePayload.email = email;
-              updatePayload.role = role;
             }
 
-            const { error: updateError } = await supabase
+            const { data: updatedData, error: updateError } = await supabase
               .from('profiles')
-            .update(updatePayload)
-              .eq('id', userId);
+              .update(updatePayload)
+              .eq('id', userId)
+              .select();
 
-            if (updateError) {
-              console.warn('Erro update profiles, tentando upsert:', updateError);
-              await supabase
+            if (updateError || !updatedData || updatedData.length === 0) {
+              console.warn('Update direto não afetou linhas (possível RLS). Tentando upsert com id:', updateError);
+              const upsertPayload = { id: userId, ...updatePayload };
+              const { error: upsertErr } = await supabase
                 .from('profiles')
-              .upsert(updatePayload, { onConflict: 'id' });
+                .upsert(upsertPayload, { onConflict: 'id' });
+              
+              if (upsertErr) {
+                console.error('Falha no upsert em profiles:', upsertErr);
+              }
             }
 
             // Se for a própria sessão do admin logado, atualizar via SDK cliente
