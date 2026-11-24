@@ -82,7 +82,7 @@ serve(async (req) => {
         email: email,
         password: password,
         email_confirm: true,
-        user_metadata: { full_name: name || '', role: role || 'user' }
+        user_metadata: { full_name: name || '', role: role || 'user', operacao: body.operacao || 'aposentadoria' }
       })
 
       if (createError) throw createError
@@ -98,6 +98,7 @@ serve(async (req) => {
           id: newUser.user.id,
           email: email,
           role: role || 'user',
+          operacao: body.operacao || 'aposentadoria',
           updated_at: new Date().toISOString()
         }
 
@@ -118,6 +119,7 @@ serve(async (req) => {
             id: newUser.user.id,
             email: email,
             role: role || 'user',
+            operacao: body.operacao || 'aposentadoria',
             full_name: name
           }, { onConflict: 'id' })
         }
@@ -185,6 +187,7 @@ serve(async (req) => {
       }
       if (email) profileUpdates.email = email
       if (role) profileUpdates.role = role
+      if (body.operacao) profileUpdates.operacao = body.operacao
 
       if (name) {
         if (existingProfile) {

@@ -5730,6 +5730,18 @@ a:hover,
   color: #475569;
 }
 
+.status-pill.status-aposentadoria {
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid rgba(29, 78, 216, 0.15);
+}
+
+.status-pill.status-maternidade {
+  background-color: #FDF2F8;
+  color: #BE185D;
+  border: 1px solid rgba(190, 24, 93, 0.15);
+}
+
 /* Controle de Usuários (Aba 2) */
 .users-control-bar {
   display: flex;

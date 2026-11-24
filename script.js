@@ -403,6 +403,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const allowedTabs = getRoleAllowedTabs(role, userId);
     const isAdmin = userId === ADMIN_USER_ID || role === 'admin' || (profile && profile.is_admin === true);
 
+    // Se o usuário não for administrador, definir obrigatoriamente a operação permitida conforme seu cadastro
+    if (!isAdmin && profile) {
+      const userOperacao = profile.operacao === 'maternidade' ? 'maternidade' : 'aposentadoria';
+      if (typeof updateProductUI === 'function') {
+        updateProductUI(userOperacao);
+      }
+    }
+
     // Botão de Seleção de Produto: Exclusivo para Administrador
     const productSwitcherContainer = document.getElementById('productSwitcherContainer');
     if (productSwitcherContainer) {
@@ -2145,7 +2153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tableBody = document.getElementById('adminUsersTableBody');
     if (!tableBody) return;
 
-    tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">Carregando usuários...</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">Carregando usuários...</td></tr>`;
 
     try {
       const { data: users, error } = await supabase
@@ -2159,7 +2167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderUsersTable(cachedUsersList, query);
     } catch (e) {
       console.error('Erro ao carregar usuários:', e);
-      tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--danger-color);">Erro ao carregar usuários da base.</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--danger-color);">Erro ao carregar usuários da base.</td></tr>`;
     }
   }
 
@@ -2186,7 +2194,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     if (filtered.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">Nenhum usuário encontrado.</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">Nenhum usuário encontrado.</td></tr>`;
       return;
     }
 
@@ -2201,6 +2209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const name = getUserDisplayName(u);
       const email = u.email || 'Não informado';
       const role = u.role || (u.id === ADMIN_USER_ID ? 'admin' : 'operador_comercial');
+      const operacaoName = u.operacao === 'maternidade' ? 'Salário Maternidade' : 'Aposentadoria';
       const initial = name.charAt(0).toUpperCase();
       const shortId = u.id ? `${u.id.substring(0, 8)}...` : '--';
 
@@ -2220,6 +2229,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>
             <span class="status-pill ${role === 'admin' || u.id === ADMIN_USER_ID ? 'status-admin' : 'status-user'}">
               ${getRoleBadgeText(role, u.id)}
+            </span>
+          </td>
+          <td>
+            <span class="status-pill ${u.operacao === 'maternidade' ? 'status-maternidade' : 'status-aposentadoria'}" style="font-size: 0.75rem; font-weight: 500;">
+              ${escapeHtml(operacaoName)}
             </span>
           </td>
           <td><span class="user-cell-id" title="${escapeHtml(u.id)}">${escapeHtml(shortId)}</span></td>
@@ -2274,6 +2288,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (roleVal === 'usuario') roleVal = 'operador_comercial';
     if (roleVal === 'advogado') roleVal = 'operador_juridico';
     document.getElementById('adminEditRole').value = roleVal;
+
+    const editOperacaoEl = document.getElementById('adminEditOperacao');
+    if (editOperacaoEl) {
+      editOperacaoEl.value = user.operacao === 'maternidade' ? 'maternidade' : 'aposentadoria';
+    }
 
     document.getElementById('modalAdminEditUser').classList.remove('hidden');
   };
@@ -2369,11 +2388,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const emailInput = document.getElementById('adminNewEmail') || document.getElementById('adminCreateEmail');
       const passwordInput = document.getElementById('adminNewPassword') || document.getElementById('adminCreatePassword');
       const roleInput = document.getElementById('adminNewRole') || document.getElementById('adminCreateRole');
+      const operacaoInput = document.getElementById('adminNewOperacao');
 
       const name = nameInput ? nameInput.value.trim() : '';
       const email = emailInput ? emailInput.value.trim() : '';
       const password = passwordInput ? passwordInput.value.trim() : '';
       const role = roleInput ? roleInput.value : 'operador_comercial';
+      const operacao = operacaoInput ? operacaoInput.value : 'aposentadoria';
       const submitBtn = document.getElementById('adminCreateUserSubmitBtn');
       const spinner = document.getElementById('adminCreateUserSpinner');
       const btnText = submitBtn ? submitBtn.querySelector('.btn-text') : null;
@@ -2389,7 +2410,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let apiHandled = false;
 
         // 1. Tentar criar via Edge Function (Auth + Profiles)
-        const edgeRes = await callAdminManageUserApi('createUser', { name, email, password, role });
+        const edgeRes = await callAdminManageUserApi('createUser', { name, email, password, role, operacao });
         if (edgeRes && edgeRes.success) {
           apiHandled = true;
           if (edgeRes.data && edgeRes.data.user && edgeRes.data.user.id) {
@@ -2415,7 +2436,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             full_name: name,
             nome: name,
             email: email,
-            role: role
+            role: role,
+            operacao: operacao
           };
 
           const { error: profileError } = await supabase
@@ -2425,7 +2447,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (profileError) {
             await supabase
               .from('profiles')
-              .upsert({ id: newUserId, full_name: name, email: email, role: role }, { onConflict: 'id' });
+              .upsert({ id: newUserId, full_name: name, email: email, role: role, operacao: operacao }, { onConflict: 'id' });
           }
         }
 
@@ -2435,7 +2457,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           full_name: name,
           nome: name,
           email: email,
-          role: role
+          role: role,
+          operacao: operacao
         });
 
         if (apiHandled) {
@@ -2469,6 +2492,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const email = document.getElementById('adminEditEmail').value.trim();
       const newPassword = document.getElementById('adminEditPassword').value.trim();
       const role = document.getElementById('adminEditRole').value;
+      const operacaoEl = document.getElementById('adminEditOperacao');
+      const operacao = operacaoEl ? operacaoEl.value : 'aposentadoria';
       const submitBtn = document.getElementById('adminEditUserSubmitBtn');
       const spinner = document.getElementById('adminEditUserSpinner');
       const btnText = submitBtn.querySelector('.btn-text');
@@ -2482,13 +2507,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         let edgeHandled = false;
 
-        // 1. Tentar atualizar via Edge Function (Auth + Profiles, incluindo troca de senha)
+        // 1. Tentar atualizar via Edge Function (Auth + Profiles, incluindo troca de senha e operação)
         const edgeRes = await callAdminManageUserApi('updateUser', {
           userId,
           name,
           email,
           password: newPassword,
-          role
+          role,
+          operacao
         });
 
         if (edgeRes && edgeRes.success) {
@@ -2514,7 +2540,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .eq('id', userId)
             .maybeSingle();
 
-          const updatePayload = { id: userId };
+          const updatePayload = { id: userId, operacao: operacao };
 
           if (existingProfile) {
             if ('full_name' in existingProfile) updatePayload.full_name = name;
@@ -2537,7 +2563,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (updateError) {
             await supabase
               .from('profiles')
-              .update({ full_name: name, email: email, role: role })
+              .update({ full_name: name, email: email, role: role, operacao: operacao })
               .eq('id', userId);
           }
 
@@ -2557,6 +2583,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           cachedUser.nome = name;
           cachedUser.email = email;
           cachedUser.role = role;
+          cachedUser.operacao = operacao;
         }
 
         if (edgeHandled) {
