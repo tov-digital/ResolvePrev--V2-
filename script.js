@@ -391,6 +391,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (userId === ADMIN_USER_ID || role === 'admin') {
       return ['comercial', 'operacao', 'judicial'];
     }
+    if (role === 'analista') {
+      return ['comercial', 'operacao', 'judicial'];
+    }
     if (role === 'operador_juridico' || role === 'supervisor_juridico' || role === 'advogado') {
       return ['operacao', 'judicial'];
     }
@@ -2173,6 +2176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function getRoleBadgeText(role, userId) {
     if (userId === ADMIN_USER_ID || role === 'admin') return '★ Administrador';
+    if (role === 'analista') return '● Analista';
     if (role === 'supervisor_comercial') return '● Supervisor Comercial';
     if (role === 'operador_juridico' || role === 'advogado') return '● Operador Jurídico';
     if (role === 'supervisor_juridico') return '● Supervisor Jurídico';
