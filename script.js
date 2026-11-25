@@ -5256,7 +5256,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const datePickerClientName = document.getElementById('datePickerClientName');
 
   async function triggerDataRequerimentoWebhook(card, novaData) {
-    if (!card) return;
+    if (!card || window.currentProduct === 'maternidade') return;
     try {
       const payload = {
         id: card.id,
