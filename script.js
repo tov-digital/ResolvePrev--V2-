@@ -5260,7 +5260,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const datePickerClientName = document.getElementById('datePickerClientName');
 
   async function triggerDataRequerimentoWebhook(card, novaData) {
-    if (!card || window.currentProduct === 'maternidade') return;
+    if (!card) return;
     try {
       const payload = {
         id: card.id,
@@ -5273,7 +5273,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         data_hora: new Date().toISOString()
       };
 
-      await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/data_requerimento', {
+      const webhookUrl = window.currentProduct === 'maternidade'
+        ? 'https://n8n.srv1077266.hstgr.cloud/webhook/sm_data_requerimento'
+        : 'https://n8n.srv1077266.hstgr.cloud/webhook/data_requerimento';
+
+      await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -6106,8 +6110,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         data_hora: new Date().toISOString()
       };
 
+      const webhookConcedidoUrl = window.currentProduct === 'maternidade'
+        ? 'https://n8n.srv1077266.hstgr.cloud/webhook/sm_concedido'
+        : 'https://n8n.srv1077266.hstgr.cloud/webhook/concedido';
+
       try {
-        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/concedido', {
+        await fetch(webhookConcedidoUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payloadConcedido)
@@ -6175,8 +6183,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         data_hora: new Date().toISOString()
       };
 
+      const webhookDocUrl = window.currentProduct === 'maternidade'
+        ? 'https://n8n.srv1077266.hstgr.cloud/webhook/sm_documentacao'
+        : 'https://n8n.srv1077266.hstgr.cloud/webhook/documentacao';
+
       try {
-        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/documentacao', {
+        await fetch(webhookDocUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -6244,8 +6256,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         data_hora: new Date().toISOString()
       };
 
+      const webhookFilaUrl = window.currentProduct === 'maternidade'
+        ? 'https://n8n.srv1077266.hstgr.cloud/webhook/sm_fila'
+        : 'https://n8n.srv1077266.hstgr.cloud/webhook/fila';
+
       try {
-        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/fila', {
+        await fetch(webhookFilaUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -6313,8 +6329,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         data_hora: new Date().toISOString()
       };
 
+      const webhookRequeridoUrl = window.currentProduct === 'maternidade'
+        ? 'https://n8n.srv1077266.hstgr.cloud/webhook/sm_requerido'
+        : 'https://n8n.srv1077266.hstgr.cloud/webhook/requerido';
+
       try {
-        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/requerido', {
+        await fetch(webhookRequeridoUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -6382,8 +6402,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         data_hora: new Date().toISOString()
       };
 
+      const webhookExigenciaUrl = window.currentProduct === 'maternidade'
+        ? 'https://n8n.srv1077266.hstgr.cloud/webhook/sm_exigencia'
+        : 'https://n8n.srv1077266.hstgr.cloud/webhook/exigencia';
+
       try {
-        await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/exigencia', {
+        await fetch(webhookExigenciaUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -8252,8 +8276,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           data_hora: new Date().toISOString()
         };
 
+        const webhookFecharPastaUrl = window.currentProduct === 'maternidade'
+          ? 'https://n8n.srv1077266.hstgr.cloud/webhook/sm_fechar_pasta'
+          : 'https://n8n.srv1077266.hstgr.cloud/webhook/fechar_pasta';
+
         try {
-          await fetch('https://n8n.srv1077266.hstgr.cloud/webhook/fechar_pasta', {
+          await fetch(webhookFecharPastaUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
